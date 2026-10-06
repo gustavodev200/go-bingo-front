@@ -22,16 +22,23 @@ function toSoundState(s: GameStoreState): SoundState {
 /** Toca os efeitos da partida a partir da store (2D e 3D). Mudo = nada toca; primeiro estado é silencioso. */
 export function useGameSounds(muted: boolean, player: SfxPlayer = sharedSfxPlayer()) {
   useEffect(() => {
-    const unlock = () => player.unlock();
-    window.addEventListener('pointerdown', unlock, { once: true });
-    return () => window.removeEventListener('pointerdown', unlock);
+    // Só gestos que contam como ativação do usuário (no iOS, touch pointerdown não conta).
+    const GESTURES = ['pointerup', 'touchend', 'click', 'keydown'] as const;
+    const stop = () => GESTURES.forEach((g) => window.removeEventListener(g, unlock));
+    function unlock() {
+      player.unlock();
+      if (player.isRunning()) stop();
+    }
+    GESTURES.forEach((g) => window.addEventListener(g, unlock));
+    return stop;
   }, [player]);
 
   useEffect(() => {
     let prev: SoundState | null = null;
     const check = () => {
       const state = useGameStore.getState();
-      if (!state.snapshot) {
+      if (!state.snapshot || state.connection === 'reconnecting') {
+        // Sem sala ou reconectando: o próximo snapshot vira a nova base (sem som de ressincronização).
         prev = null;
         return;
       }

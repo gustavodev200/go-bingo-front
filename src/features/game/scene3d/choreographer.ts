@@ -60,7 +60,8 @@ export function choreograph(prev: ReadonlyMap<string, AvatarState> | null, { mem
         [phase, phaseStart] = ['ready-jump', now];
       }
       if (member.userId === winnerId) {
-        if (phase !== 'winner') [phase, phaseStart] = ['winner', now];
+        // Vencedor comemora até o "jogar de novo", mesmo se cair; não reinicia a animação a cada tick.
+        [phase, phaseStart] = old.phase === 'winner' ? ['winner', old.phaseStart] : ['winner', now];
       } else if (phase === 'winner') {
         [phase, phaseStart] = [member.connected ? 'idle' : 'ghost', now];
       }

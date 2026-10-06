@@ -49,6 +49,17 @@ describe('createSfxPlayer', () => {
     expect(audio.resume).toHaveBeenCalled();
   });
 
+  it('resumes an interrupted context (iOS after a call) and reports when it is running', () => {
+    const audio = fakeAudio('interrupted' as AudioContextState);
+    const player = createSfxPlayer(() => audio.ctx);
+    expect(player.isRunning()).toBe(false);
+    player.unlock();
+    expect(audio.resume).toHaveBeenCalled();
+    const running = createSfxPlayer(() => fakeAudio('running').ctx);
+    running.unlock();
+    expect(running.isRunning()).toBe(true);
+  });
+
   it('is a silent no-op without WebAudio', () => {
     const player = createSfxPlayer(() => null);
     expect(() => {

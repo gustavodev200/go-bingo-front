@@ -21,7 +21,7 @@ const inGame = (drawn: number[], remaining: Record<string, number> = { [ME]: 10,
 const drawnEvent = (number: number) => ({ event: 'game:number_drawn' as const, payload: { seq: 4, number, letter: 'N' as const, drawnAt: new Date(0).toISOString() } });
 
 describe('useGameSounds', () => {
-  const player = { unlock: vi.fn(), play: vi.fn() };
+  const player = { unlock: vi.fn(), play: vi.fn(), isRunning: vi.fn(() => false) };
   beforeEach(() => {
     vi.clearAllMocks();
     useGameStore.setState(reduce(initialGameState(ME), { event: 'room:state', payload: inGame([1, 2, 3]) }));
@@ -48,9 +48,25 @@ describe('useGameSounds', () => {
     expect(player.play).not.toHaveBeenCalled();
   });
 
-  it('unlocks audio on the first tap', () => {
+  it('unlocks audio on real user gestures (tap, click, key) until the context is running', () => {
+    const { unmount } = renderHook(() => useGameSounds(false, player));
+    window.dispatchEvent(new Event('touchend'));
+    window.dispatchEvent(new Event('keydown'));
+    expect(player.unlock).toHaveBeenCalledTimes(2);
+    player.isRunning.mockReturnValue(true);
+    window.dispatchEvent(new Event('click'));
+    window.dispatchEvent(new Event('click'));
+    expect(player.unlock).toHaveBeenCalledTimes(3);
+    unmount();
+  });
+
+  it('a reconnect resync is silent, then normal draws play again', () => {
     renderHook(() => useGameSounds(false, player));
-    window.dispatchEvent(new Event('pointerdown'));
-    expect(player.unlock).toHaveBeenCalledTimes(1);
+    act(() => useGameStore.getState().setConnection('reconnecting'));
+    act(() => useGameStore.getState().dispatch({ event: 'room:state', payload: inGame([1, 2, 3, 4, 5, 6], { [ME]: 1, [ANA]: 10 }) }));
+    act(() => useGameStore.getState().setConnection('online'));
+    expect(player.play).not.toHaveBeenCalled();
+    act(() => useGameStore.getState().dispatch(drawnEvent(40)));
+    expect(player.play).toHaveBeenCalledWith('draw');
   });
 });

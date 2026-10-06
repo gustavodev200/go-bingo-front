@@ -33,6 +33,7 @@ export function GameView({
   const canClaim = useGameStore(selectCanClaim);
   const drawn = snapshot.game?.drawn ?? [];
   const card = snapshot.myCard;
+  const current = drawn.at(-1);
 
   return (
     <main className="grid h-[calc(100dvh-env(safe-area-inset-top))] grid-rows-[minmax(0,2fr)_minmax(0,3fr)_auto] landscape:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] landscape:grid-rows-[minmax(0,1fr)_auto]">
@@ -40,6 +41,12 @@ export function GameView({
         {stage ? (
           <>
             <div className="absolute inset-0">{stage}</div>
+            {current !== undefined && (
+              // Número visível na HUD na hora (o telão é cosmético e pode demorar a carregar); o anúncio fica no LastNumbers.
+              <div data-testid="current-number" aria-hidden="true" className="bg-primary text-primary-foreground absolute top-2 left-2 rounded-full px-3 py-1 text-lg font-black shadow">
+                {letterFor(current)} {current}
+              </div>
+            )}
             <div className="sr-only">
               <LastNumbers drawn={drawn} />
             </div>

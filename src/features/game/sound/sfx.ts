@@ -29,9 +29,11 @@ export interface SoundState {
   ended: boolean;
 }
 
-/** Que sons tocar entre dois estados. Primeiro estado (entrar/recarregar) é sempre silencioso. */
+/** Que sons tocar entre dois estados. Primeiro estado (entrar/recarregar) e ressincronizações são silenciosos. */
 export function sfxFor(prev: SoundState | null, next: SoundState, myUserId: string | null): Sfx[] {
   if (!prev) return [];
+  // Ressincronização (reconexão) pulando vários números: estado novo de base, sem som.
+  if (next.drawnCount > prev.drawnCount + 1) return [];
   const out: Sfx[] = [];
   if (next.drawnCount > prev.drawnCount) out.push('draw');
   if ([...next.oneAway].some((id) => !prev.oneAway.has(id))) out.push('one-away');

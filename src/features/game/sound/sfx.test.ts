@@ -35,4 +35,8 @@ describe('sfxFor', () => {
       }
     }
   });
+
+  it('a resync that jumps several numbers (reconnect) is silent', () => {
+    expect(sfxFor(s({ drawnCount: 10, oneAway: new Set() }), s({ drawnCount: 14, oneAway: new Set(['a']) }), 'me')).toEqual([]);
+  });
 });

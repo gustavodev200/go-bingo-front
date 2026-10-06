@@ -17,9 +17,9 @@ export function Globe({ lastNumber, drawCount, innerBalls }: { lastNumber: numbe
   const seenCount = useRef<number | null>(null);
   const o = useMemo(() => new Object3D(), []);
 
-  // Só anima quando o número de sorteios AUMENTA com a cena montada (reconexão/recarga não anima).
+  // Só anima um sorteio novo (+1) com a cena montada; recarga, remontagem e ressincronização não animam.
   useEffect(() => {
-    if (seenCount.current !== null && drawCount > seenCount.current) lastDrawAt.current = performance.now();
+    if (seenCount.current !== null && drawCount === seenCount.current + 1) lastDrawAt.current = performance.now();
     seenCount.current = drawCount;
   }, [drawCount]);
 

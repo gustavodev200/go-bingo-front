@@ -3,8 +3,10 @@ import { SFX_NOTES, type Sfx } from './sfx';
 export type AudioCtxLike = Pick<AudioContext, 'currentTime' | 'state' | 'resume' | 'createOscillator' | 'createGain' | 'destination'>;
 
 export interface SfxPlayer {
+  /** Cria/retoma o AudioContext — chamar dentro de um gesto do usuário (exigência do iOS). */
   unlock(): void;
   play(sfx: Sfx): void;
+  isRunning(): boolean;
 }
 
 /** Sons sintetizados (sem arquivos): um oscilador com envelope por nota. AudioContext criado só no primeiro uso. */
@@ -16,11 +18,13 @@ export function createSfxPlayer(factory: () => AudioCtxLike | null): SfxPlayer {
       tried = true;
       ctx = factory();
     }
-    if (ctx?.state === 'suspended') void ctx.resume().catch(() => undefined);
+    // 'suspended' (autoplay) e 'interrupted' (iOS após ligação/tela travada) precisam de resume.
+    if (ctx && ctx.state !== 'running' && ctx.state !== 'closed') void ctx.resume().catch(() => undefined);
     return ctx;
   };
   return {
     unlock: () => void ensure(),
+    isRunning: () => ctx?.state === 'running',
     play(sfx) {
       const c = ensure();
       if (!c) return;

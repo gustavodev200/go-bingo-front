@@ -61,4 +61,10 @@ describe('GameView', () => {
     expect(screen.getByRole('button', { name: 'Painel' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Ligar som' })).toBeInTheDocument();
   });
+
+  it('3D mode still shows the current number visibly in the HUD', () => {
+    load([]);
+    render(<GameView actions={actions} muted={false} onToggleMute={vi.fn()} stage={<div />} />);
+    expect(screen.getByTestId('current-number')).toHaveTextContent('I 25');
+  });
 });

@@ -153,4 +153,12 @@ describe('one away and winner', () => {
     const won = choreograph(crowd, { members: [m(A, 0), m(B, 1), m(C, 2)], hostId: A, now: 5, winnerId: B });
     expect(labelIds(won.values(), A, false).has(B)).toBe(true);
   });
+
+  it('a winner who drops keeps celebrating without restarting the animation every tick', () => {
+    const s0 = choreograph(null, { members: [m(A, 0), m(B, 1)], hostId: A, now: 0 });
+    const s1 = choreograph(s0, { members: [m(A, 0), m(B, 1, { connected: false })], hostId: A, now: 50, winnerId: B });
+    const s2 = choreograph(s1, { members: [m(A, 0), m(B, 1, { connected: false })], hostId: A, now: 200, winnerId: B });
+    expect(s2.get(B)).toMatchObject({ phase: 'winner', phaseStart: 50 });
+    expect(statesChanged(s1, s2)).toBe(false);
+  });
 });
