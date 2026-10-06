@@ -51,6 +51,14 @@ describe('useSceneMode', () => {
     expect(result.current).toMatchObject({ mode: '2d', reason: 'context-lost' });
   });
 
+  it('notifies the telemetry callback on every context loss', () => {
+    const onLoss = vi.fn();
+    const { result } = renderHook(() => useSceneMode(onLoss));
+    act(() => result.current.reportContextLoss());
+    act(() => result.current.reportContextLoss());
+    expect(onLoss).toHaveBeenCalledTimes(2);
+  });
+
   it('a crashed stage falls back to 2D for the rest of the visit', () => {
     const { result } = renderHook(() => useSceneMode());
     act(() => result.current.reportFailure());

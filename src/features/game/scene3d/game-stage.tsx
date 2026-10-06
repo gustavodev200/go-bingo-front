@@ -7,6 +7,7 @@ import { parseBots } from './bots';
 import { CameraRig } from './camera-rig';
 import { Confetti } from './confetti';
 import { Globe } from './globe-mesh';
+import { FpsProbe } from './fps-probe';
 import { Hall } from './hall';
 import { BOTS_ENABLED } from './lobby-stage';
 import { NameLabels } from './name-labels';
@@ -21,12 +22,13 @@ export interface GameStageProps {
   code: string;
   qualityOverride: QualityOverride;
   onContextLost: () => void;
+  onFrame?: (deltaMs: number) => void;
 }
 
 const NO_DRAWS: readonly number[] = [];
 
 /** Palco 3D da partida: telão, globo, plateia com "por 1" e cena de vitória. */
-export default function GameStage({ roomName, code, qualityOverride, onContextLost }: GameStageProps) {
+export default function GameStage({ roomName, code, qualityOverride, onContextLost, onFrame }: GameStageProps) {
   const [bots] = useState(() => parseBots(window.location.search, BOTS_ENABLED));
   const { statesRef, list, dance } = useAvatarStates(bots);
   const drawn = useGameStore((s) => s.snapshot?.game?.drawn ?? NO_DRAWS);
@@ -45,6 +47,7 @@ export default function GameStage({ roomName, code, qualityOverride, onContextLo
     <StageCanvas qualityOverride={qualityOverride} onContextLost={onContextLost}>
       {(settings, tier) => (
         <>
+          {onFrame && <FpsProbe onFrame={onFrame} />}
           <CameraRig view="game" focus={focus} />
           <Hall screen={screen} animatedBulbs={settings.animatedBulbs} shadows={settings.shadows === 'real'} />
           <Globe lastNumber={drawn.at(-1) ?? null} drawCount={drawn.length} innerBalls={tier === 'low' ? 8 : 18} />

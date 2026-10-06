@@ -2,10 +2,11 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { useProfile } from '@/features/profile/profile-context';
+import { createSessionTelemetry, reportSessionSummary } from '@/lib/telemetry';
 import { useWakeLock } from '@/features/pwa/use-wake-lock';
 import { ConnectionBanner } from './connection-banner';
 import { GameView } from './game-view';
@@ -40,13 +41,26 @@ export function RoomScreen({ code }: { code: string }) {
   const reset = useGameStore((s) => s.reset);
   useEffect(() => reset(profile.id), [reset, profile.id]);
 
-  const actions = useGameConnection(code);
+  // Uma instância por montagem da sala; o resumo sai uma vez ao sair/fechar a aba.
+  const [telemetry] = useState(() => createSessionTelemetry(reportSessionSummary));
+  useEffect(() => {
+    window.addEventListener('pagehide', telemetry.flush);
+    return () => {
+      window.removeEventListener('pagehide', telemetry.flush);
+      telemetry.flush();
+    };
+  }, [telemetry]);
+
+  const actions = useGameConnection(code, telemetry.addDrawLatencyMs);
   const snapshot = useGameStore((s) => s.snapshot);
   const connection = useGameStore((s) => s.connection);
   const exit = useGameStore((s) => s.exit);
   const showResult = useGameStore((s) => s.winner !== null || s.endedWithoutWinner);
   useWakeLock(snapshot?.status === 'IN_GAME');
-  const scene = useSceneMode();
+  const scene = useSceneMode(telemetry.addContextLoss);
+  useEffect(() => {
+    telemetry.setMode(scene.mode, scene.reason === 'ok' ? null : scene.reason);
+  }, [telemetry, scene.mode, scene.reason]);
   const inGame = snapshot?.status === 'IN_GAME' || showResult;
   const showGame = useCelebrationDelay(snapshot ? inGame : null, scene.mode === '3d');
   const resultReady = useCelebrationDelay(snapshot ? showResult : null, scene.mode === '3d', RESULT_DELAY_MS);
@@ -97,7 +111,7 @@ export function RoomScreen({ code }: { code: string }) {
           stage={
             scene.mode === '3d' ? (
               <StageErrorBoundary onError={scene.reportFailure}>
-                <GameStageLazy key={scene.stageKey} roomName={snapshot.name} code={snapshot.code} qualityOverride={scene.quality} onContextLost={scene.reportContextLoss} />
+                <GameStageLazy key={scene.stageKey} roomName={snapshot.name} code={snapshot.code} qualityOverride={scene.quality} onContextLost={scene.reportContextLoss} onFrame={telemetry.addFrameDeltaMs} />
               </StageErrorBoundary>
             ) : undefined
           }

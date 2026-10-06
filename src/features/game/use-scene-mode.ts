@@ -19,7 +19,7 @@ function prefersReducedMotion(): boolean {
 }
 
 /** Decide 3D ou 2D (sem baixar o three.js), guarda preferências e conta perdas de contexto WebGL. */
-export function useSceneMode() {
+export function useSceneMode(onContextLoss?: () => void) {
   const [webgl2] = useState(hasWebgl2);
   const [reducedMotion] = useState(prefersReducedMotion);
   const [preferred, setPreferredState] = useState<DisplayMode | null>(readPreferredMode);
@@ -37,7 +37,10 @@ export function useSceneMode() {
     writeQualityOverride(next);
     setQualityState(next);
   }, []);
-  const reportContextLoss = useCallback(() => setContextLosses((n) => n + 1), []);
+  const reportContextLoss = useCallback(() => {
+    setContextLosses((n) => n + 1);
+    onContextLoss?.();
+  }, [onContextLoss]);
   const reportFailure = useCallback(() => setFailed(true), []);
 
   return { mode, reason, setPreferred, quality, setQuality, reportContextLoss, reportFailure, stageKey: contextLosses };
