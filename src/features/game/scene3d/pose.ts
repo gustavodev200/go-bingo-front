@@ -1,7 +1,7 @@
 import type { AvatarLook } from './avatar-look';
 import { DOOR, slotPosition, type Vec3 } from './slots';
 
-export type Phase = 'idle' | 'entering' | 'ready-jump' | 'ghost' | 'leaving' | 'dance';
+export type Phase = 'idle' | 'entering' | 'ready-jump' | 'ghost' | 'leaving' | 'dance' | 'winner';
 
 export interface AvatarState {
   userId: string;
@@ -15,6 +15,8 @@ export interface AvatarState {
   hasCard: boolean;
   /** Até quando (ms) a cabeça fica virada para a porta (reação a quem entrou). */
   lookAtDoorUntil: number;
+  /** Falta 1 pedra (destaque dourado). */
+  oneAway: boolean;
 }
 
 export const PHASE_MS = { entering: 1800, 'ready-jump': 600, leaving: 2200, dance: 1500 } as const;
@@ -32,6 +34,8 @@ export interface Pose {
   armSwing: number;
   /** 0 = cor normal, 1 = fantasma (cor pálida). */
   ghost: number;
+  /** 0–1: brilho dourado ("por 1" / vencedor). */
+  glow: number;
 }
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
@@ -45,14 +49,16 @@ function idlePose(slot: Vec3, s: AvatarState, now: number): Pose {
   const breathing = 1 + 0.02 * Math.sin(now / 600 + phase);
   const lookingAtDoor = now < s.lookAtDoorUntil;
   const doorYaw = Math.max(-1.2, Math.min(1.2, heading(slot, DOOR)));
+  const hop = s.oneAway ? Math.abs(Math.sin(now / 300)) * 0.12 : 0;
   return {
-    position: slot,
+    position: hop ? [slot[0], slot[1] + hop, slot[2]] : slot,
     rotationY: 0,
     headYaw: lookingAtDoor ? doorYaw : 0.15 * Math.sin(now / 1700 + phase * 5),
     scale: breathing,
     armRaise: 0,
     armSwing: 0,
     ghost: 0,
+    glow: s.oneAway ? 0.5 + 0.5 * Math.sin(now / 250) : 0,
   };
 }
 
@@ -75,6 +81,7 @@ export function pose(s: AvatarState, now: number): Pose {
         armRaise: 0,
         armSwing: p < 1 ? 0.6 * Math.sin(dt / 120) : 0,
         ghost: 0,
+        glow: 0,
       };
     }
     case 'ready-jump': {
@@ -91,10 +98,11 @@ export function pose(s: AvatarState, now: number): Pose {
         armRaise: 0,
         armSwing: 0,
         ghost: 1,
+        glow: 0,
       };
     case 'leaving': {
       if (dt < WAVE_MS) {
-        return { position: slot, rotationY: 0, headYaw: 0, scale: 1, armRaise: 1, armSwing: 0.5 * Math.sin((dt / WAVE_MS) * Math.PI * 4), ghost: 0 };
+        return { position: slot, rotationY: 0, headYaw: 0, scale: 1, armRaise: 1, armSwing: 0.5 * Math.sin((dt / WAVE_MS) * Math.PI * 4), ghost: 0, glow: 0 };
       }
       const p = clamp01((dt - WAVE_MS) / (PHASE_MS.leaving - WAVE_MS));
       return {
@@ -105,6 +113,7 @@ export function pose(s: AvatarState, now: number): Pose {
         armRaise: 0,
         armSwing: 0.6 * Math.sin(dt / 120),
         ghost: 0,
+        glow: 0,
       };
     }
     case 'dance': {
@@ -117,8 +126,20 @@ export function pose(s: AvatarState, now: number): Pose {
         armRaise: p < 1 ? 1 : 0,
         armSwing: 0.8 * Math.sin(dt / 90),
         ghost: 0,
+        glow: 0,
       };
     }
+    case 'winner':
+      return {
+        position: [slot[0], slot[1] + Math.abs(Math.sin(dt / 250)) * 0.5, slot[2]],
+        rotationY: dt / 400,
+        headYaw: 0,
+        scale: 1,
+        armRaise: 1,
+        armSwing: 0.8 * Math.sin(dt / 90),
+        ghost: 0,
+        glow: 1,
+      };
     case 'idle':
     default:
       return idlePose(slot, s, now);

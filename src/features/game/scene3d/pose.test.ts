@@ -4,7 +4,7 @@ import { DOOR, slotPosition } from './slots';
 
 const ID = '00000000-0000-4000-8000-000000000001';
 function state(phase: Phase, phaseStart = 0, overrides: Partial<AvatarState> = {}): AvatarState {
-  return { userId: ID, slot: 3, look: avatarFromId(ID), phase, phaseStart, isHost: false, connected: phase !== 'ghost', hasCard: false, lookAtDoorUntil: 0, ...overrides };
+  return { userId: ID, slot: 3, look: avatarFromId(ID), phase, phaseStart, isHost: false, connected: phase !== 'ghost', hasCard: false, lookAtDoorUntil: 0, oneAway: false, ...overrides };
 }
 const slot = slotPosition(3);
 
@@ -63,12 +63,26 @@ describe('pose', () => {
   });
 
   it('never produces NaN, even long after a temporary phase should have ended', () => {
-    const phases: Phase[] = ['idle', 'entering', 'ready-jump', 'ghost', 'leaving', 'dance'];
+    const phases: Phase[] = ['idle', 'entering', 'ready-jump', 'ghost', 'leaving', 'dance', 'winner'];
     for (const phase of phases) {
       for (const t of [-50, 0, 1, 500, 5000, 1e7]) {
         const p = pose(state(phase, 0), t);
-        [...p.position, p.rotationY, p.headYaw, p.scale, p.armRaise, p.armSwing, p.ghost].forEach((v) => expect(Number.isFinite(v)).toBe(true));
+        [...p.position, p.rotationY, p.headYaw, p.scale, p.armRaise, p.armSwing, p.ghost, p.glow].forEach((v) => expect(Number.isFinite(v)).toBe(true));
       }
     }
+  });
+
+  it('winner keeps jumping and spinning, fully glowing', () => {
+    const ys = [100, 300, 500, 700].map((t) => pose(state('winner', 0), t).position[1]);
+    expect(Math.max(...ys)).toBeGreaterThan(slot[1] + 0.2);
+    expect(pose(state('winner', 0), 400).glow).toBe(1);
+    expect(pose(state('winner', 0), 2000).rotationY).toBeGreaterThan(pose(state('winner', 0), 1000).rotationY);
+  });
+
+  it('one-away avatars glow and hop while idle; others do not', () => {
+    const glows = [0, 100, 200, 300, 400].map((t) => pose(state('idle', 0, { oneAway: true }), t).glow);
+    expect(Math.max(...glows)).toBeGreaterThan(0.5);
+    glows.forEach((g) => expect(g).toBeLessThanOrEqual(1));
+    expect(pose(state('idle', 0), 123).glow).toBe(0);
   });
 });
