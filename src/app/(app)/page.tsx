@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { UpgradeButton } from '@/features/auth/upgrade-button';
 import { useProfile } from '@/features/profile/profile-context';
+import { InstallBanner } from '@/features/pwa/install-banner';
 import { JoinByCodeForm } from '@/features/rooms/join-by-code-form';
 import { PublicRooms } from '@/features/rooms/public-rooms';
 import { createClient } from '@/lib/supabase/client';
@@ -27,6 +28,7 @@ export default function HomePage() {
         </span>
       </header>
       {profile.isGuest && <UpgradeButton />}
+      <InstallBanner />
       <JoinByCodeForm />
       <Button asChild size="lg" className="h-11">
         <Link href="/criar">Criar sala</Link>

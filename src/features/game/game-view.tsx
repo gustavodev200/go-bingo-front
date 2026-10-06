@@ -20,7 +20,7 @@ export function GameView({ actions }: { actions: GameActions }) {
   const card = snapshot.myCard;
 
   return (
-    <main className="grid h-dvh grid-rows-[minmax(0,2fr)_minmax(0,3fr)_auto] landscape:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] landscape:grid-rows-[minmax(0,1fr)_auto]">
+    <main className="grid h-[calc(100dvh-env(safe-area-inset-top))] grid-rows-[minmax(0,2fr)_minmax(0,3fr)_auto] landscape:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] landscape:grid-rows-[minmax(0,1fr)_auto]">
       <section data-stage className="flex items-center justify-center overflow-hidden p-2 landscape:row-span-2">
         <LastNumbers drawn={drawn} />
       </section>

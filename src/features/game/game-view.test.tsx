@@ -41,4 +41,10 @@ describe('GameView', () => {
     await userEvent.click(screen.getByRole('button', { name: 'B 1, sorteado' }));
     expect(actions.mark).toHaveBeenCalledWith(0);
   });
+
+  it('subtracts the top safe-area inset from its height (standalone PWA with notch)', () => {
+    load([]);
+    render(<GameView actions={actions} />);
+    expect(screen.getByRole('main').className).toContain('100dvh-env(safe-area-inset-top)');
+  });
 });

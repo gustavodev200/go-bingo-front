@@ -6,6 +6,7 @@ import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { useProfile } from '@/features/profile/profile-context';
+import { useWakeLock } from '@/features/pwa/use-wake-lock';
 import { ConnectionBanner } from './connection-banner';
 import { GameView } from './game-view';
 import { LobbyView } from './lobby-view';
@@ -33,6 +34,7 @@ export function RoomScreen({ code }: { code: string }) {
   const connection = useGameStore((s) => s.connection);
   const exit = useGameStore((s) => s.exit);
   const showResult = useGameStore((s) => s.winner !== null || s.endedWithoutWinner);
+  useWakeLock(snapshot?.status === 'IN_GAME');
 
   // "Fulano está por 1!"
   const prevRemaining = useRef<Record<string, number>>({});

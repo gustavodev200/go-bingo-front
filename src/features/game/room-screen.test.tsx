@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { RoomSnapshot } from '@/contracts';
 import { RoomScreen } from './room-screen';
@@ -40,6 +40,29 @@ function renderWith(snapshot: RoomSnapshot | null) {
 
 describe('RoomScreen', () => {
   beforeEach(() => vi.clearAllMocks());
+
+  it('holds a screen wake lock only while the game is running', async () => {
+    const sentinel = { released: false, release: vi.fn(async () => undefined) };
+    const request = vi.fn(async () => sentinel);
+    Object.defineProperty(navigator, 'wakeLock', { configurable: true, value: { request } });
+    try {
+      renderWith(room({ status: 'WAITING' }));
+      expect(request).not.toHaveBeenCalled();
+      act(() =>
+        useGameStore.getState().dispatch({
+          event: 'room:state',
+          payload: room({
+            status: 'IN_GAME',
+            myCard: { id: '00000000-0000-4000-8000-0000000000aa', grid, marked: [] },
+            game: { id: '00000000-0000-4000-8000-0000000000bb', drawn: [], drawIntervalMs: 5000, remaining: { [ME]: 24 } },
+          }),
+        }),
+      );
+      await waitFor(() => expect(request).toHaveBeenCalledWith('screen'));
+    } finally {
+      Reflect.deleteProperty(navigator, 'wakeLock');
+    }
+  });
 
   it('shows a loading state until the snapshot arrives', () => {
     renderWith(null);

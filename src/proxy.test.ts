@@ -12,10 +12,15 @@ describe('proxy', () => {
     expect(updateSession).toHaveBeenCalledWith(req);
   });
 
-  it('skips static assets', () => {
+  it('skips static assets and public PWA routes', () => {
     const matcher = new RegExp(`^${config.matcher[0]}$`);
     expect(matcher.test('/ABC234')).toBe(true);
+    expect(matcher.test('/login')).toBe(true);
     expect(matcher.test('/_next/static/chunk.js')).toBe(false);
     expect(matcher.test('/icon.png')).toBe(false);
+    expect(matcher.test('/manifest.webmanifest')).toBe(false);
+    expect(matcher.test('/serwist/sw.js')).toBe(false);
+    expect(matcher.test('/pwa-icons/icon-192.png')).toBe(false);
+    expect(matcher.test('/~offline')).toBe(false);
   });
 });
