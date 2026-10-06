@@ -12,8 +12,12 @@ import { GameView } from './game-view';
 import { LobbyView } from './lobby-view';
 import { newlyOneAway } from './one-away';
 import { ResultDialog } from './result-dialog';
+import { SceneControls } from './scene-controls';
+import { LobbyStageLazy } from './scene3d/lobby-stage-lazy';
 import { useGameStore } from './store';
+import { useCelebrationDelay } from './use-celebration-delay';
 import { useGameConnection } from './use-game-connection';
+import { useSceneMode } from './use-scene-mode';
 
 const EXIT_MESSAGES = {
   kicked: 'O host removeu você da sala.',
@@ -35,6 +39,12 @@ export function RoomScreen({ code }: { code: string }) {
   const exit = useGameStore((s) => s.exit);
   const showResult = useGameStore((s) => s.winner !== null || s.endedWithoutWinner);
   useWakeLock(snapshot?.status === 'IN_GAME');
+  const scene = useSceneMode();
+  const inGame = snapshot?.status === 'IN_GAME' || showResult;
+  const showGame = useCelebrationDelay(inGame, scene.mode === '3d');
+  useEffect(() => {
+    if (scene.reason === 'context-lost') toast('Modo 2D ativado para economizar o aparelho');
+  }, [scene.reason]);
 
   // "Fulano está por 1!"
   const prevRemaining = useRef<Record<string, number>>({});
@@ -68,7 +78,26 @@ export function RoomScreen({ code }: { code: string }) {
   return (
     <>
       <ConnectionBanner status={connection} />
-      {snapshot.status === 'IN_GAME' || showResult ? <GameView actions={actions} /> : <LobbyView actions={actions} onLeave={() => void leave()} />}
+      {showGame ? (
+        <GameView actions={actions} />
+      ) : (
+        <>
+          {scene.mode === '3d' && (
+            <div className="h-[40dvh] w-full landscape:h-[55dvh]">
+              <LobbyStageLazy
+                key={scene.stageKey}
+                roomName={snapshot.name}
+                code={snapshot.code}
+                celebrating={inGame}
+                qualityOverride={scene.quality}
+                onContextLost={scene.reportContextLoss}
+              />
+            </div>
+          )}
+          <SceneControls mode={scene.mode} quality={scene.quality} onModeChange={scene.setPreferred} onQualityChange={scene.setQuality} />
+          <LobbyView actions={actions} onLeave={() => void leave()} />
+        </>
+      )}
       {showResult && <ResultDialog onReplay={() => void actions.replay()} onLeave={() => void leave()} />}
     </>
   );
