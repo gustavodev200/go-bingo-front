@@ -8,6 +8,8 @@ npm run dev                   # http://localhost:3000
 
 Testes: `npm test`. Contratos (`src/contracts`) são gerados pelo back: `cd ../go-bingo-back && npm run contracts:sync`.
 
+Cobertura mínima: 80% (statements/branches/functions/lines), conforme a constituição do projeto (Princípio VIII). `npm run test:cov` roda local; o CI falha a build abaixo do limiar. Ficam fora do cálculo só o código gerado (`src/contracts`, `src/components/ui` do shadcn), helpers de teste (`src/test`) e `page.tsx`/`layout.tsx` de roteamento.
+
 # workspace-agents
 
 Workspace/template pessoal para desenvolvimento de software com agentes de

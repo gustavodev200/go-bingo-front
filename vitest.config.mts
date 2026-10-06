@@ -14,5 +14,11 @@ export default defineConfig({
       NEXT_PUBLIC_API_URL: 'http://api.test',
       NEXT_PUBLIC_TURNSTILE_SITE_KEY: '1x00000000000000000000AA',
     },
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['src/contracts/**', 'src/components/ui/**', 'src/test/**', 'src/app/**/layout.tsx', 'src/app/**/page.tsx', '**/*.test.{ts,tsx}', '**/*.d.ts'],
+      thresholds: { statements: 80, branches: 80, functions: 80, lines: 80 },
+    },
   },
 });

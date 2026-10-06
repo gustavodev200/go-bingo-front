@@ -27,3 +27,12 @@ describe('UpgradeButton', () => {
     expect(push).toHaveBeenCalledWith('/auth/erro?code=identity_already_exists');
   });
 });
+
+describe('UpgradeButton other errors', () => {
+  it('toasts unexpected link errors without navigating', async () => {
+    linkIdentity.mockResolvedValue({ data: null, error: { code: 'unexpected_failure', message: 'x' } });
+    render(<UpgradeButton />);
+    await userEvent.click(screen.getByRole('button', { name: /entrar com google para salvar/i }));
+    expect(push).not.toHaveBeenCalled();
+  });
+});
