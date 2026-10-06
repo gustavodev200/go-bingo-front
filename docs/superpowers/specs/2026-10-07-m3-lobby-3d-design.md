@@ -68,7 +68,7 @@ choreographer (puro) ── AvatarState[] { userId, slot, look, phase, phaseStar
 | `idle` | padrão; primeiro snapshot ao entrar na sala | ∞ | respiração (escala ±2%), balanço de cabeça defasado por `seed` |
 | `entering` | membro novo num snapshot posterior ao primeiro e não é reconexão | 1,8 s | anda saltitando de `DOOR` até o slot (easing), olhando para a frente no fim |
 | `ready-jump` | `hasCard` passou de `false` para `true` | 0,6 s | pulo (parábola, altura 0,6) |
-| `ghost` | `connected:false` | até reconectar/sair | opacidade 0,35, flutua ±0,08 |
+| `ghost` | `connected:false` | até reconectar/sair | cor pálida lavanda (`#c4b5fd`), flutua ±0,08, levemente menor |
 | `leaving` | membro sumiu do snapshot | 2,2 s | acena 0,8 s no lugar, anda até `DOOR`, encolhe; removido ao fim |
 | `dance` | toque local no próprio avatar | 1,5 s | gira 2 voltas e pula 2× |
 
@@ -103,10 +103,10 @@ Rótulos de apelido: `<Text>` do drei acima da cabeça, sempre texto. Visíveis:
 | Confete | 300 | 120 | 0 |
 | Antialias | sim | sim | não |
 
-- Tier inicial: `cores ≥ 8 && memoryGb ≥ 6 && maxTexture ≥ 8192` → Alto; `cores ≤ 4 || memoryGb ≤ 3` → Baixo; senão Médio. Telas pequenas (< 400 px de largura) limitam a Médio.
+- Tier inicial: `cores ≥ 8 && memoryGb ≥ 6` (memória desconhecida conta como 8) → Alto; `cores ≤ 4 || memoryGb ≤ 3` → Baixo; senão Médio. Telas pequenas (< 400 px de largura) limitam a Médio.
 - `PerformanceMonitor`: `onDecline` → reduz DPR em 0,25 até o mínimo do tier, depois desce um tier; `onIncline` sobe no máximo uma vez por sessão; `flipflops={3}` → `onFallback` fixa o tier atual.
 - Override manual "Qualidade: Auto/Alta/Média/Baixa" (persistido).
-- Aba oculta → `frameloop="never"`; lobby ocioso no tier Baixo (todos `idle`/`ghost`, sem lâmpadas) → `frameloop="demand"`.
+- Aba oculta → `frameloop="never"`. (Sem `demand`: os bonecos sempre respiram, então a cena nunca fica ociosa.)
 - Perda de contexto WebGL: 1ª → remonta o Canvas (nova `key`); 2ª → modo 2D. Estado do jogo está na store; nada se perde.
 - Canvas `aria-hidden`, `role="presentation"`; nenhuma informação só no 3D.
 
@@ -132,6 +132,6 @@ Manual (aparelho real): checklist no README (FPS com `?bots=25`, perda de contex
 | Risco | Mitigação |
 |---|---|
 | `<Text>` (troika) custa 1 draw call + SDF por rótulo | Regra de visibilidade (> 15 → só 3 rótulos); tier Baixo idem. |
-| `setColorAt` com opacidade por instância não existe | Fantasmas usam um **segundo** `InstancedMesh` translúcido por peça (só desenha fantasmas). |
+| `setColorAt` não tem opacidade por instância | Fantasma = cor pálida + flutuação (sem transparência), mantendo 1 mesh por peça. |
 | Picking em `InstancedMesh` | `e.instanceId` → índice → `userId` via tabela mantida pelo `AvatarCrowd`. |
 | Jest-dom sem WebGL | Lógica 100% em módulos puros; R3F mockado nos testes de tela. |
