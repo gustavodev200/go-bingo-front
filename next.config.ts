@@ -1,8 +1,25 @@
 import { withSentryConfig } from '@sentry/nextjs/config';
 import { withSerwist } from '@serwist/turbopack';
 import type { NextConfig } from 'next';
+import { securityHeaders } from './src/lib/security-headers';
 
-const nextConfig: NextConfig = {};
+const nextConfig: NextConfig = {
+  async headers() {
+    // Em `next dev` o React/Turbopack precisam de eval e websocket de HMR, que a CSP estrita bloquearia;
+    // por isso os headers de segurança só valem no build de produção.
+    if (process.env.NODE_ENV !== 'production') return [];
+    return [
+      {
+        source: '/:path*',
+        headers: securityHeaders({
+          apiUrl: process.env.NEXT_PUBLIC_API_URL!,
+          supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          sentryDsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+        }),
+      },
+    ];
+  },
+};
 
 export default withSentryConfig(withSerwist(nextConfig), {
   silent: true,
