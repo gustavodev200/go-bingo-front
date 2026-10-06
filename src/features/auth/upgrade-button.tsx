@@ -4,10 +4,12 @@ import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { createClient } from '@/lib/supabase/client';
+import { OpenInBrowserNotice, useIsInAppBrowser } from './open-in-browser';
 
 export function UpgradeButton() {
   const router = useRouter();
   const pathname = usePathname();
+  const embedded = useIsInAppBrowser();
 
   async function upgrade() {
     const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(pathname)}`;
@@ -17,6 +19,8 @@ export function UpgradeButton() {
     toast.error('Não foi possível vincular sua conta Google.');
   }
 
+  // Só renderiza no cliente com embedded=true, então navigator existe.
+  if (embedded) return <OpenInBrowserNotice userAgent={navigator.userAgent} />;
   return (
     <Button onClick={() => void upgrade()} className="h-11 w-full">
       Entrar com Google para salvar seus pontos
@@ -26,12 +30,15 @@ export function UpgradeButton() {
 
 /** Usado quando o Google já tem perfil: descarta o convidado e entra na conta existente. */
 export function SwitchToGoogleAccount() {
+  const embedded = useIsInAppBrowser();
+
   async function switchAccount() {
     const supabase = createClient();
     await supabase.auth.signOut();
     await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/auth/callback?next=%2F` } });
   }
 
+  if (embedded) return <OpenInBrowserNotice userAgent={navigator.userAgent} />;
   return (
     <Button onClick={() => void switchAccount()} className="h-11 w-full">
       Entrar na conta Google existente
