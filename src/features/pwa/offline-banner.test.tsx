@@ -18,6 +18,7 @@ describe('OfflineBanner', () => {
     setOnLine(false);
     render(<OfflineBanner />);
     expect(screen.getByRole('status')).toHaveTextContent('Você está offline');
+    expect(screen.getByRole('status').className).toContain('fixed'); // não empurra o layout do jogo
     act(() => {
       setOnLine(true);
       window.dispatchEvent(new Event('online'));

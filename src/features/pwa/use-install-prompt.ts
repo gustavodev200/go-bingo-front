@@ -1,15 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import { isInAppBrowser } from '@/lib/in-app-browser';
 import { isIos, isStandalone } from '@/lib/pwa/platform';
+import { clearDeferredInstall, getDeferredInstall, subscribeDeferredInstall } from './install-event';
 
 export type InstallMode = 'hidden' | 'prompt' | 'ios';
-
-type BeforeInstallPromptEvent = Event & {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
-};
 
 const DISMISS_KEY = 'go-bingo:install-dismissed';
 
@@ -29,44 +25,32 @@ function rememberDismissal() {
   }
 }
 
+type Env = { eligible: boolean; ios: boolean };
+
 export function useInstallPrompt() {
-  const [mode, setMode] = useState<InstallMode>('hidden');
-  const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
+  const [env, setEnv] = useState<Env>({ eligible: false, ios: false });
+  const deferred = useSyncExternalStore(subscribeDeferredInstall, getDeferredInstall, () => null);
 
   useEffect(() => {
-    if (isStandalone() || isInAppBrowser(navigator.userAgent) || wasDismissed()) return;
+    const eligible = !isStandalone() && !isInAppBrowser(navigator.userAgent) && !wasDismissed();
     // eslint-disable-next-line react-hooks/set-state-in-effect -- detecção só existe no cliente
-    if (isIos(navigator.userAgent, navigator.maxTouchPoints)) setMode('ios');
-
-    const onBeforeInstall = (event: Event) => {
-      event.preventDefault();
-      setDeferred(event as BeforeInstallPromptEvent);
-      setMode('prompt');
-    };
-    const onInstalled = () => {
-      setDeferred(null);
-      setMode('hidden');
-    };
-    window.addEventListener('beforeinstallprompt', onBeforeInstall);
-    window.addEventListener('appinstalled', onInstalled);
-    return () => {
-      window.removeEventListener('beforeinstallprompt', onBeforeInstall);
-      window.removeEventListener('appinstalled', onInstalled);
-    };
+    setEnv({ eligible, ios: isIos(navigator.userAgent, navigator.maxTouchPoints) });
   }, []);
 
   const install = useCallback(async () => {
     if (!deferred) return;
     await deferred.prompt();
     await deferred.userChoice;
-    setDeferred(null);
-    setMode('hidden');
+    clearDeferredInstall();
   }, [deferred]);
 
   const dismiss = useCallback(() => {
     rememberDismissal();
-    setMode('hidden');
+    setEnv((current) => ({ ...current, eligible: false }));
   }, []);
 
+  let mode: InstallMode = 'hidden';
+  if (env.eligible && deferred) mode = 'prompt';
+  else if (env.eligible && env.ios) mode = 'ios';
   return { mode, install, dismiss };
 }

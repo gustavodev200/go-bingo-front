@@ -1,8 +1,8 @@
-import { SerwistProvider } from '@serwist/turbopack/react';
 import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { Toaster } from '@/components/ui/sonner';
 import { OfflineBanner } from '@/features/pwa/offline-banner';
+import { PwaProvider } from '@/features/pwa/pwa-provider';
 import './globals.css';
 
 const geistSans = Geist({ variable: '--font-sans', subsets: ['latin'] });
@@ -29,10 +29,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="pt-BR" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body className="bg-background text-foreground min-h-dvh font-sans antialiased">
         <div className="min-h-dvh pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)]">
-          <SerwistProvider swUrl="/serwist/sw.js" disable={process.env.NODE_ENV === 'development'}>
+          <PwaProvider>
             <OfflineBanner />
             {children}
-          </SerwistProvider>
+          </PwaProvider>
         </div>
         <Toaster position="top-center" />
       </body>

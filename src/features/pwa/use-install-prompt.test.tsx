@@ -1,4 +1,5 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
+import { clearDeferredInstall } from './install-event';
 import { useInstallPrompt } from './use-install-prompt';
 
 const IPHONE = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Safari/604.1';
@@ -24,6 +25,7 @@ function fireBeforeInstallPrompt(outcome: 'accepted' | 'dismissed' = 'accepted')
 
 describe('useInstallPrompt', () => {
   beforeEach(() => {
+    clearDeferredInstall();
     localStorage.clear();
     setStandalone(false);
   });
@@ -105,5 +107,23 @@ describe('useInstallPrompt', () => {
     await waitFor(() => expect(result.current.mode).toBe('prompt'));
     act(() => void window.dispatchEvent(new Event('appinstalled')));
     expect(result.current.mode).toBe('hidden');
+  });
+
+  it('still offers the prompt when the browser fired the event before the hook mounted', async () => {
+    setUa(ANDROID);
+    const event = fireBeforeInstallPrompt();
+    const { result } = renderHook(() => useInstallPrompt());
+    await waitFor(() => expect(result.current.mode).toBe('prompt'));
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  it('keeps the captured event when the component unmounts and remounts', async () => {
+    setUa(ANDROID);
+    const first = renderHook(() => useInstallPrompt());
+    fireBeforeInstallPrompt();
+    await waitFor(() => expect(first.result.current.mode).toBe('prompt'));
+    first.unmount();
+    const second = renderHook(() => useInstallPrompt());
+    await waitFor(() => expect(second.result.current.mode).toBe('prompt'));
   });
 });
