@@ -132,6 +132,9 @@ export function AvatarCrowd({
     for (const mesh of allMeshes(p)) {
       mesh.instanceMatrix.needsUpdate = true;
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+      // A bounding sphere do InstancedMesh é calculada uma vez e não acompanha setMatrixAt:
+      // zera para o raycast (toque no boneco) recalcular com as posições atuais.
+      mesh.boundingSphere = null;
     }
   });
 
@@ -143,48 +146,48 @@ export function AvatarCrowd({
 
   return (
     <group>
-      <instancedMesh ref={(m) => void (parts.current.body = m)} args={[undefined, undefined, MAX_AVATARS]} castShadow={castShadow} onPointerDown={tap}>
+      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.body = m)} args={[undefined, undefined, MAX_AVATARS]} castShadow={castShadow} onPointerDown={tap}>
         <capsuleGeometry args={[0.28, 0.35, 4, 8]} />
         <meshStandardMaterial flatShading roughness={0.5} />
       </instancedMesh>
-      <instancedMesh ref={(m) => void (parts.current.head = m)} args={[undefined, undefined, MAX_AVATARS]} castShadow={castShadow} onPointerDown={tap}>
+      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.head = m)} args={[undefined, undefined, MAX_AVATARS]} castShadow={castShadow} onPointerDown={tap}>
         <sphereGeometry args={[0.26, 10, 8]} />
         <meshStandardMaterial flatShading roughness={0.4} />
       </instancedMesh>
-      <instancedMesh ref={(m) => void (parts.current.arms = m)} args={[undefined, undefined, MAX_AVATARS * 2]}>
+      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.arms = m)} args={[undefined, undefined, MAX_AVATARS * 2]}>
         <capsuleGeometry args={[0.07, 0.3, 2, 6]} />
         <meshStandardMaterial flatShading />
       </instancedMesh>
-      <instancedMesh ref={(m) => void (parts.current.eyes = m)} args={[undefined, undefined, MAX_AVATARS * 2]}>
+      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.eyes = m)} args={[undefined, undefined, MAX_AVATARS * 2]}>
         <sphereGeometry args={[0.045, 6, 6]} />
         <meshBasicMaterial color="#0f172a" />
       </instancedMesh>
-      <instancedMesh ref={(m) => void (parts.current.mouth = m)} args={[undefined, undefined, MAX_AVATARS]}>
+      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.mouth = m)} args={[undefined, undefined, MAX_AVATARS]}>
         <sphereGeometry args={[1, 8, 6]} />
         <meshBasicMaterial color="#7f1d1d" />
       </instancedMesh>
-      <instancedMesh ref={(m) => void (parts.current.hats.tophat = m)} args={[undefined, undefined, MAX_AVATARS]}>
+      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.hats.tophat = m)} args={[undefined, undefined, MAX_AVATARS]}>
         <cylinderGeometry args={[0.17, 0.17, 0.3, 10]} />
         <meshStandardMaterial flatShading />
       </instancedMesh>
-      <instancedMesh ref={(m) => void (parts.current.hats.cap = m)} args={[undefined, undefined, MAX_AVATARS]}>
+      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.hats.cap = m)} args={[undefined, undefined, MAX_AVATARS]}>
         <cylinderGeometry args={[0.27, 0.28, 0.1, 12]} />
         <meshStandardMaterial flatShading />
       </instancedMesh>
-      <instancedMesh ref={(m) => void (parts.current.hats.beanie = m)} args={[undefined, undefined, MAX_AVATARS]}>
+      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.hats.beanie = m)} args={[undefined, undefined, MAX_AVATARS]}>
         <sphereGeometry args={[0.27, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2]} />
         <meshStandardMaterial flatShading />
       </instancedMesh>
-      <instancedMesh ref={(m) => void (parts.current.hats.party = m)} args={[undefined, undefined, MAX_AVATARS]}>
+      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.hats.party = m)} args={[undefined, undefined, MAX_AVATARS]}>
         <coneGeometry args={[0.14, 0.38, 8]} />
         <meshStandardMaterial flatShading />
       </instancedMesh>
-      <instancedMesh ref={(m) => void (parts.current.crown = m)} args={[undefined, undefined, MAX_AVATARS]}>
+      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.crown = m)} args={[undefined, undefined, MAX_AVATARS]}>
         <cylinderGeometry args={[0.2, 0.17, 0.18, 6, 1, true]} />
         <meshStandardMaterial metalness={0.6} roughness={0.3} side={DoubleSide} />
       </instancedMesh>
       {fakeShadow && (
-        <instancedMesh ref={(m) => void (parts.current.shadow = m)} args={[undefined, undefined, MAX_AVATARS]}>
+        <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.shadow = m)} args={[undefined, undefined, MAX_AVATARS]}>
           <circleGeometry args={[0.35, 16]} />
           <meshBasicMaterial color="#000000" transparent opacity={0.28} depthWrite={false} />
         </instancedMesh>

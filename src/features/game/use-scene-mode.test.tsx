@@ -51,6 +51,12 @@ describe('useSceneMode', () => {
     expect(result.current).toMatchObject({ mode: '2d', reason: 'context-lost' });
   });
 
+  it('a crashed stage falls back to 2D for the rest of the visit', () => {
+    const { result } = renderHook(() => useSceneMode());
+    act(() => result.current.reportFailure());
+    expect(result.current).toMatchObject({ mode: '2d', reason: 'failed' });
+  });
+
   it('persists the quality override', () => {
     const { result } = renderHook(() => useSceneMode());
     act(() => result.current.setQuality('low'));

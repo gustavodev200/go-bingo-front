@@ -19,6 +19,13 @@ describe('useCelebrationDelay', () => {
     expect(result.current).toBe(true);
   });
 
+  it('does not celebrate when the first known state is already in game (reload mid-game)', () => {
+    const { result, rerender } = renderHook(({ inGame }: { inGame: boolean | null }) => useCelebrationDelay(inGame, true), { initialProps: { inGame: null as boolean | null } });
+    expect(result.current).toBe(false);
+    rerender({ inGame: true });
+    expect(result.current).toBe(true);
+  });
+
   it('does not delay when the room is already in game on arrival (reconnect)', () => {
     const { result } = renderHook(() => useCelebrationDelay(true, true));
     expect(result.current).toBe(true);

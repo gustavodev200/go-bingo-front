@@ -25,8 +25,9 @@ export function useSceneMode() {
   const [preferred, setPreferredState] = useState<DisplayMode | null>(readPreferredMode);
   const [quality, setQualityState] = useState<QualityOverride>(readQualityOverride);
   const [contextLosses, setContextLosses] = useState(0);
+  const [failed, setFailed] = useState(false);
 
-  const { mode, reason } = pickDisplayMode({ webgl2, reducedMotion, preferred, contextLosses });
+  const { mode, reason } = pickDisplayMode({ webgl2, reducedMotion, preferred, contextLosses, failed });
 
   const setPreferred = useCallback((next: DisplayMode) => {
     writePreferredMode(next);
@@ -37,6 +38,7 @@ export function useSceneMode() {
     setQualityState(next);
   }, []);
   const reportContextLoss = useCallback(() => setContextLosses((n) => n + 1), []);
+  const reportFailure = useCallback(() => setFailed(true), []);
 
-  return { mode, reason, setPreferred, quality, setQuality, reportContextLoss, stageKey: contextLosses };
+  return { mode, reason, setPreferred, quality, setQuality, reportContextLoss, reportFailure, stageKey: contextLosses };
 }

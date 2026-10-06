@@ -18,7 +18,7 @@ vi.mock('@/features/profile/profile-context', () => ({
   useProfile: () => ({ profile: { id: ME, nickname: 'Eu', isGuest: false, points: 0 }, refresh: vi.fn() }),
 }));
 vi.mock('./use-game-connection', () => ({ useGameConnection: () => actions }));
-const SCENE_2D = { mode: '2d' as '2d' | '3d', reason: 'user' as string, setPreferred: vi.fn(), quality: 'auto', setQuality: vi.fn(), reportContextLoss: vi.fn(), stageKey: 0 };
+const SCENE_2D = { mode: '2d' as '2d' | '3d', reason: 'user' as string, setPreferred: vi.fn(), quality: 'auto', setQuality: vi.fn(), reportContextLoss: vi.fn(), reportFailure: vi.fn(), stageKey: 0 };
 const sceneMode = vi.hoisted(() => ({ value: null as unknown as typeof SCENE_2D }));
 vi.mock('./use-scene-mode', () => ({ useSceneMode: () => sceneMode.value }));
 vi.mock('./scene3d/lobby-stage-lazy', () => ({
@@ -79,6 +79,25 @@ describe('RoomScreen', () => {
     sceneMode.value = { ...SCENE_2D, mode: '2d', reason: 'context-lost' };
     renderWith(room());
     expect(toast).toHaveBeenCalledWith('Modo 2D ativado para economizar o aparelho');
+  });
+
+  it('3D mode: reloading mid-game goes straight to the game, no celebration', () => {
+    sceneMode.value = { ...SCENE_2D, mode: '3d', reason: 'ok' };
+    renderWith(
+      room({
+        status: 'IN_GAME',
+        myCard: { id: '00000000-0000-4000-8000-0000000000aa', grid, marked: [] },
+        game: { id: '00000000-0000-4000-8000-0000000000bb', drawn: [], drawIntervalMs: 5000, remaining: { [ME]: 24 } },
+      }),
+    );
+    expect(screen.queryByTestId('lobby-stage')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /bingo/i })).toBeInTheDocument();
+  });
+
+  it('warns when the 3D stage could not load', () => {
+    sceneMode.value = { ...SCENE_2D, mode: '2d', reason: 'failed' };
+    renderWith(room());
+    expect(toast).toHaveBeenCalledWith('Não foi possível carregar o 3D; usando o modo 2D.');
   });
 
   it('3D mode: celebrates on start before switching to the game', () => {

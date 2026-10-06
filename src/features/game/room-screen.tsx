@@ -13,6 +13,7 @@ import { LobbyView } from './lobby-view';
 import { newlyOneAway } from './one-away';
 import { ResultDialog } from './result-dialog';
 import { SceneControls } from './scene-controls';
+import { StageErrorBoundary } from './stage-error-boundary';
 import { LobbyStageLazy } from './scene3d/lobby-stage-lazy';
 import { useGameStore } from './store';
 import { useCelebrationDelay } from './use-celebration-delay';
@@ -41,9 +42,10 @@ export function RoomScreen({ code }: { code: string }) {
   useWakeLock(snapshot?.status === 'IN_GAME');
   const scene = useSceneMode();
   const inGame = snapshot?.status === 'IN_GAME' || showResult;
-  const showGame = useCelebrationDelay(inGame, scene.mode === '3d');
+  const showGame = useCelebrationDelay(snapshot ? inGame : null, scene.mode === '3d');
   useEffect(() => {
     if (scene.reason === 'context-lost') toast('Modo 2D ativado para economizar o aparelho');
+    if (scene.reason === 'failed') toast('Não foi possível carregar o 3D; usando o modo 2D.');
   }, [scene.reason]);
 
   // "Fulano está por 1!"
@@ -84,14 +86,16 @@ export function RoomScreen({ code }: { code: string }) {
         <>
           {scene.mode === '3d' && (
             <div className="h-[40dvh] w-full landscape:h-[55dvh]">
-              <LobbyStageLazy
-                key={scene.stageKey}
-                roomName={snapshot.name}
-                code={snapshot.code}
-                celebrating={inGame}
-                qualityOverride={scene.quality}
-                onContextLost={scene.reportContextLoss}
-              />
+              <StageErrorBoundary onError={scene.reportFailure}>
+                <LobbyStageLazy
+                  key={scene.stageKey}
+                  roomName={snapshot.name}
+                  code={snapshot.code}
+                  celebrating={inGame}
+                  qualityOverride={scene.quality}
+                  onContextLost={scene.reportContextLoss}
+                />
+              </StageErrorBoundary>
             </div>
           )}
           <SceneControls mode={scene.mode} quality={scene.quality} onModeChange={scene.setPreferred} onQualityChange={scene.setQuality} />
