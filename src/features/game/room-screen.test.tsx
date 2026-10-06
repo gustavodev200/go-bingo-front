@@ -18,6 +18,16 @@ vi.mock('@/features/profile/profile-context', () => ({
   useProfile: () => ({ profile: { id: ME, nickname: 'Eu', isGuest: false, points: 0 }, refresh: vi.fn() }),
 }));
 vi.mock('./use-game-connection', () => ({ useGameConnection: () => actions }));
+const SCENE_2D = { mode: '2d' as '2d' | '3d', reason: 'user' as string, setPreferred: vi.fn(), quality: 'auto', setQuality: vi.fn(), reportContextLoss: vi.fn(), reportFailure: vi.fn(), stageKey: 0 };
+const sceneMode = vi.hoisted(() => ({ value: null as unknown as typeof SCENE_2D }));
+vi.mock('./use-scene-mode', () => ({ useSceneMode: () => sceneMode.value }));
+vi.mock('./scene3d/lobby-stage-lazy', () => ({
+  LobbyStageLazy: (props: { celebrating: boolean; onContextLost: () => void }) => (
+    <div data-testid="lobby-stage" data-celebrating={String(props.celebrating)}>
+      <button onClick={props.onContextLost}>perder contexto</button>
+    </div>
+  ),
+}));
 
 function room(overrides: Partial<RoomSnapshot> = {}): RoomSnapshot {
   return {
@@ -39,7 +49,80 @@ function renderWith(snapshot: RoomSnapshot | null) {
 }
 
 describe('RoomScreen', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useGameStore.getState().reset(ME); // testes não herdam a sala do anterior
+    sceneMode.value = { ...SCENE_2D };
+  });
+
+  it('2D mode: lobby HUD only, no canvas', () => {
+    renderWith(room());
+    expect(screen.queryByTestId('lobby-stage')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Ver em 3D' })).toBeInTheDocument();
+  });
+
+  it('3D mode: stage above the same lobby HUD', () => {
+    sceneMode.value = { ...SCENE_2D, mode: '3d', reason: 'ok' };
+    renderWith(room());
+    expect(screen.getByTestId('lobby-stage')).toHaveAttribute('data-celebrating', 'false');
+    expect(screen.getByText('Amigos')).toBeInTheDocument(); // HUD continua
+  });
+
+  it('reports a lost WebGL context', async () => {
+    sceneMode.value = { ...SCENE_2D, mode: '3d', reason: 'ok' };
+    renderWith(room());
+    await userEvent.click(screen.getByRole('button', { name: 'perder contexto' }));
+    expect(sceneMode.value.reportContextLoss).toHaveBeenCalled();
+  });
+
+  it('warns when it falls back to 2D after losing the context', () => {
+    sceneMode.value = { ...SCENE_2D, mode: '2d', reason: 'context-lost' };
+    renderWith(room());
+    expect(toast).toHaveBeenCalledWith('Modo 2D ativado para economizar o aparelho');
+  });
+
+  it('3D mode: reloading mid-game goes straight to the game, no celebration', () => {
+    sceneMode.value = { ...SCENE_2D, mode: '3d', reason: 'ok' };
+    renderWith(
+      room({
+        status: 'IN_GAME',
+        myCard: { id: '00000000-0000-4000-8000-0000000000aa', grid, marked: [] },
+        game: { id: '00000000-0000-4000-8000-0000000000bb', drawn: [], drawIntervalMs: 5000, remaining: { [ME]: 24 } },
+      }),
+    );
+    expect(screen.queryByTestId('lobby-stage')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /bingo/i })).toBeInTheDocument();
+  });
+
+  it('warns when the 3D stage could not load', () => {
+    sceneMode.value = { ...SCENE_2D, mode: '2d', reason: 'failed' };
+    renderWith(room());
+    expect(toast).toHaveBeenCalledWith('Não foi possível carregar o 3D; usando o modo 2D.');
+  });
+
+  it('3D mode: celebrates on start before switching to the game', () => {
+    vi.useFakeTimers();
+    try {
+      sceneMode.value = { ...SCENE_2D, mode: '3d', reason: 'ok' };
+      renderWith(room());
+      act(() =>
+        useGameStore.getState().dispatch({
+          event: 'room:state',
+          payload: room({
+            status: 'IN_GAME',
+            myCard: { id: '00000000-0000-4000-8000-0000000000aa', grid, marked: [] },
+            game: { id: '00000000-0000-4000-8000-0000000000bb', drawn: [], drawIntervalMs: 5000, remaining: { [ME]: 24 } },
+          }),
+        }),
+      );
+      expect(screen.getByTestId('lobby-stage')).toHaveAttribute('data-celebrating', 'true');
+      act(() => vi.advanceTimersByTime(1200));
+      expect(screen.queryByTestId('lobby-stage')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /bingo/i })).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 
   it('holds a screen wake lock only while the game is running', async () => {
     const sentinel = { released: false, release: vi.fn(async () => undefined) };
