@@ -120,3 +120,75 @@ describe('useGameConnection', () => {
     expect(toastError).toHaveBeenCalledWith('Sem conexão');
   });
 });
+
+describe('useGameConnection robustness', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    socket = new FakeSocket();
+    useGameStore.setState(initialGameState(ME));
+  });
+
+  it('ignores a room:state for another room the user still belongs to', async () => {
+    await connect();
+    act(() => socket.fire('room:state', { ...snapshot, code: 'ZZZ999', name: 'Outra sala' }));
+    expect(useGameStore.getState().snapshot?.code).toBe('ABC234');
+  });
+
+  it('after an exit the socket disconnects and never rejoins', async () => {
+    await connect();
+    act(() => socket.fire('room:member_left', { userId: ME, reason: 'kicked' }));
+    expect(useGameStore.getState().exit).toEqual({ reason: 'kicked' });
+    expect(socket.connected).toBe(false);
+    await act(async () => {
+      socket.fire('connect');
+      await flush();
+    });
+    expect(socket.emitted.filter((e) => e.event === 'room:join')).toHaveLength(1);
+  });
+
+  it('keeps events that arrive while the join is pending', async () => {
+    let resolveJoin!: (ack: unknown) => void;
+    const inGame: RoomSnapshot = { ...snapshot, status: 'IN_GAME', game: { id: '00000000-0000-4000-8000-0000000000bb', drawn: [3], drawIntervalMs: 5000, remaining: {} } };
+    socket.acks.set('room:join', new Promise((resolve) => (resolveJoin = resolve)));
+    renderHook(() => useGameConnection('ABC234'));
+    act(() => socket.fire('connect'));
+    act(() => socket.fire('game:number_drawn', { seq: 2, number: 7, letter: 'B', drawnAt: '' }));
+    await act(async () => {
+      resolveJoin({ ok: true, data: inGame });
+      await flush();
+    });
+    expect(useGameStore.getState().snapshot?.game?.drawn).toEqual([3, 7]);
+  });
+
+  it('retries the join when the server does not answer instead of leaving', async () => {
+    vi.useFakeTimers();
+    try {
+      renderHook(() => useGameConnection('ABC234'));
+      await act(async () => {
+        socket.fire('connect'); // sem ack configurado → timeout
+        await vi.advanceTimersByTimeAsync(0);
+      });
+      expect(useGameStore.getState().exit).toBeNull();
+      socket.acks.set('room:join', { ok: true, data: snapshot });
+      await act(() => vi.advanceTimersByTimeAsync(5_000));
+      expect(useGameStore.getState().snapshot?.code).toBe('ABC234');
+      expect(useGameStore.getState().connection).toBe('online');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('gives up after repeated timeouts', async () => {
+    vi.useFakeTimers();
+    try {
+      renderHook(() => useGameConnection('ABC234'));
+      await act(async () => {
+        socket.fire('connect');
+        await vi.advanceTimersByTimeAsync(60_000);
+      });
+      expect(useGameStore.getState().exit?.reason).toBe('error');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});

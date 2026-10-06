@@ -18,6 +18,9 @@ export interface GameActions {
   replay(): Promise<void>;
 }
 
+const JOIN_RETRY_MS = 1_000;
+const JOIN_MAX_ATTEMPTS = 5;
+
 function report<T>(res: Ack<T>): res is { ok: true; data: T } {
   if (!res.ok) toast.error(res.error.message);
   return res.ok;
@@ -28,23 +31,56 @@ export function useGameConnection(code: string): GameActions {
 
   useEffect(() => {
     let active = true;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    // Eventos que chegam antes da resposta do room:join são guardados e reaplicados
+    // sobre o snapshot (o reducer é idempotente para números repetidos).
+    let joining = true;
+    let pending: ServerMessage[] = [];
     const socket = createGameSocket();
     socketRef.current = socket;
     const { dispatch, setConnection, setExit } = useGameStore.getState();
 
     for (const event of Object.values(ServerEvents)) {
-      socket.on(event, (payload: unknown) => dispatch({ event, payload } as ServerMessage));
+      socket.on(event, (payload: unknown) => {
+        const msg = { event, payload } as ServerMessage;
+        // room:state também chega pelo canal do usuário, inclusive de outra sala da qual ele ainda é membro.
+        if (msg.event === 'room:state' && msg.payload.code !== code) return;
+        if (joining) pending.push(msg);
+        else dispatch(msg);
+      });
     }
-    socket.on('connect', () => {
+
+    function join(attempt: number) {
       void emitAck(socket, 'room:join', { code }).then((res) => {
-        if (!active) return;
+        if (!active || useGameStore.getState().exit) return;
         if (res.ok) {
           dispatch({ event: 'room:state', payload: res.data });
+          pending.forEach(dispatch);
+          pending = [];
+          joining = false;
           setConnection('online');
+        } else if (res.error.code === 'INTERNAL' && attempt < JOIN_MAX_ATTEMPTS) {
+          // Sem resposta (rede lenta): tenta de novo em vez de expulsar o jogador.
+          setConnection('reconnecting');
+          retryTimer = setTimeout(() => join(attempt + 1), JOIN_RETRY_MS);
         } else {
+          pending = [];
           setExit({ reason: res.error.code === 'NOT_FOUND' ? 'not_found' : 'error', message: res.error.message });
         }
       });
+    }
+
+    socket.on('connect', () => {
+      if (useGameStore.getState().exit) return;
+      joining = true;
+      pending = [];
+      clearTimeout(retryTimer);
+      join(1);
+    });
+
+    // Ao sair (removido, sala encerrada, erro), desliga o socket: reconectar faria um room:join silencioso.
+    const unsubscribe = useGameStore.subscribe((state) => {
+      if (state.exit && socket.connected) socket.disconnect();
     });
     socket.on('disconnect', () => setConnection('reconnecting'));
     socket.on('connect_error', (error) => {
@@ -55,6 +91,8 @@ export function useGameConnection(code: string): GameActions {
 
     return () => {
       active = false;
+      clearTimeout(retryTimer);
+      unsubscribe();
       socket.removeAllListeners();
       socket.disconnect();
       socketRef.current = null;
