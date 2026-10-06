@@ -7,6 +7,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
+    exclude: ['e2e/**', 'node_modules/**'],
     setupFiles: ['./vitest.setup.ts'],
     env: {
       NEXT_PUBLIC_SUPABASE_URL: 'https://test.supabase.local',
