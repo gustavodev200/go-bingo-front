@@ -22,6 +22,6 @@ test('código inexistente não derruba o app e mostra erro', async ({ browser })
 });
 
 test('rota protegida sem sessão redireciona ao login preservando o destino', async ({ page }) => {
-  await page.goto('/criar');
-  await expect(page).toHaveURL(/\/login\?next=%2Fcriar/);
+  await page.goto('/create');
+  await expect(page).toHaveURL(/\/login\?next=%2Fcreate/);
 });

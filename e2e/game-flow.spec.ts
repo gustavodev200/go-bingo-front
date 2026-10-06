@@ -89,7 +89,7 @@ test('@mobile modo 2D (movimento reduzido) joga até o início da partida', asyn
   const page = await context.newPage();
   await page.goto('/login');
   await page.getByRole('button', { name: 'Jogar como convidado' }).click();
-  await expect(page).toHaveURL(/\/apelido/, { timeout: 30_000 });
+  await expect(page).toHaveURL(/\/nickname/, { timeout: 30_000 });
   await page.getByLabel('Apelido').fill('Eva');
   await page.getByRole('button', { name: 'Continuar' }).click();
   const code = await createRoom(page, 'Sala 2D');

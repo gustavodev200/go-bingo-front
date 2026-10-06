@@ -6,15 +6,15 @@ export async function newGuest(browser: Browser, nickname: string): Promise<{ pa
   await page.goto('/login');
   await page.getByRole('button', { name: 'Jogar como convidado' }).click();
   // O Turnstile de teste (site key 1x00…AA) resolve sozinho e dispara o signInAnonymously.
-  await expect(page).toHaveURL(/\/apelido/, { timeout: 30_000 });
+  await expect(page).toHaveURL(/\/nickname/, { timeout: 30_000 });
   await page.getByLabel('Apelido').fill(nickname);
   await page.getByRole('button', { name: 'Continuar' }).click();
-  await expect(page).not.toHaveURL(/\/apelido/);
+  await expect(page).not.toHaveURL(/\/nickname/);
   return { page, context };
 }
 
 export async function createRoom(page: Page, name: string): Promise<string> {
-  await page.goto('/criar');
+  await page.goto('/create');
   await page.getByLabel('Nome da sala').fill(name);
   await page.getByRole('button', { name: 'Criar sala', exact: true }).click();
   await expect(page).toHaveURL(/\/[A-Z0-9]{6}$/);

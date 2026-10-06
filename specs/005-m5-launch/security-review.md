@@ -28,7 +28,7 @@ nenhum login (o `.env.local` aponta para o projeto de dev real) e nenhum e2e dep
   - `withSentryConfig` envolve o build inteiro; sem `SENTRY_AUTH_TOKEN` não sobe source map (build verde sem token).
   - `useGameConnection(code, onDrawLatency)` e `useSceneMode(onContextLoss)` ganharam callback opcional — único
     consumidor é `RoomScreen`; testes antigos continuam verdes.
-  - `safeNextPath` (corrigido nesta fase) é usado por `/login`, `/apelido` e `/auth/callback` — os três reavaliados.
+  - `safeNextPath` (corrigido nesta fase) é usado por `/login`, `/nickname` e `/auth/callback` — os três reavaliados.
 
 ## "Não confie no frontend"
 
@@ -44,10 +44,10 @@ Vulnerabilidade: Open redirect — next normalizado para URL protocol-relative (
 Severidade: MEDIUM
 Arquivo: src/lib/safe-next.ts (consumidor explorável: src/features/auth/nickname-form.tsx:25)
 Linha: 5-12 (antes da correção)
-Componente/Endpoint: /apelido?next=
+Componente/Endpoint: /nickname?next=
 Evidência: CONFIRMADO — 5 casos novos em src/lib/safe-next.test.ts falhavam (recebido "//evil.com"); o app
   router do Next 16.3.8 trata URL de outro origin como navegação MPA (app-router-instance.js, isExternalURL).
-Como pode ser explorada: vítima abre https://<app>/apelido?next=/.//evil.com (ou via /login?next=... se ainda
+Como pode ser explorada: vítima abre https://<app>/nickname?next=/.//evil.com (ou via /login?next=... se ainda
   não tem sessão), escolhe o apelido e é levada para evil.com (phishing com tela falsa de login).
 Impacto: phishing a partir do domínio legítimo. /auth/callback não era explorável (prefixa o origin).
 Correção recomendada: rejeitar pathname normalizado que comece com "//". APLICADA — commit 6fc9bf2.
@@ -65,7 +65,7 @@ Como pode ser explorada: só em conjunto com um XSS futuro — a CSP não bloque
   cookies do Supabase são legíveis por JS.
 Impacto: CSP não serve de segunda barreira contra XSS.
 Correção recomendada: nonce por requisição no proxy + 'strict-dynamic'. Viabilidade: a doc do Next exige
-  renderização dinâmica para nonce (páginas estáticas não recebem nonce); hoje /, /criar e /ranking são estáticas
+  renderização dinâmica para nonce (páginas estáticas não recebem nonce); hoje /, /create e /ranking são estáticas
   e o check:bundle lê esse HTML. Exige connection()/dinâmico em todas as páginas, ajuste do check:bundle e
   revalidar Turnstile/Sentry/workers blob do troika — não trivial, não implementado. PENDENTE — decisão do usuário.
 Como validar a correção: header sem 'unsafe-inline' + e2e com trackCspViolations sem violações.
@@ -118,7 +118,7 @@ websocket; I6 Turnstile depende do CAPTCHA no Supabase de produção; I7 allowli
 ### Autenticação e Autorização (`references/auth-authz.md`)
 
 - [x] OAuth PKCE e troca do `code` no servidor — Resolvido — `auth/callback/route.ts`; `route.test.ts`
-- [x] `next` só interno — Resolvido — M1 corrigido (`6fc9bf2`); `/login`, `/apelido`, `/auth/callback` usam `safeNextPath`
+- [x] `next` só interno — Resolvido — M1 corrigido (`6fc9bf2`); `/login`, `/nickname`, `/auth/callback` usam `safeNextPath`
 - [x] Sessão verificada no proxy com `getClaims()` (assinatura) — Resolvido — `lib/supabase/proxy.ts`; `proxy.test.ts`
 - [x] Matcher do proxy cobre as páginas e exclui só estático/PWA — Resolvido — `proxy.test.ts` (I2 informativo)
 - [x] Nenhuma permissão decidida só no front — Resolvido — host/kick/start no servidor; `e2e/access-rules.spec.ts`
@@ -130,7 +130,7 @@ websocket; I6 Turnstile depende do CAPTCHA no Supabase de produção; I7 allowli
 
 - [x] XSS: `dangerouslySetInnerHTML`/`innerHTML`/`document.write`/`eval` = 0 em `src` e `e2e` — Resolvido
 - [x] Apelido/nome da sala só como texto (JSX, `fillText`, `<Text>` do drei) — Resolvido — ver auditoria §14-25
-- [x] `/auth/erro` não reflete o `code` — Resolvido — só mensagens de um mapa fixo
+- [x] `/auth/error` não reflete o `code` — Resolvido — só mensagens de um mapa fixo
 - [x] CSRF — Não aplicável — API por header; callback protegido pelo verifier PKCE
 - [x] SQL — Não aplicável no app; `e2e/support/db.ts` parametrizado e só no banco de teste
 - [x] SSRF / Path traversal / Command injection — Não aplicável (`pwa-icons/[file]` só de lista fixa)

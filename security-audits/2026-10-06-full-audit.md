@@ -13,7 +13,7 @@ validar** — marcados "re-checar no primeiro deploy". Nenhum login foi feito (o
 projeto de dev real do usuário) e nenhum e2e dependente de Supabase foi rodado.
 
 Resultado: nenhum CRITICAL/HIGH. 1 MEDIUM **corrigido com teste** (open redirect pelo `next` de
-`/apelido`), 4 LOW pendentes de decisão do usuário, 7 informativos.
+`/nickname`), 4 LOW pendentes de decisão do usuário, 7 informativos.
 
 SECURITY STATUS: **NO CRITICAL-HIGH ISSUES FOUND** (dentro do escopo e dos testes realizados).
 
@@ -39,9 +39,9 @@ por DSN (M5). CSP e headers de segurança só no build de produção (M5).
 |---|---|---|---|---|
 | `/login?next=` | página (server) | pública | `next` → `safeNextPath` | passa `next` ao OAuth e ao convidado |
 | `/auth/callback?code=&next=&error*=` | route handler | pública | `code` (PKCE), `next` | `exchangeCodeForSession`; redirect `${origin}${safeNext}` |
-| `/auth/erro?code=` | página | pública | `code` | só chaves de um mapa fixo; texto |
-| `/apelido?next=` | página (server) + form | sessão | `next`, apelido | **M1** (corrigido) |
-| `/`, `/criar`, `/ranking`, `/[code]` | páginas | sessão (proxy) + JWT na API | código da sala, nome, maxPlayers | dados só via API |
+| `/auth/error?code=` | página | pública | `code` | só chaves de um mapa fixo; texto |
+| `/nickname?next=` | página (server) + form | sessão | `next`, apelido | **M1** (corrigido) |
+| `/`, `/create`, `/ranking`, `/[code]` | páginas | sessão (proxy) + JWT na API | código da sala, nome, maxPlayers | dados só via API |
 | `/serwist/sw.js`, `/pwa-icons/[file]`, `/manifest.webmanifest`, `/~offline` | rotas estáticas | pública | `file` (lista fixa) | |
 | Socket.IO `/game` (cliente) | WS | `auth.token` | eventos tipados (`contracts/events.ts`) | só `websocket` |
 | Sentry (DSN público) | integração | — | eventos | `dataCollection` desligado |
@@ -73,18 +73,18 @@ Nenhum.
 
 ## 8. Medium Findings
 
-### M1 — Open redirect pelo `next` de `/apelido` — **CORRIGIDO** (`6fc9bf2`)
+### M1 — Open redirect pelo `next` de `/nickname` — **CORRIGIDO** (`6fc9bf2`)
 
 ```text
 Vulnerabilidade: Open redirect (next normalizado para URL protocol-relative)
 Severidade: MEDIUM
 Arquivo: src/lib/safe-next.ts (consumidor: src/features/auth/nickname-form.tsx:25)
 Linha: 5-12 (antes da correção)
-Componente/Endpoint: /apelido?next=…  (também /login, /auth/callback, que usam a mesma função)
+Componente/Endpoint: /nickname?next=…  (também /login, /auth/callback, que usam a mesma função)
 Evidência: CONFIRMADO — safeNextPath('/.//evil.com') devolvia '//evil.com' (5 casos novos em
   safe-next.test.ts falhavam); NicknameForm faz router.replace(next) e o app router do Next
   (app-router-instance.js: isExternalURL → navegação MPA) sai para https://evil.com.
-Como pode ser explorada: link https://<app>/apelido?next=/.//evil.com (ou /login?next=%2Fapelido%3Fnext%3D%2F.%2F%2Fevil.com
+Como pode ser explorada: link https://<app>/nickname?next=/.//evil.com (ou /login?next=%2Fnickname%3Fnext%3D%2F.%2F%2Fevil.com
   para quem não tem sessão). Depois de escolher o apelido, a vítima cai no site do atacante (phishing
   "entre de novo com Google").
 Impacto: phishing a partir do domínio legítimo; sem roubo direto de sessão.
@@ -105,7 +105,7 @@ Evidência: CONFIRMADO pelo código (decisão do plano do M5)
 Impacto: se surgir um XSS, a CSP não o bloqueia; os cookies do Supabase são legíveis por JS (I1),
   então XSS = sequestro de sessão.
 Viabilidade de nonce: a doc do Next exige renderização dinâmica para nonce (o proxy gera o nonce e o
-  Next injeta durante o SSR; página estática não recebe nonce). Hoje `/`, `/criar`, `/ranking` são
+  Next injeta durante o SSR; página estática não recebe nonce). Hoje `/`, `/create`, `/ranking` são
   estáticas e `scripts/check-bundle.mjs` lê o HTML gerado delas. O proxy já roda em toda rota, então
   gerar o nonce lá é simples, mas obriga `await connection()`/dinâmico em todas as páginas, `'strict-dynamic'`
   e revalidar Turnstile, Sentry e os workers blob do troika. Não é trivial → não implementado.
@@ -208,19 +208,19 @@ Correção recomendada: `permissions: { contents: read }` no topo; opcionalmente
 
 | Campo | Onde | Tipo | Min | Max | Caracteres | Validação backend | Validação frontend | Status |
 |---|---|---|---|---|---|---|---|---|
-| `next` | `/login`, `/apelido`, `/auth/callback` | path | — | — | caminho interno | — | `safeNextPath` | OK após M1 |
+| `next` | `/login`, `/nickname`, `/auth/callback` | path | — | — | caminho interno | — | `safeNextPath` | OK após M1 |
 | `code` (OAuth) | `/auth/callback` | string | — | — | — | Supabase (PKCE verifier no cookie) | — | OK |
-| `code` (erro) | `/auth/erro` | string | — | — | — | — | mapa fixo | OK |
-| apelido | `/apelido` → `PATCH /me` | string | 3 | 16 | `[A-Za-z0-9_À-ú ]` + blocklist | `nicknameSchema` | mesmo schema + `maxLength` | OK |
-| nome da sala | `/criar` → `POST /rooms` | string | 3 | 24 | livre (texto) | `createRoomSchema` | mesmo schema | OK (render como texto) |
-| maxPlayers | `/criar` | literal | 10/15/25 | — | — | Zod | `<select>` + Zod | OK |
+| `code` (erro) | `/auth/error` | string | — | — | — | — | mapa fixo | OK |
+| apelido | `/nickname` → `PATCH /me` | string | 3 | 16 | `[A-Za-z0-9_À-ú ]` + blocklist | `nicknameSchema` | mesmo schema + `maxLength` | OK |
+| nome da sala | `/create` → `POST /rooms` | string | 3 | 24 | livre (texto) | `createRoomSchema` | mesmo schema | OK (render como texto) |
+| maxPlayers | `/create` | literal | 10/15/25 | — | — | Zod | `<select>` + Zod | OK |
 | código da sala | `/[code]`, entrar por código | string | 6 | 6 | alfabeto sem 0/O/1/I | `roomCodeSchema` | `roomCodeSchema` | OK |
 | `?bots=` | sala | int | 0 | MAX_SLOTS | — | — (não vai ao servidor) | `parseBots` | OK |
 
 ## 14-25. Auditorias específicas
 
 - **Authentication**: `/auth/callback` troca o `code` por sessão (PKCE do `@supabase/ssr`), erros do provedor vão
-  para `/auth/erro` com o código URL-encoded; `next` sanitizado. Convidado: `signInAnonymously({ captchaToken })`.
+  para `/auth/error` com o código URL-encoded; `next` sanitizado. Convidado: `signInAnonymously({ captchaToken })`.
   Upgrade: `linkIdentity` com `redirectTo` no próprio origin.
 - **Authorization**: `src/proxy.ts` + `lib/supabase/proxy.ts` usam `getClaims()` (verifica a assinatura) e mandam
   quem não tem sessão para `/login`; `/login` e `/auth/*` públicos. Nenhuma decisão de permissão fica só no front.
@@ -279,7 +279,7 @@ SECURITY STATUS: **NO CRITICAL-HIGH ISSUES FOUND**
 
 Top problemas (prioridade):
 
-1. M1 — open redirect via `next` em `/apelido` — `src/lib/safe-next.ts` — **corrigido** (`6fc9bf2`).
+1. M1 — open redirect via `next` em `/nickname` — `src/lib/safe-next.ts` — **corrigido** (`6fc9bf2`).
 2. L1 — CSP com `'unsafe-inline'` — `security-headers.ts:31` — nonce + `'strict-dynamic'` — Média.
 3. L3 — HIGH do `npm audit` no CLI `shadcn` — `package.json:36` — mover para devDependencies — Média.
 4. L2 — jsdelivr em runtime/CSP — `security-headers.ts:26` — fonte local — Baixa.

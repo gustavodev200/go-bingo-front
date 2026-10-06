@@ -29,7 +29,7 @@ describe('updateSession', () => {
   });
 
   it('lets public routes through without a session', async () => {
-    for (const path of ['/login', '/auth/callback', '/auth/erro']) {
+    for (const path of ['/login', '/auth/callback', '/auth/error']) {
       const res = await updateSession(new NextRequest(`http://localhost:3000${path}`));
       expect(res.headers.get('location')).toBeNull();
     }

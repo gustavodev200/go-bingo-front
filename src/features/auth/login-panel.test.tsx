@@ -32,7 +32,7 @@ describe('LoginPanel', () => {
     await userEvent.click(screen.getByRole('button', { name: /jogar como convidado/i }));
     await userEvent.click(screen.getByRole('button', { name: 'captcha' }));
     expect(signInAnonymously).toHaveBeenCalledWith({ options: { captchaToken: 'captcha-ok' } });
-    expect(replace).toHaveBeenCalledWith('/apelido?next=%2FABC234');
+    expect(replace).toHaveBeenCalledWith('/nickname?next=%2FABC234');
   });
 
   it('in-app browser: hides Google, explains, keeps guest', () => {

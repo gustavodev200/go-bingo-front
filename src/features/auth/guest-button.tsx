@@ -19,7 +19,7 @@ export function GuestButton({ next }: { next: string }) {
       toast.error('Não foi possível entrar como convidado. Tente novamente.');
       return;
     }
-    router.replace(`/apelido?next=${encodeURIComponent(next)}`);
+    router.replace(`/nickname?next=${encodeURIComponent(next)}`);
   }
 
   if (verifying) {

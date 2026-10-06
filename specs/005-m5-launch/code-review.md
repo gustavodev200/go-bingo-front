@@ -13,7 +13,7 @@ correção desta fase (`6fc9bf2`). Skill: `.claude/skills/code-review/SKILL.md`.
 | `src/lib/safe-next.ts:10` | média | `"/.//evil.com"` normalizava para `"//evil.com"` e o `NicknameForm` navegava para fora do site (M1 da Security Review). | **Corrigido** em `6fc9bf2` (rejeita pathname que comece com `//`), com 5 casos de teste que falhavam antes. |
 | `src/lib/telemetry.ts:59` / `src/features/game/room-screen.tsx:45-52` | média | Cada visita a uma sala com algo medido vira um `captureMessage` no Sentry. Isso consome a mesma cota de eventos dos erros; com o beta crescendo, a cota pode acabar e erros reais passam a ser descartados. | Amostrar o resumo (ex.: enviar só 10–20% das sessões, `Math.random() < RATE` em `reportSessionSummary`) ou usar a API de métricas do Sentry; manter erros sem amostragem. |
 | `src/features/game/use-game-connection.ts:55-58` | baixa | A latência do sorteio é `Date.now() − drawnAt`, então inclui a diferença entre o relógio do aparelho e o do servidor (está documentado); `addDrawLatencyMs` descarta valores negativos, o que puxa o p95 para cima em aparelhos adiantados. | Aceitável para tendência; se o número virar SLO, medir o offset do relógio no `room:join` (horário do servidor no snapshot) e descontar. |
-| `src/app/auth/erro/page.tsx:15` | baixa | `MESSAGES[code]` com `?code=constructor` (ou `toString`) devolve uma função do protótipo, e o `<p>` fica vazio em vez da mensagem padrão. Não é segurança: não reflete texto. É anterior ao M5. | `Object.hasOwn(MESSAGES, code) ? MESSAGES[code] : PADRÃO`. |
+| `src/app/auth/error/page.tsx:15` | baixa | `MESSAGES[code]` com `?code=constructor` (ou `toString`) devolve uma função do protótipo, e o `<p>` fica vazio em vez da mensagem padrão. Não é segurança: não reflete texto. É anterior ao M5. | `Object.hasOwn(MESSAGES, code) ? MESSAGES[code] : PADRÃO`. |
 | `e2e/game-flow.spec.ts:28,49` | baixa | Violações de CSP só são checadas na página do host do teste de partida completa; o palco 3D do convidado e o fluxo de login/Turnstile não são vigiados. | Chamar `trackCspViolations` também em `newGuest` (`e2e/support/players.ts`) e checar no fim de cada teste. |
 | `next.config.ts:16-17` | baixa | `process.env.NEXT_PUBLIC_API_URL!` e `process.env.NEXT_PUBLIC_SUPABASE_URL!`: se faltarem no build de produção, `new URL(undefined)` falha com `TypeError: Invalid URL` sem dizer qual variável falta (o `env.ts` diz, mas roda depois). | Opcional: reutilizar `parsePublicEnv(process.env)` no `next.config.ts` para a mensagem ficar clara. |
 
@@ -28,7 +28,7 @@ Pontos verificados sem achado:
 - **Simplicidade/YAGNI**: telemetria é uma função pura com closures (`createSessionTelemetry`) e limites de amostra
   (5000 frames, 200 sorteios); sem lib nova além de `@sentry/nextjs`.
 - **Consistência com o preset**: nada de Prisma no front; Supabase só para Auth; `pg` só em devDependencies, para o e2e.
-- **Performance**: `FpsProbe` só empilha um número por frame (com teto); `check:bundle` garante que `/`, `/criar` e
+- **Performance**: `FpsProbe` só empilha um número por frame (com teto); `check:bundle` garante que `/`, `/create` e
   `/ranking` continuam sem three.js.
 
 ## Confirmação de itens da Security Review
@@ -53,5 +53,5 @@ Security Review. Para aprovar, falta:
 1. Usuário decidir L1–L4: corrigir ou registrar em "Riscos aceitos explicitamente", com aprovação.
 2. Rodar `npm run e2e` contra um ambiente de teste (CI com os secrets `E2E_*`).
 
-As sugestões média/baixa acima (amostrar a telemetria, `Object.hasOwn` no `/auth/erro`, CSP vigiada em mais
+As sugestões média/baixa acima (amostrar a telemetria, `Object.hasOwn` no `/auth/error`, CSP vigiada em mais
 testes) não bloqueiam. A amostragem da telemetria é recomendada antes de abrir o beta.
