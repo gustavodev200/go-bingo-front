@@ -6,7 +6,14 @@ import './globals.css';
 const geistSans = Geist({ variable: '--font-sans', subsets: ['latin'] });
 const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] });
 
-export const metadata: Metadata = { title: 'Go Bingo', description: 'Bingo multiplayer com os amigos' };
+export const metadata: Metadata = {
+  applicationName: 'Go Bingo',
+  title: 'Go Bingo',
+  description: 'Bingo multiplayer com os amigos',
+  appleWebApp: { capable: true, title: 'Go Bingo', statusBarStyle: 'default' },
+  formatDetection: { telephone: false },
+  icons: { apple: '/pwa-icons/icon-192.png' },
+};
 
 export const viewport: Viewport = {
   width: 'device-width',
