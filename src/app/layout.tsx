@@ -27,7 +27,8 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body className="bg-background text-foreground min-h-dvh font-sans antialiased">
+      {/* suppressHydrationWarning: extensões do navegador (ex.: ColorZilla) injetam atributos no <body> antes da hidratação. */}
+      <body className="bg-background text-foreground min-h-dvh font-sans antialiased" suppressHydrationWarning>
         <div className="min-h-dvh pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)]">
           <PwaProvider>
             <OfflineBanner />
