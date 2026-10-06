@@ -1,3 +1,13 @@
+## Rodando o Go Bingo Front
+
+```bash
+cp .env.example .env.local    # Supabase URL/publishable key do seu projeto; API em http://localhost:3333
+npm install
+npm run dev                   # http://localhost:3000
+```
+
+Testes: `npm test`. Contratos (`src/contracts`) são gerados pelo back: `cd ../go-bingo-back && npm run contracts:sync`.
+
 # workspace-agents
 
 Workspace/template pessoal para desenvolvimento de software com agentes de
