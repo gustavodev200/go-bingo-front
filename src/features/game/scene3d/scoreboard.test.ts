@@ -1,4 +1,4 @@
-import { LIT, drawTelao, telaoView, type TelaoCtx, type TelaoView } from './telao';
+import { LIT, drawScoreboard, scoreboardView, type ScoreboardCtx, type ScoreboardView } from './scoreboard';
 
 type Call = { op: 'fillRect' | 'fillText' | 'arc'; args: unknown[]; fillStyle: string; font: string };
 
@@ -15,16 +15,16 @@ function fakeCtx() {
     arc: (...args: unknown[]) => calls.push({ op: 'arc', args, fillStyle: String(ctx.fillStyle), font: ctx.font }),
     fill: () => undefined,
   };
-  return { ctx: ctx as unknown as TelaoCtx, calls, texts: () => calls.filter((c) => c.op === 'fillText').map((c) => String(c.args[0])) };
+  return { ctx: ctx as unknown as ScoreboardCtx, calls, texts: () => calls.filter((c) => c.op === 'fillText').map((c) => String(c.args[0])) };
 }
 
-const draw = (view: TelaoView) => {
+const draw = (view: ScoreboardView) => {
   const f = fakeCtx();
-  drawTelao(f.ctx, view);
+  drawScoreboard(f.ctx, view);
   return f;
 };
 
-describe('drawTelao', () => {
+describe('drawScoreboard', () => {
   it('lobby: room name and code', () => {
     const f = draw({ kind: 'lobby', name: 'Amigos', code: 'ABC234' });
     expect(f.texts()).toEqual(expect.arrayContaining(['Amigos', 'ABC234']));
@@ -57,12 +57,12 @@ describe('drawTelao', () => {
   });
 });
 
-describe('telaoView', () => {
+describe('scoreboardView', () => {
   const base = { phase: 'game' as const, name: 'Sala', code: 'ABC234', drawn: [1, 2], winner: null, ended: false, myUserId: 'me' };
   it('winner beats everything, using the nickname from the store', () =>
-    expect(telaoView({ ...base, winner: { userId: 'x', nickname: 'Ana' }, ended: true })).toEqual({ kind: 'won', nickname: 'Ana', isMe: false }));
-  it('flags my own win', () => expect(telaoView({ ...base, winner: { userId: 'me', nickname: 'Eu' } })).toMatchObject({ isMe: true }));
-  it('ended without winner', () => expect(telaoView({ ...base, ended: true })).toEqual({ kind: 'ended' }));
-  it('game shows the draws', () => expect(telaoView(base)).toEqual({ kind: 'game', drawn: [1, 2] }));
-  it('lobby shows name and code', () => expect(telaoView({ ...base, phase: 'lobby' })).toEqual({ kind: 'lobby', name: 'Sala', code: 'ABC234' }));
+    expect(scoreboardView({ ...base, winner: { userId: 'x', nickname: 'Ana' }, ended: true })).toEqual({ kind: 'won', nickname: 'Ana', isMe: false }));
+  it('flags my own win', () => expect(scoreboardView({ ...base, winner: { userId: 'me', nickname: 'Eu' } })).toMatchObject({ isMe: true }));
+  it('ended without winner', () => expect(scoreboardView({ ...base, ended: true })).toEqual({ kind: 'ended' }));
+  it('game shows the draws', () => expect(scoreboardView(base)).toEqual({ kind: 'game', drawn: [1, 2] }));
+  it('lobby shows name and code', () => expect(scoreboardView({ ...base, phase: 'lobby' })).toEqual({ kind: 'lobby', name: 'Sala', code: 'ABC234' }));
 });

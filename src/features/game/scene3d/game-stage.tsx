@@ -14,7 +14,7 @@ import { NameLabels } from './name-labels';
 import type { QualityOverride } from './quality';
 import { slotPosition } from './slots';
 import { StageCanvas } from './stage-canvas';
-import { telaoView } from './telao';
+import { scoreboardView } from './scoreboard';
 import { useAvatarStates } from './use-avatar-states';
 
 export interface GameStageProps {
@@ -37,7 +37,7 @@ export default function GameStage({ roomName, code, qualityOverride, onContextLo
   const myUserId = useGameStore((s) => s.myUserId);
 
   const screen = useMemo(
-    () => telaoView({ phase: 'game', name: roomName, code, drawn, winner: winner && { userId: winner.userId, nickname: winner.nickname }, ended, myUserId }),
+    () => scoreboardView({ phase: 'game', name: roomName, code, drawn, winner: winner && { userId: winner.userId, nickname: winner.nickname }, ended, myUserId }),
     [roomName, code, drawn, winner, ended, myUserId],
   );
   const winnerState = winner ? list.find((s) => s.userId === winner.userId) : undefined;
