@@ -3,15 +3,21 @@
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
 import type { PerspectiveCamera } from 'three';
-import { cameraFor, orbitPosition } from './camera';
+import { approach, cameraFor, focusOn, orbitPosition, type CameraView } from './camera';
+import type { Vec3 } from './slots';
 
 const MAX_YAW = 0.26; // ~15°
 
-/** Enquadra pelo aspect da região do canvas; arrasto horizontal gira até ±15° e volta com mola. */
-export function CameraRig() {
+/**
+ * Enquadra pelo aspect da região do canvas (lobby ou partida); arrasto horizontal gira até ±15° e volta com mola.
+ * Com `focus`, a câmera desliza até o avatar vencedor.
+ */
+export function CameraRig({ view = 'lobby', focus = null }: { view?: CameraView; focus?: Vec3 | null }) {
   const gl = useThree((s) => s.gl);
   const yaw = useRef(0);
   const targetYaw = useRef(0);
+  const pos = useRef<Vec3 | null>(null);
+  const look = useRef<Vec3 | null>(null);
 
   useEffect(() => {
     const el = gl.domElement;
@@ -42,14 +48,17 @@ export function CameraRig() {
 
   useFrame((state, delta) => {
     const camera = state.camera as PerspectiveCamera;
-    const setup = cameraFor(state.size.width / Math.max(1, state.size.height));
     yaw.current += (targetYaw.current - yaw.current) * Math.min(1, delta * 8);
-    if (camera.fov !== setup.fov) {
-      camera.fov = setup.fov;
+    const setup = focus ? focusOn(focus) : cameraFor(state.size.width / Math.max(1, state.size.height), view);
+    const desired = focus ? setup.position : orbitPosition(setup, yaw.current);
+    pos.current = pos.current ? approach(pos.current, desired, delta, 2.5) : desired;
+    look.current = look.current ? approach(look.current, setup.target, delta, 2.5) : setup.target;
+    if (Math.abs(camera.fov - setup.fov) > 0.01) {
+      camera.fov += (setup.fov - camera.fov) * Math.min(1, delta * 2.5);
       camera.updateProjectionMatrix();
     }
-    camera.position.set(...orbitPosition(setup, yaw.current));
-    camera.lookAt(...setup.target);
+    camera.position.set(...pos.current);
+    camera.lookAt(...look.current);
   });
 
   return null;

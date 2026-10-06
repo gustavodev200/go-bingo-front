@@ -1,20 +1,20 @@
 'use client';
 
-import { Text } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useLayoutEffect, useMemo, useRef } from 'react';
-import { Color, Object3D, type InstancedMesh, type Mesh, type MeshStandardMaterial } from 'three';
+import { Color, Object3D, type InstancedMesh } from 'three';
 import { bulbLevel } from './ambience';
 import { DOOR } from './slots';
+import type { TelaoView } from './telao';
+import { TelaoScreen } from './telao-screen';
 
 const BULBS = 28;
 const BULB_COLOR = new Color('#fde68a');
 const DIM = new Color('#78350f');
 
-/** Salão de game show: chão, plateia em degraus, palco, telão (nome + código), globo parado, porta e lâmpadas. */
-export function Hall({ roomName, code, animatedBulbs, shadows }: { roomName: string; code: string; animatedBulbs: boolean; shadows: boolean }) {
+/** Salão de game show: chão, plateia em degraus, palco, telão (textura), porta e lâmpadas. O globo é um componente à parte. */
+export function Hall({ screen, animatedBulbs, shadows }: { screen: TelaoView; animatedBulbs: boolean; shadows: boolean }) {
   const bulbs = useRef<InstancedMesh>(null);
-  const globe = useRef<Mesh>(null);
   const color = useMemo(() => new Color(), []);
   const bulbPositions = useMemo(
     () =>
@@ -46,8 +46,6 @@ export function Hall({ roomName, code, animatedBulbs, shadows }: { roomName: str
       for (let i = 0; i < BULBS; i++) mesh.setColorAt(i, color.copy(DIM).lerp(BULB_COLOR, bulbLevel(i, now)));
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
     }
-    const material = globe.current?.material as MeshStandardMaterial | undefined;
-    if (material) material.emissiveIntensity = 0.4 + 0.25 * Math.sin(now / 700);
   });
 
   return (
@@ -76,21 +74,11 @@ export function Hall({ roomName, code, animatedBulbs, shadows }: { roomName: str
         <meshStandardMaterial color="#be185d" flatShading />
       </mesh>
       {/* telão */}
-      <mesh position={[0, 3.2, -5.2]}>
-        <boxGeometry args={[7, 3, 0.2]} />
+      <mesh position={[0, 3.3, -5.2]}>
+        <boxGeometry args={[7.2, 3.8, 0.2]} />
         <meshStandardMaterial color="#111827" />
       </mesh>
-      <Text position={[0, 3.9, -5.08]} fontSize={0.45} color="#fef3c7" anchorX="center" anchorY="middle" maxWidth={6.5}>
-        {roomName}
-      </Text>
-      <Text position={[0, 2.9, -5.08]} fontSize={0.9} color="#fde047" anchorX="center" anchorY="middle" letterSpacing={0.12}>
-        {code}
-      </Text>
-      {/* globo parado (gira no M4) */}
-      <mesh ref={globe} position={[3.6, 1.3, -3.6]}>
-        <icosahedronGeometry args={[0.8, 1]} />
-        <meshStandardMaterial color="#fbbf24" emissive="#f59e0b" emissiveIntensity={0.4} flatShading />
-      </mesh>
+      <TelaoScreen view={screen} />
       {/* porta */}
       <group position={[DOOR[0], 0, DOOR[2] - 0.8]}>
         <mesh position={[0, 1.2, 0]}>

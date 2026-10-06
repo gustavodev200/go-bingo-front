@@ -119,7 +119,7 @@ export function AvatarCrowd({
         p.shadow.setMatrixAt(i, tmp.o.matrix);
       }
 
-      tmp.color.set(s.look.body).lerp(GHOST, ps.ghost);
+      tmp.color.set(s.look.body).lerp(GHOST, ps.ghost).lerp(GOLD, ps.glow * 0.6);
       p.body?.setColorAt(i, tmp.color);
       p.head?.setColorAt(i, tmp.color);
       p.arms?.setColorAt(i * 2, tmp.color);
