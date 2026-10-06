@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { UpgradeButton } from '@/features/auth/upgrade-button';
 import { useProfile } from '@/features/profile/profile-context';
 import { JoinByCodeForm } from '@/features/rooms/join-by-code-form';
 import { PublicRooms } from '@/features/rooms/public-rooms';
@@ -25,6 +26,7 @@ export default function HomePage() {
           {profile.nickname} {profile.isGuest ? '(convidado)' : `· ${profile.points} pts`}
         </span>
       </header>
+      {profile.isGuest && <UpgradeButton />}
       <JoinByCodeForm />
       <Button asChild size="lg" className="h-11">
         <Link href="/criar">Criar sala</Link>

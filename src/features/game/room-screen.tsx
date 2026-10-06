@@ -10,6 +10,7 @@ import { ConnectionBanner } from './connection-banner';
 import { GameView } from './game-view';
 import { LobbyView } from './lobby-view';
 import { newlyOneAway } from './one-away';
+import { ResultDialog } from './result-dialog';
 import { useGameStore } from './store';
 import { useGameConnection } from './use-game-connection';
 
@@ -66,6 +67,7 @@ export function RoomScreen({ code }: { code: string }) {
     <>
       <ConnectionBanner status={connection} />
       {snapshot.status === 'IN_GAME' || showResult ? <GameView actions={actions} /> : <LobbyView actions={actions} onLeave={() => void leave()} />}
+      {showResult && <ResultDialog onReplay={() => void actions.replay()} onLeave={() => void leave()} />}
     </>
   );
 }
