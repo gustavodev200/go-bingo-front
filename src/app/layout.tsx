@@ -28,10 +28,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt-BR" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body className="bg-background text-foreground min-h-dvh font-sans antialiased">
-        <SerwistProvider swUrl="/serwist/sw.js" disable={process.env.NODE_ENV === 'development'}>
-          <OfflineBanner />
-          {children}
-        </SerwistProvider>
+        <div className="min-h-dvh pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)]">
+          <SerwistProvider swUrl="/serwist/sw.js" disable={process.env.NODE_ENV === 'development'}>
+            <OfflineBanner />
+            {children}
+          </SerwistProvider>
+        </div>
         <Toaster position="top-center" />
       </body>
     </html>

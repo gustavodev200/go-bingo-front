@@ -10,6 +10,24 @@ Testes: `npm test`. Contratos (`src/contracts`) são gerados pelo back: `cd ../g
 
 Cobertura mínima: 80% (statements/branches/functions/lines), conforme a constituição do projeto (Princípio VIII). `npm run test:cov` roda local; o CI falha a build abaixo do limiar. Ficam fora do cálculo só o código gerado (`src/contracts`, `src/components/ui` do shadcn), helpers de teste (`src/test`) e `page.tsx`/`layout.tsx` de roteamento.
 
+### PWA (M2)
+
+- O service worker só é registrado em produção: `npm run build && npx next start` e abrir `http://localhost:3000` (em dev o SW fica desligado).
+- Instalável: Chrome → DevTools → Application → Manifest (sem erros, ícones 192/512/maskable) e "Install" na barra de endereço.
+- Regras de cache: só `/_next/static/**` e `/pwa-icons/**` do mesmo origin (`src/lib/pwa/cache-rules.ts`). API, Supabase e HTML nunca são cacheados.
+- Ícones são gerados em build por `src/app/pwa-icons/[file]/route.tsx` (arte provisória "B"; trocar quando houver identidade visual).
+
+**Checklist de dispositivos reais (critério de saída do M2)** — marcar em Android (Chrome) e iPhone (Safari), com o front em HTTPS (preview da Vercel) e o back acessível:
+
+- [ ] Android: aparece o card "Instale o Go Bingo"; "Instalar" abre o prompt nativo; ícone na tela inicial abre em tela cheia.
+- [ ] iPhone: card mostra "Compartilhar → Adicionar à Tela de Início"; ícone abre em tela cheia.
+- [ ] Login com Google a partir do app **instalado** no iPhone volta para o app logado (risco do PRD §8). Se abrir o Safari e não voltar: registrar e orientar "faça login antes de instalar".
+- [ ] Partida completa em retrato e em paisagem; cartela cabe em 320 px; nada atrás do notch/barra inferior.
+- [ ] Duplo toque rápido numa pedra não dá zoom; puxar a tela para baixo não recarrega.
+- [ ] Tela não apaga durante a partida (Wake Lock); sai do jogo e volta a apagar.
+- [ ] Modo avião com o app aberto: banner "Você está offline"; ao reabrir o app sem rede: página "Você está offline".
+- [ ] DevTools → Application → Cache Storage: nenhuma resposta da API.
+
 # workspace-agents
 
 Workspace/template pessoal para desenvolvimento de software com agentes de

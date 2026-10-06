@@ -123,8 +123,13 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Evita pull-to-refresh acidental no meio da partida. */
+    overscroll-behavior-y: none;
   }
   html {
     @apply font-sans;
+    /* Sem zoom por double-tap; pinch-zoom continua disponível (acessibilidade). */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 }
