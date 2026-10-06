@@ -48,7 +48,7 @@ Cobertura mínima: 80% (statements/branches/functions/lines), conforme a constit
 
 ### Partida 3D (M4)
 
-- Telão desenhado numa textura de canvas 2D (`scene3d/telao.ts`): bola atual, 4 anteriores, painel 1–75.
+- Telão (scoreboard) desenhado numa textura de canvas 2D (`scene3d/scoreboard.ts`): bola atual, 4 anteriores, painel 1–75.
 - Globo gira, acelera e solta a bola a cada sorteio (cosmético; a HUD mostra o número na hora).
 - "Por 1": boneco dourado pulsando; vitória: câmera vai até o vencedor, telão "BINGO!", confete; diálogo de resultado após 2,5 s no 3D.
 - Sons sintetizados (WebAudio, sem arquivos) com botão de mudo persistente; "Painel" mostra o 1–75 na HUD nos dois modos.
@@ -77,7 +77,7 @@ Cobertura mínima: 80% (statements/branches/functions/lines), conforme a constit
 - Privacidade: `dataCollection` com tudo desligado (sem IP, cookies, headers nem corpo de requisições).
 - Mensagem `session-summary` (uma por sessão de partida) com os campos `mode`, `fallbackReason`, `contextLosses`, `fpsP50`, `drawLatencyP95Ms` e `draws`.
 - Limitação: `drawLatencyP95Ms` usa `Date.now() - drawnAt` (relógio do cliente menos o do servidor), então inclui o desvio de relógio entre os dois; serve para tendência, não como medida absoluta.
-- A telemetria é amostrada e tem tetos de quantidade por sessão (veja `src/lib/telemetry.ts`).
+- O `session-summary` é enviado uma vez por sessão, sem amostragem de sessões; cada sessão tem tetos de amostras (5000 frames e 200 latências, veja `src/lib/telemetry.ts`).
 
 ### Segurança
 
