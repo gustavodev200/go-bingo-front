@@ -80,4 +80,17 @@ describe('useAvatarStates', () => {
     act(() => useGameStore.getState().dispatch({ event: 'room:state', payload: room() }));
     expect(result.current.list.map((s) => s.phase)).toEqual(['idle']);
   });
+
+  it('reads who is one away and who won from the store', () => {
+    useGameStore.setState(
+      reduce(initialGameState(ME), {
+        event: 'room:state',
+        payload: { ...room([member(ME, 0), member(ANA, 1)]), status: 'IN_GAME', game: { id: '00000000-0000-4000-8000-0000000000bb', drawn: [1], drawIntervalMs: 5000, remaining: { [ME]: 5, [ANA]: 1 } } },
+      }),
+    );
+    const { result } = renderHook(() => useAvatarStates(0, clock));
+    expect(result.current.statesRef.current.get(ANA)?.oneAway).toBe(true);
+    act(() => useGameStore.getState().dispatch({ event: 'game:won', payload: { userId: ANA, nickname: 'Ana', pointsAwarded: 20, grid: Array.from({ length: 25 }, () => 0) } }));
+    expect(result.current.statesRef.current.get(ANA)?.phase).toBe('winner');
+  });
 });

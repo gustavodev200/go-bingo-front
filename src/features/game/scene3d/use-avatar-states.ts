@@ -26,11 +26,17 @@ export function useAvatarStates(botTotal = 0, clock: () => number = defaultClock
 
   useEffect(() => {
     const recompute = () => {
-      const { snapshot } = useGameStore.getState();
+      const { snapshot, winner } = useGameStore.getState();
       if (!snapshot) return;
       const bots = botMembers(botsShown.current, snapshot.members.map((m) => m.slot));
       const members = [...snapshot.members, ...bots];
-      commit(choreograph(initialized.current ? statesRef.current : null, { members, hostId: snapshot.hostId, now: clock() }));
+      const oneAway = new Set(
+        Object.entries(snapshot.game?.remaining ?? {})
+          .filter(([, left]) => left === 1)
+          .map(([id]) => id),
+      );
+      const prev = initialized.current ? statesRef.current : null;
+      commit(choreograph(prev, { members, hostId: snapshot.hostId, now: clock(), oneAway, winnerId: winner?.userId ?? null }));
     };
     recompute();
     const unsubscribe = useGameStore.subscribe(recompute);

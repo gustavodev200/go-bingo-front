@@ -21,6 +21,8 @@ vi.mock('./use-game-connection', () => ({ useGameConnection: () => actions }));
 const SCENE_2D = { mode: '2d' as '2d' | '3d', reason: 'user' as string, setPreferred: vi.fn(), quality: 'auto', setQuality: vi.fn(), reportContextLoss: vi.fn(), reportFailure: vi.fn(), stageKey: 0 };
 const sceneMode = vi.hoisted(() => ({ value: null as unknown as typeof SCENE_2D }));
 vi.mock('./use-scene-mode', () => ({ useSceneMode: () => sceneMode.value }));
+vi.mock('./scene3d/game-stage-lazy', () => ({ GameStageLazy: () => <div data-testid="game-stage" /> }));
+vi.mock('./sound/use-game-sounds', () => ({ useGameSounds: vi.fn() }));
 vi.mock('./scene3d/lobby-stage-lazy', () => ({
   LobbyStageLazy: (props: { celebrating: boolean; onContextLost: () => void }) => (
     <div data-testid="lobby-stage" data-celebrating={String(props.celebrating)}>
@@ -98,6 +100,26 @@ describe('RoomScreen', () => {
     sceneMode.value = { ...SCENE_2D, mode: '2d', reason: 'failed' };
     renderWith(room());
     expect(toast).toHaveBeenCalledWith('Não foi possível carregar o 3D; usando o modo 2D.');
+  });
+
+  it('3D mode: the game screen gets the 3D stage', () => {
+    sceneMode.value = { ...SCENE_2D, mode: '3d', reason: 'ok' };
+    renderWith(room({ status: 'IN_GAME', myCard: { id: '00000000-0000-4000-8000-0000000000aa', grid, marked: [] }, game: { id: '00000000-0000-4000-8000-0000000000bb', drawn: [], drawIntervalMs: 5000, remaining: { [ME]: 24 } } }));
+    expect(screen.getByTestId('game-stage')).toBeInTheDocument();
+  });
+
+  it('3D mode: the result dialog waits for the victory scene', () => {
+    vi.useFakeTimers();
+    try {
+      sceneMode.value = { ...SCENE_2D, mode: '3d', reason: 'ok' };
+      renderWith(room({ status: 'IN_GAME', myCard: { id: '00000000-0000-4000-8000-0000000000aa', grid, marked: [] }, game: { id: '00000000-0000-4000-8000-0000000000bb', drawn: [], drawIntervalMs: 5000, remaining: { [ME]: 24 } } }));
+      act(() => useGameStore.getState().dispatch({ event: 'game:won', payload: { userId: ANA, nickname: 'Ana', pointsAwarded: 20, grid } }));
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      act(() => vi.advanceTimersByTime(2500));
+      expect(screen.getByRole('dialog')).toHaveTextContent('Ana fez BINGO!');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('3D mode: celebrates on start before switching to the game', () => {

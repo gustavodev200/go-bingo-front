@@ -119,3 +119,46 @@ describe('labelIds', () => {
     expect(labelIds(left.values(), A, true).has(C)).toBe(false);
   });
 });
+
+describe('one away and winner', () => {
+  it('flags who is one away', () => {
+    const s = choreograph(null, { members: [m(A, 0), m(B, 1)], hostId: A, now: 0, oneAway: new Set([B]) });
+    expect(s.get(B)?.oneAway).toBe(true);
+    expect(s.get(A)?.oneAway).toBe(false);
+  });
+
+  it('the winner celebrates until the win is cleared', () => {
+    const s0 = choreograph(null, { members: [m(A, 0), m(B, 1)], hostId: A, now: 0 });
+    const s1 = choreograph(s0, { members: [m(A, 0), m(B, 1)], hostId: A, now: 50, winnerId: B });
+    expect(s1.get(B)).toMatchObject({ phase: 'winner', phaseStart: 50 });
+    const s2 = choreograph(s1, { members: [m(A, 0), m(B, 1)], hostId: A, now: 60, winnerId: B });
+    expect(s2.get(B)?.phaseStart).toBe(50);
+    const s3 = choreograph(s2, { members: [m(A, 0), m(B, 1)], hostId: A, now: 70, winnerId: null });
+    expect(s3.get(B)?.phase).toBe('idle');
+  });
+
+  it('a winner who already left does not create an avatar', () => {
+    const s = choreograph(null, { members: [m(A, 0)], hostId: A, now: 0, winnerId: B });
+    expect(s.has(B)).toBe(false);
+  });
+
+  it('statesChanged notices one-away changes', () => {
+    const s0 = choreograph(null, { members: [m(A, 0)], hostId: A, now: 0 });
+    expect(statesChanged(s0, choreograph(s0, { members: [m(A, 0)], hostId: A, now: 1, oneAway: new Set([A]) }))).toBe(true);
+  });
+
+  it('labels always show who is one away and the winner', () => {
+    const crowd = choreograph(null, { members: [m(A, 0), m(B, 1), m(C, 2)], hostId: A, now: 0, oneAway: new Set([C]) });
+    expect(labelIds(crowd.values(), A, false)).toEqual(new Set([A, C]));
+    const won = choreograph(crowd, { members: [m(A, 0), m(B, 1), m(C, 2)], hostId: A, now: 5, winnerId: B });
+    expect(labelIds(won.values(), A, false).has(B)).toBe(true);
+  });
+
+  it('a winner who drops keeps celebrating without restarting the animation every tick', () => {
+    const s0 = choreograph(null, { members: [m(A, 0), m(B, 1)], hostId: A, now: 0 });
+    const s1 = choreograph(s0, { members: [m(A, 0), m(B, 1, { connected: false })], hostId: A, now: 50, winnerId: B });
+    const s2 = choreograph(s1, { members: [m(A, 0), m(B, 1, { connected: false })], hostId: A, now: 200, winnerId: B });
+    expect(s2.get(B)).toMatchObject({ phase: 'winner', phaseStart: 50 });
+    expect(statesChanged(s1, s2)).toBe(false);
+  });
+});

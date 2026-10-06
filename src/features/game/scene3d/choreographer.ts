@@ -12,7 +12,13 @@ export interface ChoreoInput {
   members: SceneMember[];
   hostId: string;
   now: number;
+  /** Quem está a 1 pedra (destaque). */
+  oneAway?: ReadonlySet<string>;
+  /** Vencedor da partida (cena de vitória) até o próximo `room:state`. */
+  winnerId?: string | null;
 }
+
+const NOBODY: ReadonlySet<string> = new Set();
 
 export const LOOK_AT_DOOR_MS = 1000;
 
@@ -27,7 +33,7 @@ function settle(old: AvatarState, now: number): { phase: Phase; phaseStart: numb
  * Deriva o estado de animação de cada avatar a partir do snapshot da sala (store) e do estado anterior.
  * `prev === null` é o primeiro snapshot ao entrar: todos já estão no lugar (sem desfile de entradas).
  */
-export function choreograph(prev: ReadonlyMap<string, AvatarState> | null, { members, hostId, now }: ChoreoInput): Map<string, AvatarState> {
+export function choreograph(prev: ReadonlyMap<string, AvatarState> | null, { members, hostId, now, oneAway = NOBODY, winnerId = null }: ChoreoInput): Map<string, AvatarState> {
   const next = new Map<string, AvatarState>();
   const arrived: string[] = [];
 
@@ -53,6 +59,12 @@ export function choreograph(prev: ReadonlyMap<string, AvatarState> | null, { mem
       } else if (member.hasCard && !old.hasCard && phase === 'idle') {
         [phase, phaseStart] = ['ready-jump', now];
       }
+      if (member.userId === winnerId) {
+        // Vencedor comemora até o "jogar de novo", mesmo se cair; não reinicia a animação a cada tick.
+        [phase, phaseStart] = old.phase === 'winner' ? ['winner', old.phaseStart] : ['winner', now];
+      } else if (phase === 'winner') {
+        [phase, phaseStart] = [member.connected ? 'idle' : 'ghost', now];
+      }
     }
 
     next.set(member.userId, {
@@ -65,6 +77,7 @@ export function choreograph(prev: ReadonlyMap<string, AvatarState> | null, { mem
       connected: member.connected,
       hasCard: member.hasCard,
       lookAtDoorUntil: old?.lookAtDoorUntil ?? 0,
+      oneAway: oneAway.has(member.userId),
     });
   }
 
@@ -96,17 +109,17 @@ export function statesChanged(a: ReadonlyMap<string, AvatarState> | null, b: Rea
   if (a?.size !== b.size) return true;
   for (const [id, s] of b) {
     const o = a.get(id);
-    if (o?.phase !== s.phase || o.phaseStart !== s.phaseStart || o.isHost !== s.isHost) return true;
+    if (o?.phase !== s.phase || o.phaseStart !== s.phaseStart || o.isHost !== s.isHost || o.oneAway !== s.oneAway) return true;
   }
   return false;
 }
 
-/** Rótulos visíveis: todos, ou (sala cheia no celular) só o meu, o do host e de quem está chegando. Quem sai, nunca. */
+/** Rótulos visíveis: todos, ou (sala cheia no celular) só o meu, o do host, de quem chega, de quem está por 1 e do vencedor. Quem sai, nunca. */
 export function labelIds(states: Iterable<AvatarState>, myUserId: string | null, showAll: boolean): Set<string> {
   const ids = new Set<string>();
   for (const s of states) {
     if (s.phase === 'leaving') continue;
-    if (showAll || s.userId === myUserId || s.isHost || s.phase === 'entering') ids.add(s.userId);
+    if (showAll || s.userId === myUserId || s.isHost || s.phase === 'entering' || s.phase === 'winner' || s.oneAway) ids.add(s.userId);
   }
   return ids;
 }

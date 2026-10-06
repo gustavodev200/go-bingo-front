@@ -24,27 +24,47 @@ describe('GameView', () => {
 
   it('keeps BINGO disabled until every cell is marked', () => {
     load([0, 1]);
-    render(<GameView actions={actions} />);
+    render(<GameView actions={actions} muted={false} onToggleMute={vi.fn()} />);
     expect(screen.getByRole('button', { name: /bingo/i })).toBeDisabled();
   });
 
   it('enables BINGO and claims', async () => {
     load(Array.from({ length: 25 }, (_, i) => i).filter((i) => i !== 12));
-    render(<GameView actions={actions} />);
+    render(<GameView actions={actions} muted={false} onToggleMute={vi.fn()} />);
     await userEvent.click(screen.getByRole('button', { name: /bingo/i }));
     expect(actions.claim).toHaveBeenCalled();
   });
 
   it('marks through the actions', async () => {
     load([]);
-    render(<GameView actions={actions} />);
+    render(<GameView actions={actions} muted={false} onToggleMute={vi.fn()} />);
     await userEvent.click(screen.getByRole('button', { name: 'B 1, sorteado' }));
     expect(actions.mark).toHaveBeenCalledWith(0);
   });
 
   it('subtracts the top safe-area inset from its height (standalone PWA with notch)', () => {
     load([]);
-    render(<GameView actions={actions} />);
+    render(<GameView actions={actions} muted={false} onToggleMute={vi.fn()} />);
     expect(screen.getByRole('main').className).toContain('100dvh-env(safe-area-inset-top)');
+  });
+
+  it('puts the 3D stage in the stage area but keeps the number announced for screen readers', () => {
+    load([]);
+    render(<GameView actions={actions} muted={false} onToggleMute={vi.fn()} stage={<div data-testid="stage" />} />);
+    expect(screen.getByTestId('stage')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('25');
+  });
+
+  it('offers the board and the sound toggle in both modes', () => {
+    load([]);
+    render(<GameView actions={actions} muted onToggleMute={vi.fn()} />);
+    expect(screen.getByRole('button', { name: 'Painel' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Ligar som' })).toBeInTheDocument();
+  });
+
+  it('3D mode still shows the current number visibly in the HUD', () => {
+    load([]);
+    render(<GameView actions={actions} muted={false} onToggleMute={vi.fn()} stage={<div />} />);
+    expect(screen.getByTestId('current-number')).toHaveTextContent('I 25');
   });
 });
