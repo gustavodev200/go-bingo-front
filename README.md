@@ -28,6 +28,24 @@ Cobertura mínima: 80% (statements/branches/functions/lines), conforme a constit
 - [ ] Modo avião com o app aberto: banner "Você está offline"; ao reabrir o app sem rede: página "Você está offline".
 - [ ] DevTools → Application → Cache Storage: nenhuma resposta da API.
 
+### Lobby 3D (M3)
+
+- A cena fica em `src/features/game/scene3d/`: regras puras (`choreographer.ts`, `pose.ts`, `quality.ts`...) testadas no Vitest; componentes R3F (`*.tsx`) só desenham.
+- three.js só é baixado dentro da sala (`npm run check:bundle` garante no CI).
+- Modo 2D automático sem WebGL2, com `prefers-reduced-motion` ou após 2 perdas de contexto; botão "Ver em 2D/3D" e seletor de qualidade no lobby.
+- Teste de carga: em dev, `/{codigo}?bots=25` coloca 24 bonecos falsos só na cena (em produção, apenas com `NEXT_PUBLIC_ENABLE_BOTS=1`).
+- Os apelidos 3D usam `<Text>` do drei (troika), que baixa a fonte padrão de uma CDN na primeira vez.
+
+**Checklist de aparelho real (critério de saída do M3):**
+
+- [ ] Primeira olhada no desktop: salão, telão com nome/código, bonecos entrando pela porta com `?bots=25`, nada cortado pela câmera.
+- [ ] Android intermediário, `?bots=25` (build com `NEXT_PUBLIC_ENABLE_BOTS=1`): ≥ 30 FPS (Chrome DevTools remoto → FPS meter) no tier automático.
+- [ ] iPhone: trocar de app várias vezes durante o lobby; a cena volta ou cai para 2D com aviso, sem sair da sala.
+- [ ] `prefers-reduced-motion` ligado no sistema → sala abre em 2D; "Ver em 3D" funciona e é lembrado.
+- [ ] Entrar/sair/cair com um segundo aparelho: boneco entra pela porta, acena ao sair, fica pálido flutuando ao cair e volta ao reconectar.
+- [ ] Tocar no próprio boneco: dança; tocar no de outra pessoa: nada.
+- [ ] Host inicia: confete por ~1 s e troca para a tela da partida.
+
 # workspace-agents
 
 Workspace/template pessoal para desenvolvimento de software com agentes de
