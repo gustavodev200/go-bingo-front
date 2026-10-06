@@ -18,7 +18,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/**/*.{ts,tsx}'],
-      exclude: ['src/contracts/**', 'src/components/ui/**', 'src/test/**', 'src/app/pwa-icons/**', 'src/app/sw.ts', 'src/app/serwist/**', 'src/features/game/scene3d/**/*.tsx', 'src/app/**/layout.tsx', 'src/app/**/page.tsx', '**/*.test.{ts,tsx}', '**/*.d.ts'],
+      exclude: ['src/contracts/**', 'src/components/ui/**', 'src/test/**', 'src/app/pwa-icons/**', 'src/app/sw.ts', 'src/app/serwist/**', 'src/app/global-error.tsx', 'src/features/game/scene3d/**/*.tsx', 'src/app/**/layout.tsx', 'src/app/**/page.tsx', '**/*.test.{ts,tsx}', '**/*.d.ts', 'instrumentation*.ts', 'sentry.*.ts'],
       thresholds: { statements: 80, branches: 80, functions: 80, lines: 80 },
     },
   },
