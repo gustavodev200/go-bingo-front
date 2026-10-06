@@ -46,6 +46,22 @@ Cobertura mínima: 80% (statements/branches/functions/lines), conforme a constit
 - [ ] Tocar no próprio boneco: dança; tocar no de outra pessoa: nada.
 - [ ] Host inicia: confete por ~1 s e troca para a tela da partida.
 
+### Partida 3D (M4)
+
+- Telão desenhado numa textura de canvas 2D (`scene3d/telao.ts`): bola atual, 4 anteriores, painel 1–75.
+- Globo gira, acelera e solta a bola a cada sorteio (cosmético; a HUD mostra o número na hora).
+- "Por 1": boneco dourado pulsando; vitória: câmera vai até o vencedor, telão "BINGO!", confete; diálogo de resultado após 2,5 s no 3D.
+- Sons sintetizados (WebAudio, sem arquivos) com botão de mudo persistente; "Painel" mostra o 1–75 na HUD nos dois modos.
+
+**Checklist de aparelho real (critério de saída do M4):**
+
+- [ ] Partida com `?bots=25` no Android intermediário: ≥ 30 FPS no tier automático.
+- [ ] A cada sorteio: número aparece na HUD na hora; globo acelera; bola voa e some antes do próximo sorteio; telão atualiza.
+- [ ] Alguém fica "por 1": boneco dourado + toast + som.
+- [ ] Vitória vista de dois aparelhos: câmera no vencedor, telão "BINGO! — Nome" ("Você!" no do vencedor), confete, diálogo depois.
+- [ ] Recarregar no meio da partida: sem som e sem bola voando; telão com o estado certo.
+- [ ] Mudo persiste após recarregar; modo 2D joga a partida inteira com "Painel" e som.
+
 # workspace-agents
 
 Workspace/template pessoal para desenvolvimento de software com agentes de
