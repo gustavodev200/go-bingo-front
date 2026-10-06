@@ -14,11 +14,17 @@ import { newlyOneAway } from './one-away';
 import { ResultDialog } from './result-dialog';
 import { SceneControls } from './scene-controls';
 import { StageErrorBoundary } from './stage-error-boundary';
+import { GameStageLazy } from './scene3d/game-stage-lazy';
 import { LobbyStageLazy } from './scene3d/lobby-stage-lazy';
+import { useGameSounds } from './sound/use-game-sounds';
+import { useMuted } from './sound/use-muted';
 import { useGameStore } from './store';
 import { useCelebrationDelay } from './use-celebration-delay';
 import { useGameConnection } from './use-game-connection';
 import { useSceneMode } from './use-scene-mode';
+
+/** No 3D, o diálogo de resultado espera a cena de vitória. */
+export const RESULT_DELAY_MS = 2500;
 
 const EXIT_MESSAGES = {
   kicked: 'O host removeu você da sala.',
@@ -43,6 +49,9 @@ export function RoomScreen({ code }: { code: string }) {
   const scene = useSceneMode();
   const inGame = snapshot?.status === 'IN_GAME' || showResult;
   const showGame = useCelebrationDelay(snapshot ? inGame : null, scene.mode === '3d');
+  const resultReady = useCelebrationDelay(snapshot ? showResult : null, scene.mode === '3d', RESULT_DELAY_MS);
+  const [muted, setMuted] = useMuted();
+  useGameSounds(muted);
   useEffect(() => {
     if (scene.reason === 'context-lost') toast('Modo 2D ativado para economizar o aparelho');
     if (scene.reason === 'failed') toast('Não foi possível carregar o 3D; usando o modo 2D.');
@@ -81,7 +90,18 @@ export function RoomScreen({ code }: { code: string }) {
     <>
       <ConnectionBanner status={connection} />
       {showGame ? (
-        <GameView actions={actions} />
+        <GameView
+          actions={actions}
+          muted={muted}
+          onToggleMute={setMuted}
+          stage={
+            scene.mode === '3d' ? (
+              <StageErrorBoundary onError={scene.reportFailure}>
+                <GameStageLazy key={scene.stageKey} roomName={snapshot.name} code={snapshot.code} qualityOverride={scene.quality} onContextLost={scene.reportContextLoss} />
+              </StageErrorBoundary>
+            ) : undefined
+          }
+        />
       ) : (
         <>
           {scene.mode === '3d' && (
@@ -102,7 +122,7 @@ export function RoomScreen({ code }: { code: string }) {
           <LobbyView actions={actions} onLeave={() => void leave()} />
         </>
       )}
-      {showResult && <ResultDialog onReplay={() => void actions.replay()} onLeave={() => void leave()} />}
+      {showResult && resultReady && <ResultDialog onReplay={() => void actions.replay()} onLeave={() => void leave()} />}
     </>
   );
 }

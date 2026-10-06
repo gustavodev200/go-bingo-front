@@ -1,11 +1,15 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { letterFor } from '@/contracts';
+import { cn } from '@/lib/utils';
 import { CardGrid } from './card-grid';
+import { DrawnBoard } from './drawn-board';
 import { LastNumbers } from './last-numbers';
 import { RemainingPanel } from './remaining-panel';
+import { SoundToggle } from './sound-toggle';
 import { selectCanClaim, useGameStore } from './store';
 import type { GameActions } from './use-game-connection';
 
@@ -13,7 +17,18 @@ import type { GameActions } from './use-game-connection';
  * Layout: retrato = palco (topo) / cartela / barra fixa; paisagem = palco | cartela+barra.
  * A <section data-stage> é onde o canvas 3D entra nos marcos M3/M4; hoje ela é o "modo 2D".
  */
-export function GameView({ actions }: { actions: GameActions }) {
+export function GameView({
+  actions,
+  stage,
+  muted,
+  onToggleMute,
+}: {
+  actions: GameActions;
+  /** Palco 3D (modo 3D); sem ele, a região mostra os últimos números em DOM. */
+  stage?: ReactNode;
+  muted: boolean;
+  onToggleMute: (muted: boolean) => void;
+}) {
   const snapshot = useGameStore((s) => s.snapshot)!;
   const canClaim = useGameStore(selectCanClaim);
   const drawn = snapshot.game?.drawn ?? [];
@@ -21,8 +36,21 @@ export function GameView({ actions }: { actions: GameActions }) {
 
   return (
     <main className="grid h-[calc(100dvh-env(safe-area-inset-top))] grid-rows-[minmax(0,2fr)_minmax(0,3fr)_auto] landscape:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] landscape:grid-rows-[minmax(0,1fr)_auto]">
-      <section data-stage className="flex items-center justify-center overflow-hidden p-2 landscape:row-span-2">
-        <LastNumbers drawn={drawn} />
+      <section data-stage className={cn('relative flex items-center justify-center overflow-hidden landscape:row-span-2', !stage && 'p-2')}>
+        {stage ? (
+          <>
+            <div className="absolute inset-0">{stage}</div>
+            <div className="sr-only">
+              <LastNumbers drawn={drawn} />
+            </div>
+          </>
+        ) : (
+          <LastNumbers drawn={drawn} />
+        )}
+        <div className="absolute top-2 right-2 flex gap-2">
+          <DrawnBoard drawn={drawn} />
+          <SoundToggle muted={muted} onChange={onToggleMute} />
+        </div>
       </section>
       <section className="flex items-center overflow-y-auto px-3">
         {card && (
