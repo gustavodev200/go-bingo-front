@@ -15,6 +15,7 @@
   "dependencies": {
     "@base-ui/react": "^1.8.0",
     "@marsidev/react-turnstile": "^1.6.1",
+    "@serwist/turbopack": "^9.5.13",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.2",
     "class-variance-authority": "^0.7.1",
@@ -25,6 +26,7 @@
     "radix-ui": "^1.7.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "serwist": "^9.5.13",
     "shadcn": "^4.21.3",
     "socket.io-client": "^4.8.4",
     "sonner": "^2.0.8",
@@ -43,6 +45,7 @@
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.1.2",
     "@vitest/coverage-v8": "^5.0.3",
+    "esbuild": "^0.28.2",
     "eslint": "^9",
     "eslint-config-next": "16.3.8",
     "jsdom": "^29.1.1",
