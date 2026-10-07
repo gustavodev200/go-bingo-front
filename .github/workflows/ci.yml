@@ -22,8 +22,8 @@ jobs:
       - run: npm run test:cov
       - run: npm run build
       - run: npm run check:bundle
-  # Só roda com a variável de repositório E2E_ENABLED=true. Pré-requisitos: projeto Supabase de teste
-  # (anonymous sign-ins) e os secrets E2E_SUPABASE_URL, E2E_SUPABASE_PUBLISHABLE_KEY e BACK_REPO_TOKEN.
+  # Runs only when the repository variable E2E_ENABLED=true. Prerequisites: Supabase test project
+  # (anonymous sign-ins + Turnstile test secret), secrets E2E_SUPABASE_URL, E2E_SUPABASE_PUBLISHABLE_KEY, BACK_REPO_TOKEN.
   e2e:
     if: ${{ vars.E2E_ENABLED == 'true' }}
     runs-on: ubuntu-latest
@@ -57,7 +57,7 @@ jobs:
           DATABASE_URL: postgresql://bingo:bingo@localhost:5432/go_bingo_e2e
           DIRECT_URL: postgresql://bingo:bingo@localhost:5432/go_bingo_e2e
       - run: npx playwright install --with-deps chromium
-      - name: Sobe o back
+      - name: Start backend server
         working-directory: back
         run: node dist/main &
         env:
