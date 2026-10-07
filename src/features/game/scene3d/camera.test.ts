@@ -67,6 +67,25 @@ describe('cameraFor(game)', () => {
   });
 });
 
+describe('cameraFor(game) — plateia visível', () => {
+  it.each([0.5, 1.15, 2.2])('keeps the center avatars (feet to head) on screen at aspect %s', (aspect) => {
+    const setup = cameraFor(aspect, 'game');
+    const cam = new PerspectiveCamera(setup.fov, aspect, 0.1, 200);
+    cam.position.set(...setup.position);
+    cam.lookAt(...setup.target);
+    cam.updateMatrixWorld();
+    // 9 primeiros slots = frente (5 do meio) + fileira do meio (4 do meio)
+    for (let s = 0; s < 9; s++) {
+      const p = slotPosition(s);
+      for (const dy of [0.2, 1.5]) {
+        const v = new Vector3(p[0], p[1] + dy, p[2]).project(cam);
+        expect(Math.abs(v.x)).toBeLessThanOrEqual(1);
+        expect(Math.abs(v.y)).toBeLessThanOrEqual(1);
+      }
+    }
+  });
+});
+
 describe('cameraFor(lobby, spread)', () => {
   const distance = (s: ReturnType<typeof cameraFor>) => Math.hypot(s.position[0] - s.target[0], s.position[1] - s.target[1], s.position[2] - s.target[2]);
 

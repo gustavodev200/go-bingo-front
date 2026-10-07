@@ -3,11 +3,12 @@
 import { useFrame, type ThreeEvent } from '@react-three/fiber';
 import { useLayoutEffect, useMemo, useRef, type RefObject } from 'react';
 import { Color, DoubleSide, Euler, Matrix4, Object3D, Quaternion, Vector3, type InstancedMesh } from 'three';
-import type { Hat } from './avatar-look';
+import type { Hat, HairStyle } from './avatar-look';
 import { pose, type AvatarState } from './pose';
 
 export const MAX_AVATARS = 32; // 25 na sala + quem está saindo
 type HatType = Exclude<Hat, 'none'>;
+type V3 = [number, number, number];
 const HAT_TYPES: HatType[] = ['tophat', 'cap', 'beanie', 'party'];
 const GHOST = new Color('#c4b5fd');
 const GOLD = new Color('#facc15');
@@ -17,33 +18,48 @@ const ZERO = new Matrix4().makeScale(0, 0, 0);
 /** Proporção "chibi": cabeça grande em cima de um corpo pequeno. */
 const HEAD_Y = 1.06;
 const HEAD_R = 0.34;
-const HAT: Record<HatType, { offset: [number, number, number]; rot: [number, number, number]; scale: number }> = {
-  tophat: { offset: [0, 0.5, -0.02], rot: [-0.08, 0, 0], scale: 1.2 },
-  cap: { offset: [0, 0.29, 0], rot: [-0.18, 0, 0], scale: 1.3 },
-  beanie: { offset: [0, 0.07, -0.01], rot: [-0.1, 0, 0], scale: 1.36 },
-  party: { offset: [0, 0.54, 0], rot: [-0.12, 0, 0.12], scale: 1.15 },
+const HAT: Record<HatType, { offset: V3; rot: V3; scale: number }> = {
+  tophat: { offset: [0, 0.52, -0.02], rot: [-0.08, 0, 0], scale: 1.2 },
+  cap: { offset: [0, 0.31, 0], rot: [-0.18, 0, 0], scale: 1.32 },
+  beanie: { offset: [0, 0.09, -0.01], rot: [-0.1, 0, 0], scale: 1.4 },
+  party: { offset: [0, 0.56, 0], rot: [-0.12, 0, 0.12], scale: 1.15 },
 };
+/** Espetos do cabelo "spiky": posição e inclinação (para fora) no espaço da cabeça. */
+const SPIKES: { offset: V3; rot: V3 }[] = [
+  { offset: [0, 0.38, 0.02], rot: [0.1, 0, 0] },
+  { offset: [-0.17, 0.33, 0.04], rot: [0.15, 0, 0.6] },
+  { offset: [0.17, 0.33, 0.04], rot: [0.15, 0, -0.6] },
+  { offset: [-0.1, 0.32, -0.16], rot: [-0.5, 0, 0.35] },
+  { offset: [0.1, 0.32, -0.16], rot: [-0.5, 0, -0.35] },
+];
+/** Piscar: a cada ~4 s, 120 ms de olho fechado; fase diferente por boneco. */
+const BLINK_PERIOD_S = 4.2;
+const BLINK_S = 0.12;
 
-type Parts = {
-  torso: InstancedMesh | null;
-  legs: InstancedMesh | null;
-  shoes: InstancedMesh | null;
-  arms: InstancedMesh | null;
-  hands: InstancedMesh | null;
-  head: InstancedMesh | null;
-  hair: InstancedMesh | null;
-  eyes: InstancedMesh | null;
-  shine: InstancedMesh | null;
-  cheeks: InstancedMesh | null;
-  smile: InstancedMesh | null;
-  wow: InstancedMesh | null;
-  crown: InstancedMesh | null;
-  shadow: InstancedMesh | null;
-  hats: Record<HatType, InstancedMesh | null>;
+type Single =
+  | 'torso'
+  | 'head'
+  | 'nose'
+  | 'hairCap'
+  | 'hairBun'
+  | 'hairLong'
+  | 'hairAfro'
+  | 'smile'
+  | 'wow'
+  | 'crown'
+  | 'shadow';
+type Paired = 'legs' | 'shoes' | 'arms' | 'hands' | 'sclera' | 'pupils' | 'shine' | 'brows' | 'cheeks';
+type Parts = Record<Single | Paired | 'spikes', InstancedMesh | null> & { hats: Record<HatType, InstancedMesh | null> };
+
+const SINGLE: Single[] = ['torso', 'head', 'nose', 'hairCap', 'hairBun', 'hairLong', 'hairAfro', 'smile', 'wow', 'crown', 'shadow'];
+const PAIRED: Paired[] = ['legs', 'shoes', 'arms', 'hands', 'sclera', 'pupils', 'shine', 'brows', 'cheeks'];
+const HAIR_PARTS: Record<HairStyle, (Single | 'spikes')[]> = {
+  short: ['hairCap'],
+  spiky: ['hairCap', 'spikes'],
+  bun: ['hairCap', 'hairBun'],
+  long: ['hairCap', 'hairLong'],
+  afro: ['hairAfro'],
 };
-
-/** Peças com 2 instâncias por boneco (pares). */
-const PAIRED: (keyof Omit<Parts, 'hats'>)[] = ['legs', 'shoes', 'arms', 'hands', 'eyes', 'shine', 'cheeks'];
 
 function allMeshes(p: Parts): InstancedMesh[] {
   const { hats, ...rest } = p;
@@ -63,20 +79,7 @@ export function AvatarCrowd({
   fakeShadow: boolean;
 }) {
   const parts = useRef<Parts>({
-    torso: null,
-    legs: null,
-    shoes: null,
-    arms: null,
-    hands: null,
-    head: null,
-    hair: null,
-    eyes: null,
-    shine: null,
-    cheeks: null,
-    smile: null,
-    wow: null,
-    crown: null,
-    shadow: null,
+    ...(Object.fromEntries([...SINGLE, ...PAIRED, 'spikes'].map((k) => [k, null])) as Record<Single | Paired | 'spikes', null>),
     hats: { tophat: null, cap: null, beanie: null, party: null },
   });
   const ids = useRef<string[]>([]);
@@ -114,77 +117,103 @@ export function AvatarCrowd({
     const states = [...(statesRef.current?.values() ?? [])].slice(0, MAX_AVATARS);
     ids.current = states.map((s) => s.userId);
 
-    const compose = (out: Matrix4, parent: Matrix4, offset: [number, number, number], rot: [number, number, number], scale: [number, number, number]) => {
+    const compose = (out: Matrix4, parent: Matrix4, offset: V3, rot: V3, scale: V3) => {
       tmp.local.compose(tmp.v.set(...offset), tmp.q.setFromEuler(tmp.e.set(...rot)), tmp.s.set(...scale));
       out.multiplyMatrices(parent, tmp.local);
     };
     /** out = parent × T(offset) × R(rot) × S(scale) */
-    const place = (mesh: InstancedMesh | null, index: number, parent: Matrix4, offset: [number, number, number], rot: [number, number, number] = [0, 0, 0], scale: [number, number, number] = [1, 1, 1]) => {
+    const place = (mesh: InstancedMesh | null, index: number, parent: Matrix4, offset: V3, rot: V3 = [0, 0, 0], scale: V3 = [1, 1, 1]) => {
       if (!mesh) return;
       compose(tmp.out, parent, offset, rot, scale);
       mesh.setMatrixAt(index, tmp.out);
+    };
+    const hide = (mesh: InstancedMesh | null, index: number) => mesh?.setMatrixAt(index, ZERO);
+    const hideAvatar = (i: number) => {
+      for (const k of SINGLE) hide(p[k], i);
+      for (const k of PAIRED) {
+        hide(p[k], i * 2);
+        hide(p[k], i * 2 + 1);
+      }
+      for (let k = 0; k < SPIKES.length; k++) hide(p.spikes, i * SPIKES.length + k);
+      for (const mesh of Object.values(p.hats)) hide(mesh, i);
     };
 
     for (let i = 0; i < MAX_AVATARS; i++) {
       const s = states[i];
       if (!s) {
-        const { hats, ...rest } = p;
-        for (const [key, mesh] of Object.entries(rest) as [keyof typeof rest, InstancedMesh | null][]) {
-          if (!mesh) continue;
-          if (PAIRED.includes(key)) {
-            mesh.setMatrixAt(i * 2, ZERO);
-            mesh.setMatrixAt(i * 2 + 1, ZERO);
-          } else mesh.setMatrixAt(i, ZERO);
-        }
-        for (const mesh of Object.values(hats)) mesh?.setMatrixAt(i, ZERO);
+        hideAvatar(i);
         continue;
       }
       const ps = pose(s, now);
+      const look = s.look;
       tmp.base.compose(tmp.v.set(...ps.position), tmp.q.setFromEuler(tmp.e.set(0, ps.rotationY, 0)), tmp.s.setScalar(Math.max(ps.scale, 0.0001)));
 
       // corpo
       place(p.torso, i, tmp.base, [0, 0.5, 0], [0, 0, 0], [1, 1, 0.9]);
       for (const side of [-1, 1] as const) {
-        const k = side < 0 ? 0 : 1;
+        const k = i * 2 + (side < 0 ? 0 : 1);
         // pernas balançam opostas aos braços; sapato acompanha a perna
         compose(tmp.limb, tmp.base, [side * 0.11, 0.3, 0], [side * ps.armSwing * 0.35, 0, 0], [1, 1, 1]);
-        place(p.legs, i * 2 + k, tmp.limb, [0, -0.12, 0]);
-        place(p.shoes, i * 2 + k, tmp.limb, [0, -0.25, 0.04], [0, 0, 0], [1, 0.6, 1.35]);
+        place(p.legs, k, tmp.limb, [0, -0.12, 0]);
+        place(p.shoes, k, tmp.limb, [0, -0.25, 0.04], [0, 0, 0], [1, 0.6, 1.35]);
         // braço gira no ombro; mão na ponta
         const raise = side > 0 ? ps.armRaise * (2.6 + ps.armSwing) : 0;
         compose(tmp.limb, tmp.base, [side * 0.27, 0.66, 0], [-side * ps.armSwing * 0.5, 0, side * (0.25 + raise)], [1, 1, 1]);
-        place(p.arms, i * 2 + k, tmp.limb, [0, -0.13, 0]);
-        place(p.hands, i * 2 + k, tmp.limb, [0, -0.28, 0]);
+        place(p.arms, k, tmp.limb, [0, -0.13, 0]);
+        place(p.hands, k, tmp.limb, [0, -0.28, 0]);
       }
 
       // cabeça e tudo que vai nela gira junto (headYaw)
       tmp.local.compose(tmp.v.set(0, HEAD_Y, 0), tmp.q.setFromEuler(tmp.e.set(0, ps.headYaw, 0)), tmp.s.set(1, 1, 1));
       tmp.head.multiplyMatrices(tmp.base, tmp.local);
       place(p.head, i, tmp.head, [0, 0, 0]);
-      place(p.hair, i, tmp.head, [0, 0.04, -0.03], [-0.35, 0, 0]);
+      place(p.nose, i, tmp.head, [0, -0.03, 0.335], [0, 0, 0], [1, 0.8, 0.8]);
+
+      // cabelo: só as peças do estilo do boneco
+      const hair = HAIR_PARTS[look.hairStyle];
+      if (hair.includes('hairCap')) place(p.hairCap, i, tmp.head, [0, 0.04, -0.03], [-0.35, 0, 0]);
+      else hide(p.hairCap, i);
+      if (hair.includes('hairBun')) place(p.hairBun, i, tmp.head, [0, 0.34, -0.14]);
+      else hide(p.hairBun, i);
+      if (hair.includes('hairLong')) place(p.hairLong, i, tmp.head, [0, -0.17, -0.02]);
+      else hide(p.hairLong, i);
+      if (hair.includes('hairAfro')) place(p.hairAfro, i, tmp.head, [0, 0.14, -0.18], [0, 0, 0], [1.05, 0.95, 0.9]);
+      else hide(p.hairAfro, i);
+      SPIKES.forEach((spike, k) => {
+        if (hair.includes('spikes')) place(p.spikes, i * SPIKES.length + k, tmp.head, spike.offset, spike.rot);
+        else hide(p.spikes, i * SPIKES.length + k);
+      });
+
+      // rosto: olhos piscam, sobrancelhas sobem no "uau"
+      const t = (now / 1000 + look.seed * 11) % BLINK_PERIOD_S;
+      const eyeOpen = t < BLINK_S ? 0.12 : 1;
+      const browLift = look.face === 'wow' ? 0.035 : 0;
       for (const side of [-1, 1] as const) {
-        const k = side < 0 ? 0 : 1;
-        place(p.eyes, i * 2 + k, tmp.head, [side * 0.12, 0.02, 0.3], [0, 0, 0], [1, 1.3, 0.6]);
-        place(p.shine, i * 2 + k, tmp.head, [side * 0.12 + 0.02, 0.06, 0.335]);
-        place(p.cheeks, i * 2 + k, tmp.head, [side * 0.2, -0.08, 0.26], [0, side * 0.5, 0], [1, 0.6, 0.4]);
+        const k = i * 2 + (side < 0 ? 0 : 1);
+        place(p.sclera, k, tmp.head, [side * 0.12, 0.03, 0.29], [0, 0, 0], [1, 1.2 * eyeOpen, 0.55]);
+        place(p.pupils, k, tmp.head, [side * 0.115, 0.02, 0.325], [0, 0, 0], [1, 1.15 * eyeOpen, 0.6]);
+        if (eyeOpen < 1) hide(p.shine, k);
+        else place(p.shine, k, tmp.head, [side * 0.115 + 0.018, 0.05, 0.345]);
+        place(p.brows, k, tmp.head, [side * 0.12, 0.15 + browLift, 0.3], [0, 0, Math.PI / 2 + side * (look.face === 'wow' ? 0.25 : 0.12)]);
+        place(p.cheeks, k, tmp.head, [side * 0.2, -0.08, 0.26], [0, side * 0.5, 0], [1, 0.6, 0.4]);
       }
-      if (s.look.face === 'wow') {
-        place(p.wow, i, tmp.head, [0, -0.13, 0.31]);
-        p.smile?.setMatrixAt(i, ZERO);
+      if (look.face === 'wow') {
+        place(p.wow, i, tmp.head, [0, -0.15, 0.31], [0, 0, 0], [1, 1.2, 0.6]);
+        hide(p.smile, i);
       } else {
-        const w = s.look.face === 'grin' ? 1.35 : 1;
-        place(p.smile, i, tmp.head, [0, -0.08, 0.31], [0, 0, Math.PI], [w, w, 1]);
-        p.wow?.setMatrixAt(i, ZERO);
+        const w = look.face === 'grin' ? 1.35 : 1;
+        place(p.smile, i, tmp.head, [0, -0.1, 0.31], [0, 0, Math.PI], [w, w, 1]);
+        hide(p.wow, i);
       }
 
+      // chapéus (black power não usa chapéu) e coroa do host acima do cabelo
       for (const type of HAT_TYPES) {
-        const mesh = p.hats[type];
         const h = HAT[type];
-        if (!s.isHost && s.look.hat === type) place(mesh, i, tmp.head, h.offset, h.rot, [h.scale, h.scale, h.scale]);
-        else mesh?.setMatrixAt(i, ZERO);
+        if (!s.isHost && look.hat === type && look.hairStyle !== 'afro') place(p.hats[type], i, tmp.head, h.offset, h.rot, [h.scale, h.scale, h.scale]);
+        else hide(p.hats[type], i);
       }
-      if (s.isHost) place(p.crown, i, tmp.head, [0, HEAD_R + 0.08, 0], [-0.12, 0, 0], [1.3, 1.3, 1.3]);
-      else p.crown?.setMatrixAt(i, ZERO);
+      if (s.isHost) place(p.crown, i, tmp.head, [0, look.hairStyle === 'afro' ? 0.62 : HEAD_R + 0.1, 0], [-0.12, 0, 0], [1.3, 1.3, 1.3]);
+      else hide(p.crown, i);
 
       if (p.shadow) {
         tmp.o.position.set(ps.position[0], ps.position[1] + 0.02, ps.position[2]);
@@ -195,21 +224,32 @@ export function AvatarCrowd({
       }
 
       // cores: roupa brilha dourada na vitória; tudo fica lilás translúcido ao "virar fantasma" (desconectado)
-      tmp.color.set(s.look.body).lerp(GHOST, ps.ghost).lerp(GOLD, ps.glow * 0.6);
-      p.torso?.setColorAt(i, tmp.color);
+      const paint = (meshes: (InstancedMesh | null)[], color: string, glow = 0) => {
+        tmp.color.set(color).lerp(GHOST, ps.ghost).lerp(GOLD, glow);
+        for (const m of meshes) m?.setColorAt(i, tmp.color);
+      };
+      const paintPair = (meshes: (InstancedMesh | null)[], color: string) => {
+        tmp.color.set(color).lerp(GHOST, ps.ghost);
+        for (const m of meshes) {
+          m?.setColorAt(i * 2, tmp.color);
+          m?.setColorAt(i * 2 + 1, tmp.color);
+        }
+      };
+      paint([p.torso], look.body, ps.glow * 0.6);
+      tmp.color.set(look.body).lerp(GHOST, ps.ghost).lerp(GOLD, ps.glow * 0.6);
       p.arms?.setColorAt(i * 2, tmp.color);
       p.arms?.setColorAt(i * 2 + 1, tmp.color);
-      tmp.color.set(s.look.skin).lerp(GHOST, ps.ghost);
-      p.head?.setColorAt(i, tmp.color);
-      p.hands?.setColorAt(i * 2, tmp.color);
-      p.hands?.setColorAt(i * 2 + 1, tmp.color);
-      tmp.color.set(s.look.hair).lerp(GHOST, ps.ghost);
-      p.hair?.setColorAt(i, tmp.color);
-      tmp.color.set(s.look.pants).lerp(GHOST, ps.ghost);
-      p.legs?.setColorAt(i * 2, tmp.color);
-      p.legs?.setColorAt(i * 2 + 1, tmp.color);
-      tmp.color.set(s.look.accent).lerp(GHOST, ps.ghost);
-      for (const type of HAT_TYPES) p.hats[type]?.setColorAt(i, tmp.color);
+      paint([p.head, p.nose], look.skin);
+      paintPair([p.hands], look.skin);
+      paint([p.hairCap, p.hairBun, p.hairLong, p.hairAfro], look.hair);
+      paintPair([p.brows], look.hair);
+      tmp.color.set(look.hair).lerp(GHOST, ps.ghost);
+      for (let k = 0; k < SPIKES.length; k++) p.spikes?.setColorAt(i * SPIKES.length + k, tmp.color);
+      paintPair([p.legs], look.pants);
+      paint(
+        HAT_TYPES.map((type) => p.hats[type]),
+        look.accent,
+      );
       p.crown?.setColorAt(i, GOLD);
     }
 
@@ -254,23 +294,30 @@ export function AvatarCrowd({
         <meshStandardMaterial roughness={0.5} />
       </instancedMesh>
 
-      {/* cabeça */}
+      {/* cabeça e rosto */}
       <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.head = m)} args={[undefined, undefined, MAX_AVATARS]} castShadow={castShadow} onPointerDown={tap}>
         <sphereGeometry args={[HEAD_R, 28, 22]} />
         <meshStandardMaterial roughness={0.5} />
       </instancedMesh>
-      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.hair = m)} args={[undefined, undefined, MAX_AVATARS]}>
-        {/* calota cobrindo o topo e a nuca, inclinada para trás deixando a testa livre */}
-        <sphereGeometry args={[HEAD_R + 0.035, 28, 16, 0, Math.PI * 2, 0, Math.PI * 0.58]} />
-        <meshStandardMaterial roughness={0.55} side={DoubleSide} />
+      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.nose = m)} args={[undefined, undefined, MAX_AVATARS]}>
+        <sphereGeometry args={[0.04, 10, 8]} />
+        <meshStandardMaterial roughness={0.5} />
       </instancedMesh>
-      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.eyes = m)} args={[undefined, undefined, pair]}>
-        <sphereGeometry args={[0.055, 12, 10]} />
-        <meshStandardMaterial color="#0f172a" roughness={0.2} />
+      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.sclera = m)} args={[undefined, undefined, pair]}>
+        <sphereGeometry args={[0.072, 14, 12]} />
+        <meshStandardMaterial color="#ffffff" roughness={0.25} />
+      </instancedMesh>
+      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.pupils = m)} args={[undefined, undefined, pair]}>
+        <sphereGeometry args={[0.045, 12, 10]} />
+        <meshStandardMaterial color="#1e1b4b" roughness={0.15} />
       </instancedMesh>
       <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.shine = m)} args={[undefined, undefined, pair]}>
-        <sphereGeometry args={[0.018, 8, 6]} />
+        <sphereGeometry args={[0.016, 8, 6]} />
         <meshBasicMaterial color="#ffffff" />
+      </instancedMesh>
+      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.brows = m)} args={[undefined, undefined, pair]}>
+        <capsuleGeometry args={[0.016, 0.07, 2, 6]} />
+        <meshStandardMaterial roughness={0.6} />
       </instancedMesh>
       <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.cheeks = m)} args={[undefined, undefined, pair]}>
         <sphereGeometry args={[0.06, 12, 8]} />
@@ -283,6 +330,30 @@ export function AvatarCrowd({
       <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.wow = m)} args={[undefined, undefined, MAX_AVATARS]}>
         <sphereGeometry args={[0.045, 10, 8]} />
         <meshBasicMaterial color="#7f1d1d" />
+      </instancedMesh>
+
+      {/* cabelos (um InstancedMesh por peça; cada boneco usa as do seu estilo) */}
+      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.hairCap = m)} args={[undefined, undefined, MAX_AVATARS]}>
+        {/* calota cobrindo o topo e a nuca, inclinada para trás deixando a testa livre */}
+        <sphereGeometry args={[HEAD_R + 0.035, 28, 16, 0, Math.PI * 2, 0, Math.PI * 0.58]} />
+        <meshStandardMaterial roughness={0.55} side={DoubleSide} />
+      </instancedMesh>
+      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.spikes = m)} args={[undefined, undefined, MAX_AVATARS * SPIKES.length]}>
+        <coneGeometry args={[0.075, 0.22, 8]} />
+        <meshStandardMaterial roughness={0.55} />
+      </instancedMesh>
+      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.hairBun = m)} args={[undefined, undefined, MAX_AVATARS]}>
+        <sphereGeometry args={[0.14, 16, 12]} />
+        <meshStandardMaterial roughness={0.55} />
+      </instancedMesh>
+      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.hairLong = m)} args={[undefined, undefined, MAX_AVATARS]}>
+        {/* "cortina" atrás da cabeça descendo até os ombros */}
+        <cylinderGeometry args={[HEAD_R + 0.03, HEAD_R + 0.08, 0.5, 20, 1, true, Math.PI / 2 - 0.3, Math.PI + 0.6]} />
+        <meshStandardMaterial roughness={0.55} side={DoubleSide} />
+      </instancedMesh>
+      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.hairAfro = m)} args={[undefined, undefined, MAX_AVATARS]}>
+        <icosahedronGeometry args={[HEAD_R + 0.1, 2]} />
+        <meshStandardMaterial roughness={0.9} flatShading />
       </instancedMesh>
 
       {/* chapéus e coroa do host */}

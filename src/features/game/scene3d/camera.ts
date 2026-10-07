@@ -7,7 +7,8 @@ const FOV = 45;
 const MAX_DISTANCE = 26;
 const VIEWS: Record<CameraView, { target: Vec3; halfWidth: number; halfHeight: number; elevation: number }> = {
   lobby: { target: [0, 1.1, -0.6], halfWidth: 5.6, halfHeight: 3.2, elevation: 0.32 },
-  game: { target: [0.5, 2.7, -3.8], halfWidth: 4.35, halfHeight: 2.9, elevation: 0.12 },
+  // game: de cima da plateia — bonecos em primeiro plano, telão e globo ao fundo.
+  game: { target: [0, 2.4, -0.5], halfWidth: 4.5, halfHeight: 3.25, elevation: 0.45 },
 };
 
 /** Menor meia-largura do lobby: mesmo com 1–2 jogadores o palco e o globo continuam em cena. */

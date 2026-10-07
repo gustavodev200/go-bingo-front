@@ -15,7 +15,7 @@ function Label({ userId, nickname, statesRef, isMe }: { userId: string; nickname
     const s = statesRef.current?.get(userId);
     if (!group.current || !s) return;
     const p = pose(s, performance.now());
-    group.current.position.set(p.position[0], p.position[1] + 1.85 * p.scale, p.position[2]);
+    group.current.position.set(p.position[0], p.position[1] + 1.72 * p.scale, p.position[2]);
     group.current.scale.setScalar(Math.max(0.0001, p.scale));
   });
   return (
