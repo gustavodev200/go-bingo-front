@@ -47,7 +47,7 @@ export function LobbyView({ actions, onLeave, coins }: { actions: GameActions; o
           <CardGrid grid={snapshot.myCard.grid} marked={[]} drawn={NO_DRAWS} />
         ) : (
           <p className="text-muted-foreground rounded-2xl border border-dashed border-white/15 px-4 py-6 text-center text-sm">
-            Gere uma cartela para ficar pronto. Se não gerar, recebe uma automática no início (também custa {CARD_COST} moedas, se você tiver).
+            Gere uma cartela para ficar pronto. Se não gerar, recebe uma automática no início ({CARD_COST} moedas se tiver saldo; senão, de graça).
           </p>
         )}
         <Button variant="secondary" className="h-11 gap-2 rounded-xl" disabled={!canBuyCard} onClick={() => void actions.generateCard()}>
@@ -60,7 +60,7 @@ export function LobbyView({ actions, onLeave, coins }: { actions: GameActions; o
         </Button>
         {!canBuyCard && (
           <p role="status" className="text-center text-xs text-amber-200/80">
-            Moedas insuficientes. Volte amanhã para o bônus do dia (+{DAILY_COINS}) ou vença uma partida.
+            Sem moedas para trocar agora — você ainda joga: no início recebe uma cartela de graça. Volte amanhã para o bônus do dia (+{DAILY_COINS}).
           </p>
         )}
       </section>

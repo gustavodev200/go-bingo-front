@@ -44,4 +44,15 @@ describe('CardGrid (como no bingo de verdade)', () => {
     const { container: none } = render(<CardGrid grid={grid} marked={[]} drawn={new Set()} onMark={vi.fn()} />);
     expect(drawn.innerHTML).toBe(none.innerHTML);
   });
+
+  it('size="sm" is a read-only picture: no buttons, drawn cells labelled', () => {
+    render(<CardGrid size="sm" label="Cartela de Ana" grid={grid} marked={[0, 6]} drawn={new Set([1, 17])} />);
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    const group = screen.getByRole('group', { name: 'Cartela de Ana' });
+    expect(group).toBeInTheDocument();
+    expect(screen.getByLabelText('B 1, sorteado')).toBeInTheDocument();
+    expect(screen.getByLabelText('I 17, sorteado')).toBeInTheDocument();
+    expect(screen.getByLabelText('B 2')).toBeInTheDocument();
+    expect(screen.getByLabelText('Casa livre')).toBeInTheDocument();
+  });
 });

@@ -2,11 +2,14 @@
 
 import { Coins } from '@/components/stage/coin';
 import { Button } from '@/components/ui/button';
-import { LOSS_COINS } from '@/contracts';
+import { FREE_CELL, LOSS_COINS } from '@/contracts';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { UpgradeButton } from '@/features/auth/upgrade-button';
 import { useProfile } from '@/features/profile/profile-context';
+import { CardGrid } from './card-grid';
 import { selectIsHost, useGameStore } from './store';
+
+const NO_DRAWS: readonly number[] = [];
 
 function myWinText(isGuest: boolean, points: number): string {
   if (isGuest) return 'Convidados não pontuam no ranking.';
@@ -19,6 +22,7 @@ export function ResultDialog({ onReplay, onLeave }: { onReplay: () => void; onLe
   const { profile } = useProfile();
   const winner = useGameStore((s) => s.winner);
   const isHost = useGameStore(selectIsHost);
+  const drawn = useGameStore((s) => s.snapshot?.game?.drawn ?? NO_DRAWS);
   const iWon = winner?.userId === profile.id;
 
   const title = winner ? (iWon ? 'Você venceu! 🎉' : `${winner.nickname} fez BINGO!`) : 'Fim de jogo';
@@ -41,6 +45,7 @@ export function ResultDialog({ onReplay, onLeave }: { onReplay: () => void; onLe
             )}
           </p>
         )}
+        {winner && <WinnerCard grid={winner.grid} nickname={winner.nickname} drawn={drawn} />}
         {iWon && profile.isGuest && <UpgradeButton />}
         <div className="flex flex-col gap-2">
           {isHost ? (
@@ -57,4 +62,11 @@ export function ResultDialog({ onReplay, onLeave }: { onReplay: () => void; onLe
       </DialogContent>
     </Dialog>
   );
+}
+
+/** A "foto" da vitória: prova visual de que a cartela fechou com os números que saíram. */
+function WinnerCard({ grid, nickname, drawn }: { grid: readonly number[]; nickname: string; drawn: readonly number[] }) {
+  const drawnSet = new Set(drawn);
+  const marked = grid.flatMap((n, i) => (n !== FREE_CELL && drawnSet.has(n) ? [i] : []));
+  return <CardGrid size="sm" grid={grid} marked={marked} drawn={drawnSet} label={`Cartela de ${nickname}`} />;
 }

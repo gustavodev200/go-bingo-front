@@ -58,7 +58,7 @@ describe('LobbyView', () => {
     expect(screen.getByText('100')).toBeInTheDocument();
     rerender(<LobbyView actions={actions} coins={4} onLeave={vi.fn()} />);
     expect(screen.getByRole('button', { name: /gerar cartela/i })).toBeDisabled();
-    expect(screen.getByRole('status')).toHaveTextContent(/moedas insuficientes/i);
+    expect(screen.getByRole('status')).toHaveTextContent(/sem moedas para trocar/i);
   });
 
   it('players generate a card, see who is offline and can leave', async () => {
@@ -73,5 +73,11 @@ describe('LobbyView', () => {
     expect(actions.generateCard).toHaveBeenCalled();
     await userEvent.click(screen.getByRole('button', { name: /sair da sala/i }));
     expect(onLeave).toHaveBeenCalled();
+  });
+
+  it('without coins, explains the player still plays with a free card', () => {
+    render(<LobbyView actions={actions} coins={0} onLeave={vi.fn()} />);
+    expect(screen.getByRole('status')).toHaveTextContent(/você ainda joga/i);
+    expect(screen.getByRole('status')).toHaveTextContent(/de graça/i);
   });
 });

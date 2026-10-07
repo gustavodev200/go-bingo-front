@@ -15,10 +15,10 @@ vi.mock('@/features/profile/profile-context', () => ({
 }));
 vi.mock('@/features/auth/upgrade-button', () => ({ UpgradeButton: () => <button>upgrade</button> }));
 
-function setup(hostId: string, winnerId: string | null) {
+function setup(hostId: string, winnerId: string | null, drawn: number[] = []) {
   const snapshot: RoomSnapshot = {
     code: 'ABC234', name: 'Sala', hostId, maxPlayers: 10, isPublic: true, status: 'IN_GAME', winPattern: 'FULL_CARD',
-    members: [], myCard: null, game: { id: '00000000-0000-4000-8000-0000000000bb', drawn: [], drawIntervalMs: 5000, remaining: {} },
+    members: [], myCard: null, game: { id: '00000000-0000-4000-8000-0000000000bb', drawn, drawIntervalMs: 5000, remaining: {} },
   };
   let state = reduce(initialGameState(ME), { event: 'room:state', payload: snapshot });
   state = winnerId
@@ -79,5 +79,19 @@ describe('ResultDialog', () => {
     expect(screen.getByText(/sem vencedor/i)).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /jogar de novo/i }));
     expect(onReplay).toHaveBeenCalled();
+  });
+
+  it("shows the winner's card with the drawn numbers stamped", () => {
+    setup(ME, ANA, [1, 2, 3, 4, 5]);
+    render(<ResultDialog onReplay={vi.fn()} onLeave={vi.fn()} />);
+    expect(screen.getByRole('group', { name: 'Cartela de Ana' })).toBeInTheDocument();
+    expect(screen.getByLabelText('B 1, sorteado')).toBeInTheDocument();
+    expect(screen.getByLabelText('B 6')).toBeInTheDocument();
+  });
+
+  it('no winner, no card', () => {
+    setup(ME, null);
+    render(<ResultDialog onReplay={vi.fn()} onLeave={vi.fn()} />);
+    expect(screen.queryByRole('group')).not.toBeInTheDocument();
   });
 });

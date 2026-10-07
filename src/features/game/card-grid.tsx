@@ -9,13 +9,18 @@ interface CardGridProps {
   marked: readonly number[];
   drawn: ReadonlySet<number>;
   onMark?: (index: number) => void;
+  /** `sm` = miniatura somente leitura (ex.: cartela do vencedor no resultado). */
+  size?: 'md' | 'sm';
+  /** Nome acessível do grupo na miniatura. */
+  label?: string;
 }
 
 /**
  * Cartela de papel: casas creme, marcado leva o "carimbo" magenta.
  * Como no bingo de verdade, a cartela não entrega o que já saiu: quem não prestar atenção esquece de marcar.
  */
-export function CardGrid({ grid, marked, drawn, onMark }: CardGridProps) {
+export function CardGrid({ grid, marked, drawn, onMark, size = 'md', label }: CardGridProps) {
+  if (size === 'sm') return <MiniCardGrid grid={grid} marked={marked} label={label} />;
   const markedSet = new Set(marked);
   const cells: number[] = [];
   for (let row = 0; row < 5; row++) for (let col = 0; col < 5; col++) cells.push(col * 5 + row);
@@ -60,6 +65,47 @@ export function CardGrid({ grid, marked, drawn, onMark }: CardGridProps) {
             >
               {free ? '★' : number}
             </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+const STAMP = 'before:absolute before:top-[10%] before:bottom-[10%] before:left-1/2 before:aspect-square before:-translate-x-1/2 before:-z-10 before:rounded-full before:bg-pink-500/90';
+
+/** Miniatura sem interação: casas carimbadas = números que saíram. */
+function MiniCardGrid({ grid, marked, label }: { grid: readonly number[]; marked: readonly number[]; label?: string }) {
+  const markedSet = new Set(marked);
+  const cells: number[] = [];
+  for (let row = 0; row < 5; row++) for (let col = 0; col < 5; col++) cells.push(col * 5 + row);
+
+  return (
+    <div role="group" aria-label={label} className="mx-auto w-full max-w-[15rem] rounded-xl bg-linear-to-b from-fuchsia-800 to-violet-950 p-1.5 shadow-[0_0_0_2px_rgb(251_191_36/0.6)]">
+      <div className="grid grid-cols-5 gap-1 select-none">
+        {BINGO_LETTERS.map((letter) => (
+          <div key={letter} className="flex justify-center" aria-hidden="true">
+            <BingoBall letter={letter} className="w-6" faceClassName="text-[10px]">
+              {letter}
+            </BingoBall>
+          </div>
+        ))}
+        {cells.map((index) => {
+          const number = grid[index];
+          const free = index === FREE_INDEX || number === FREE_CELL;
+          const isMarked = free || markedSet.has(index);
+          return (
+            <div
+              key={index}
+              aria-label={free ? 'Casa livre' : `${letterFor(number)} ${number}${isMarked ? ', sorteado' : ''}`}
+              className={cn(
+                'font-display relative isolate flex aspect-6/5 items-center justify-center overflow-hidden rounded-md bg-amber-50 text-sm font-bold text-violet-950',
+                isMarked && cn(STAMP, 'text-white'),
+                free && 'before:bg-linear-to-b before:from-amber-300 before:to-amber-500 text-violet-950',
+              )}
+            >
+              {free ? '★' : number}
+            </div>
           );
         })}
       </div>
