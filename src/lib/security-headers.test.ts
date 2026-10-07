@@ -27,6 +27,14 @@ describe('buildCsp', () => {
   });
 });
 
+describe('buildCsp script-src', () => {
+  it('permite blob: em script-src (worker do troika faz importScripts de blob) sem curinga', () => {
+    const script = buildCsp(opts).split('; ').find((d) => d.startsWith('script-src'));
+    expect(script).toContain('blob:');
+    expect(script).not.toContain('*');
+  });
+});
+
 describe('securityHeaders', () => {
   it('envia CSP, HSTS, nosniff, referrer e permissions policy', () => {
     const keys = securityHeaders(opts).map((h) => h.key);

@@ -28,8 +28,9 @@ export function buildCsp({ apiUrl, supabaseUrl, sentryDsn }: CspOptions): string
   ];
   const directives: Record<string, string[]> = {
     'default-src': ["'self'"],
-    // Next injeta scripts inline de hidratação; three/troika usam worker de blob.
-    'script-src': ["'self'", "'unsafe-inline'", 'https://challenges.cloudflare.com'],
+    // Next injeta scripts inline de hidratação; o worker do troika (drei <Text>) faz importScripts de uma
+    // URL blob:, que é checada contra script-src (e não só worker-src).
+    'script-src': ["'self'", "'unsafe-inline'", 'blob:', 'https://challenges.cloudflare.com'],
     'style-src': ["'self'", "'unsafe-inline'"],
     'img-src': ["'self'", 'data:', 'blob:'],
     'font-src': ["'self'", 'data:', 'https://cdn.jsdelivr.net'],
