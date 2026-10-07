@@ -1,6 +1,8 @@
 'use client';
 
+import { Coins } from '@/components/stage/coin';
 import { Button } from '@/components/ui/button';
+import { LOSS_COINS } from '@/contracts';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { UpgradeButton } from '@/features/auth/upgrade-button';
 import { useProfile } from '@/features/profile/profile-context';
@@ -28,6 +30,16 @@ export function ResultDialog({ onReplay, onLeave }: { onReplay: () => void; onLe
           <DialogTitle className="text-marquee text-2xl">{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
+        {winner && (
+          <p className="flex items-center justify-center gap-2 rounded-2xl bg-white/5 py-3 text-lg">
+            {iWon ? (
+              <Coins amount={winner.coinsAwarded} signed className="text-amber-300" />
+            ) : (
+              // perda limitada ao saldo: nunca fica negativo
+              <Coins amount={-LOSS_COINS} signed className="text-rose-300" />
+            )}
+          </p>
+        )}
         {iWon && profile.isGuest && <UpgradeButton />}
         <div className="flex flex-col gap-2">
           {isHost ? (

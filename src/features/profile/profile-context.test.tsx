@@ -4,6 +4,8 @@ import { ApiError } from '@/lib/api';
 import { RequireNickname, useProfile } from './profile-context';
 
 const apiFetch = vi.fn();
+const toastSuccess = vi.fn();
+vi.mock('sonner', () => ({ toast: { success: (m: string) => toastSuccess(m) } }));
 const replace = vi.fn();
 vi.mock('@/lib/api', async (orig) => ({ ...(await orig<typeof import('@/lib/api')>()), apiFetch: (...a: unknown[]) => apiFetch(...a) }));
 // Objeto estável, como o router real do Next (senão o effect re-roda a cada render).
@@ -23,6 +25,20 @@ describe('RequireNickname', () => {
     apiFetch.mockResolvedValue({ id: 'x', nickname: 'Ana', isGuest: true, points: 0 });
     render(<RequireNickname><Name /></RequireNickname>);
     expect(await screen.findByText('Ana')).toBeInTheDocument();
+  });
+
+  it('announces the daily bonus credited on this visit', async () => {
+    apiFetch.mockResolvedValue({ id: 'x', nickname: 'Ana', isGuest: true, points: 0, coins: 150, dailyBonus: 50 });
+    render(<RequireNickname><Name /></RequireNickname>);
+    expect(await screen.findByText('Ana')).toBeInTheDocument();
+    expect(toastSuccess).toHaveBeenCalledWith('+50 moedas: bônus do dia!');
+  });
+
+  it('stays quiet when the bonus was already claimed today', async () => {
+    apiFetch.mockResolvedValue({ id: 'x', nickname: 'Ana', isGuest: true, points: 0, coins: 150, dailyBonus: 0 });
+    render(<RequireNickname><Name /></RequireNickname>);
+    expect(await screen.findByText('Ana')).toBeInTheDocument();
+    expect(toastSuccess).not.toHaveBeenCalled();
   });
 
   it('sends users without nickname to /nickname keeping the path', async () => {

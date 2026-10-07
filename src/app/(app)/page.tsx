@@ -4,6 +4,7 @@ import { LogOut, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Avatar } from '@/components/stage/avatar';
+import { Coins } from '@/components/stage/coin';
 import { MarqueeTitle } from '@/components/stage/stage';
 import { Button } from '@/components/ui/button';
 import { UpgradeButton } from '@/features/auth/upgrade-button';
@@ -30,7 +31,11 @@ export default function HomePage() {
           <Avatar id={profile.id} className="w-8" />
           <span className="flex min-w-0 flex-col leading-tight">
             <span className="truncate text-sm font-semibold">{profile.nickname}</span>
-            <span className="text-xs font-semibold text-amber-300">{profile.isGuest ? 'convidado' : `${profile.points} pts`}</span>
+            <span className="flex items-center gap-1.5 text-xs font-semibold text-amber-300">
+              <Coins amount={profile.coins} />
+              <span className="text-violet-200/70">·</span>
+              {profile.isGuest ? 'convidado' : `${profile.points} pts`}
+            </span>
           </span>
         </span>
       </header>

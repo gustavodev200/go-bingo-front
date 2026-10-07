@@ -2,8 +2,9 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { profileSchema, type Profile } from '@/contracts';
+import { meResponseSchema, type Profile } from '@/contracts';
 import { ApiError, apiFetch } from '@/lib/api';
 
 interface ProfileContextValue {
@@ -27,7 +28,9 @@ export function RequireNickname({ children }: { children: ReactNode }) {
 
   const load = useCallback(async () => {
     try {
-      const p = await apiFetch('/me', profileSchema);
+      const p = await apiFetch('/me', meResponseSchema);
+      // O servidor credita o bônus do dia no primeiro GET /me do dia.
+      if (p.dailyBonus > 0) toast.success(`+${p.dailyBonus} moedas: bônus do dia!`);
       if (!p.nickname) return router.replace(`/nickname?next=${encodeURIComponent(pathname)}`);
       setProfile(p);
     } catch (error) {

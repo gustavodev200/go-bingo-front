@@ -1,7 +1,8 @@
 'use client';
 
+import { Coin, Coins } from '@/components/stage/coin';
 import { Button } from '@/components/ui/button';
-import { MAX_CARD_REGENS } from '@/contracts';
+import { CARD_COST, DAILY_COINS, MAX_CARD_REGENS } from '@/contracts';
 import { CardGrid } from './card-grid';
 import type { GameActions } from './use-game-connection';
 import { MembersList } from './members-list';
@@ -10,12 +11,14 @@ import { selectIsHost, selectReadyCount, useGameStore } from './store';
 
 const NO_DRAWS: ReadonlySet<number> = new Set();
 
-export function LobbyView({ actions, onLeave }: { actions: GameActions; onLeave: () => void }) {
+/** `coins` = saldo do jogador (cada cartela custa CARD_COST). */
+export function LobbyView({ actions, onLeave, coins }: { actions: GameActions; onLeave: () => void; coins: number }) {
   const snapshot = useGameStore((s) => s.snapshot)!;
   const myUserId = useGameStore((s) => s.myUserId)!;
   const isHost = useGameStore(selectIsHost);
   const ready = useGameStore(selectReadyCount);
   const canStart = snapshot.members.length >= 2 && ready >= 2;
+  const canBuyCard = coins >= CARD_COST;
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-col gap-5 px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
@@ -33,17 +36,30 @@ export function LobbyView({ actions, onLeave }: { actions: GameActions; onLeave:
       </section>
 
       <section className="glass flex flex-col gap-3 p-4">
-        <h2 className="font-display text-lg font-semibold">Sua cartela</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-lg font-semibold">Sua cartela</h2>
+          <Coins amount={coins} className="rounded-full bg-amber-300/15 px-2.5 py-1 text-sm text-amber-200 ring-1 ring-amber-300/30" />
+        </div>
         {snapshot.myCard ? (
           <CardGrid grid={snapshot.myCard.grid} marked={[]} drawn={NO_DRAWS} />
         ) : (
           <p className="text-muted-foreground rounded-2xl border border-dashed border-white/15 px-4 py-6 text-center text-sm">
-            Gere uma cartela para ficar pronto. Se não gerar, recebe uma automática no início.
+            Gere uma cartela para ficar pronto. Se não gerar, recebe uma automática no início (também custa {CARD_COST} moedas, se você tiver).
           </p>
         )}
-        <Button variant="secondary" className="h-11 rounded-xl" onClick={() => void actions.generateCard()}>
+        <Button variant="secondary" className="h-11 gap-2 rounded-xl" disabled={!canBuyCard} onClick={() => void actions.generateCard()}>
           {snapshot.myCard ? `Trocar cartela (até ${MAX_CARD_REGENS}x)` : 'Gerar cartela'}
+          <span className="flex items-center gap-1 rounded-full bg-black/25 px-2 py-0.5 text-xs">
+            <Coin className="size-3.5" />
+            <span aria-hidden>{CARD_COST}</span>
+            <span className="sr-only">, custa {CARD_COST} moedas</span>
+          </span>
         </Button>
+        {!canBuyCard && (
+          <p role="status" className="text-center text-xs text-amber-200/80">
+            Moedas insuficientes. Volte amanhã para o bônus do dia (+{DAILY_COINS}) ou vença uma partida.
+          </p>
+        )}
       </section>
 
       {isHost ? (

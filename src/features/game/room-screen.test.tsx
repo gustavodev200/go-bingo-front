@@ -15,7 +15,7 @@ const actions = { generateCard: vi.fn(), start: vi.fn(), cancel: vi.fn(), leave:
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push }), usePathname: () => '/ABC234' }));
 vi.mock('sonner', () => ({ toast: Object.assign((msg: string) => toast(msg), { error: vi.fn(), success: vi.fn() }) }));
 vi.mock('@/features/profile/profile-context', () => ({
-  useProfile: () => ({ profile: { id: ME, nickname: 'Eu', isGuest: false, points: 0 }, refresh: vi.fn() }),
+  useProfile: () => ({ profile: { id: ME, nickname: 'Eu', isGuest: false, points: 0, coins: 100 }, refresh: vi.fn() }),
 }));
 const hooks = vi.hoisted(() => ({ onDrawLatency: undefined as ((ms: number) => void) | undefined, onContextLoss: undefined as (() => void) | undefined }));
 vi.mock('./use-game-connection', () => ({
@@ -161,7 +161,7 @@ describe('RoomScreen', () => {
     try {
       sceneMode.value = { ...SCENE_2D, mode: '3d', reason: 'ok' };
       renderWith(room({ status: 'IN_GAME', myCard: { id: '00000000-0000-4000-8000-0000000000aa', grid, marked: [] }, game: { id: '00000000-0000-4000-8000-0000000000bb', drawn: [], drawIntervalMs: 5000, remaining: { [ME]: 24 } } }));
-      act(() => useGameStore.getState().dispatch({ event: 'game:won', payload: { userId: ANA, nickname: 'Ana', pointsAwarded: 20, grid } }));
+      act(() => useGameStore.getState().dispatch({ event: 'game:won', payload: { userId: ANA, nickname: 'Ana', pointsAwarded: 20, coinsAwarded: 100, grid } }));
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
       act(() => vi.advanceTimersByTime(2500));
       expect(screen.getByRole('dialog')).toHaveTextContent('Ana fez BINGO!');
@@ -246,7 +246,7 @@ describe('RoomScreen', () => {
 
   it('shows the result dialog after a win and replays', async () => {
     renderWith(room({ status: 'IN_GAME', game: { id: '00000000-0000-4000-8000-0000000000bb', drawn: [], drawIntervalMs: 5000, remaining: {} } }));
-    act(() => useGameStore.getState().dispatch({ event: 'game:won', payload: { userId: ANA, nickname: 'Ana', pointsAwarded: 0, grid } }));
+    act(() => useGameStore.getState().dispatch({ event: 'game:won', payload: { userId: ANA, nickname: 'Ana', pointsAwarded: 0, coinsAwarded: 100, grid } }));
     expect(screen.getByText(/ana fez bingo/i)).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /jogar de novo/i }));
     expect(actions.replay).toHaveBeenCalled();

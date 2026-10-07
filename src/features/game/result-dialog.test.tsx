@@ -10,7 +10,7 @@ const grid = Array.from({ length: 25 }, (_, i) => (i === 12 ? 0 : i + 1));
 let isGuest = false;
 
 vi.mock('@/features/profile/profile-context', () => ({
-  useProfile: () => ({ profile: { id: ME, nickname: 'Eu', isGuest, points: 0 }, refresh: vi.fn() }),
+  useProfile: () => ({ profile: { id: ME, nickname: 'Eu', isGuest, points: 0, coins: 100 }, refresh: vi.fn() }),
 }));
 vi.mock('@/features/auth/upgrade-button', () => ({ UpgradeButton: () => <button>upgrade</button> }));
 
@@ -21,7 +21,7 @@ function setup(hostId: string, winnerId: string | null) {
   };
   let state = reduce(initialGameState(ME), { event: 'room:state', payload: snapshot });
   state = winnerId
-    ? reduce(state, { event: 'game:won', payload: { userId: winnerId, nickname: winnerId === ME ? 'Eu' : 'Ana', pointsAwarded: winnerId === ME && !isGuest ? 20 : 0, grid } })
+    ? reduce(state, { event: 'game:won', payload: { userId: winnerId, nickname: winnerId === ME ? 'Eu' : 'Ana', pointsAwarded: winnerId === ME && !isGuest ? 20 : 0, coinsAwarded: 100, grid } })
     : reduce(state, { event: 'game:ended', payload: { reason: 'exhausted' } });
   useGameStore.setState(state);
 }
@@ -36,6 +36,16 @@ describe('ResultDialog', () => {
     render(<ResultDialog onReplay={vi.fn()} onLeave={vi.fn()} />);
     expect(screen.getByText(/você venceu/i)).toBeInTheDocument();
     expect(screen.getByText(/\+20 pontos/i)).toBeInTheDocument();
+  });
+
+  it('winner sees the coins won; others see the coins lost', () => {
+    setup(ME, ME);
+    const { unmount } = render(<ResultDialog onReplay={vi.fn()} onLeave={vi.fn()} />);
+    expect(screen.getByRole('dialog')).toHaveTextContent('+100 moedas');
+    unmount();
+    setup(ANA, ANA);
+    render(<ResultDialog onReplay={vi.fn()} onLeave={vi.fn()} />);
+    expect(screen.getByRole('dialog')).toHaveTextContent('−20 moedas');
   });
 
   it('guest winner sees the upgrade CTA', () => {

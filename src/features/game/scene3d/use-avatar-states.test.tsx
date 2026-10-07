@@ -90,7 +90,7 @@ describe('useAvatarStates', () => {
     );
     const { result } = renderHook(() => useAvatarStates(0, clock));
     expect(result.current.statesRef.current.get(ANA)?.oneAway).toBe(true);
-    act(() => useGameStore.getState().dispatch({ event: 'game:won', payload: { userId: ANA, nickname: 'Ana', pointsAwarded: 20, grid: Array.from({ length: 25 }, () => 0) } }));
+    act(() => useGameStore.getState().dispatch({ event: 'game:won', payload: { userId: ANA, nickname: 'Ana', pointsAwarded: 20, coinsAwarded: 100, grid: Array.from({ length: 25 }, () => 0) } }));
     expect(result.current.statesRef.current.get(ANA)?.phase).toBe('winner');
   });
 });

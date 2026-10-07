@@ -17,6 +17,7 @@ export const errorCodeSchema = z.enum([
   'INVALID_STATE',
   'NOT_DRAWN',
   'BINGO_INVALID',
+  'INSUFFICIENT_COINS',
   'INTERNAL',
 ]);
 export type ErrorCode = z.infer<typeof errorCodeSchema>;

@@ -32,6 +32,15 @@ describe('CreateRoomForm', () => {
     expect(apiFetch.mock.calls[0][2].body).toBe(JSON.stringify({ name: 'Família', maxPlayers: 25, isPublic: false }));
   });
 
+  it('lets the host pick the pace of the balls (Normal = server default, not sent)', async () => {
+    apiFetch.mockResolvedValue({ code: 'ZZZ234' });
+    render(<CreateRoomForm />);
+    await userEvent.type(screen.getByLabelText(/nome da sala/i), 'Calma');
+    await userEvent.click(screen.getByLabelText(/calmo/i));
+    await userEvent.click(screen.getByRole('button', { name: /criar sala/i }));
+    expect(JSON.parse(apiFetch.mock.calls[0][2].body as string)).toMatchObject({ drawIntervalMs: 12_000 });
+  });
+
   it('validates the name length', async () => {
     render(<CreateRoomForm />);
     await userEvent.type(screen.getByLabelText(/nome da sala/i), 'ab');

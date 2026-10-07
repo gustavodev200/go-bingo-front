@@ -8,17 +8,25 @@ import { Label } from '@/components/ui/label';
 import { createRoomResponseSchema, createRoomSchema } from '@/contracts';
 import { ApiError, apiFetch } from '@/lib/api';
 
+/** Tempo entre bolas. "Normal" não envia valor: vale o padrão do servidor. */
+const PACES: { label: string; hint: string; ms: number | undefined }[] = [
+  { label: 'Rápido', hint: 'a cada 6s', ms: 6_000 },
+  { label: 'Normal', hint: 'padrão', ms: undefined },
+  { label: 'Calmo', hint: 'a cada 12s', ms: 12_000 },
+];
+
 export function CreateRoomForm() {
   const router = useRouter();
   const [name, setName] = useState('');
   const [maxPlayers, setMaxPlayers] = useState('15');
   const [isPublic, setIsPublic] = useState(true);
+  const [drawIntervalMs, setDrawIntervalMs] = useState<number | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    const parsed = createRoomSchema.safeParse({ name, maxPlayers: Number(maxPlayers), isPublic });
+    const parsed = createRoomSchema.safeParse({ name, maxPlayers: Number(maxPlayers), isPublic, drawIntervalMs });
     if (!parsed.success) return setError(parsed.error.issues[0].message);
     setSaving(true);
     try {
@@ -63,6 +71,21 @@ export function CreateRoomForm() {
               <input type="radio" name="visibility" className="accent-amber-400" checked={isPublic === option.value} onChange={() => setIsPublic(option.value)} /> {option.label}
             </span>
             <span className="text-muted-foreground text-xs">{option.hint}</span>
+          </label>
+        ))}
+      </fieldset>
+
+      <fieldset className="mt-1 grid grid-cols-3 gap-2">
+        <legend className="mb-2 text-sm font-medium">Ritmo das bolas</legend>
+        {PACES.map((pace) => (
+          <label
+            key={pace.label}
+            className="flex min-h-11 cursor-pointer flex-col items-center rounded-xl border border-white/15 bg-white/5 px-2 py-2 text-center transition has-checked:border-amber-300 has-checked:bg-amber-300/15 has-checked:shadow-[0_0_20px_-6px_rgb(251_191_36/0.7)] has-focus-visible:ring-3 has-focus-visible:ring-ring/50"
+          >
+            <span className="flex items-center gap-1.5 font-semibold">
+              <input type="radio" name="pace" className="accent-amber-400" checked={pace.ms === drawIntervalMs} onChange={() => setDrawIntervalMs(pace.ms)} /> {pace.label}
+            </span>
+            <span className="text-muted-foreground text-xs">{pace.hint}</span>
           </label>
         ))}
       </fieldset>

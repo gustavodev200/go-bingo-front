@@ -27,14 +27,14 @@ describe('LobbyView', () => {
 
   it('host waits for 2 ready players before starting', () => {
     load({ members: [member(ME, 'Eu', 0, { hasCard: true }), member(ANA, 'Ana', 1)] });
-    render(<LobbyView actions={actions} onLeave={vi.fn()} />);
+    render(<LobbyView actions={actions} coins={100} onLeave={vi.fn()} />);
     expect(screen.getByRole('button', { name: /aguardando 2 jogadores prontos/i })).toBeDisabled();
     expect(screen.getByText('2/10 jogadores · 1 prontos')).toBeInTheDocument();
   });
 
   it('host starts, kicks and cancels', async () => {
     load({ members: [member(ME, 'Eu', 0, { hasCard: true }), member(ANA, 'Ana', 1, { hasCard: true })], myCard: { id: '00000000-0000-4000-8000-0000000000aa', grid, marked: [] } });
-    render(<LobbyView actions={actions} onLeave={vi.fn()} />);
+    render(<LobbyView actions={actions} coins={100} onLeave={vi.fn()} />);
     await userEvent.click(screen.getByRole('button', { name: /iniciar partida/i }));
     expect(actions.start).toHaveBeenCalled();
     await userEvent.click(screen.getByRole('button', { name: /remover/i }));
@@ -45,10 +45,20 @@ describe('LobbyView', () => {
     expect(screen.getByRole('button', { name: /casa livre/i })).toBeInTheDocument();
   });
 
+  it('shows the balance and the card cost; blocks the card without coins', async () => {
+    load({});
+    const { rerender } = render(<LobbyView actions={actions} coins={100} onLeave={vi.fn()} />);
+    expect(screen.getByRole('button', { name: /gerar cartela, custa 5 moedas/i })).toBeEnabled();
+    expect(screen.getByText('100')).toBeInTheDocument();
+    rerender(<LobbyView actions={actions} coins={4} onLeave={vi.fn()} />);
+    expect(screen.getByRole('button', { name: /gerar cartela/i })).toBeDisabled();
+    expect(screen.getByRole('status')).toHaveTextContent(/moedas insuficientes/i);
+  });
+
   it('players generate a card, see who is offline and can leave', async () => {
     const onLeave = vi.fn();
     load({ hostId: ANA, members: [member(ME, 'Eu', 0), member(ANA, 'Ana', 1, { connected: false })] });
-    render(<LobbyView actions={actions} onLeave={onLeave} />);
+    render(<LobbyView actions={actions} coins={100} onLeave={onLeave} />);
     expect(screen.queryByRole('button', { name: /iniciar partida/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /remover/i })).not.toBeInTheDocument();
     expect(screen.getByText(/ana · reconectando/i)).toBeInTheDocument();

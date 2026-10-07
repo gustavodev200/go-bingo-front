@@ -38,7 +38,7 @@ describe('useGameSounds', () => {
     renderHook(() => useGameSounds(false, player));
     act(() => useGameStore.getState().dispatch({ event: 'game:progress', payload: { remaining: { [ME]: 1, [ANA]: 10 } } }));
     expect(player.play).toHaveBeenCalledWith('one-away');
-    act(() => useGameStore.getState().dispatch({ event: 'game:won', payload: { userId: ME, nickname: 'Eu', pointsAwarded: 20, grid: GRID } }));
+    act(() => useGameStore.getState().dispatch({ event: 'game:won', payload: { userId: ME, nickname: 'Eu', pointsAwarded: 20, coinsAwarded: 100, grid: GRID } }));
     expect(player.play).toHaveBeenCalledWith('bingo-me');
   });
 

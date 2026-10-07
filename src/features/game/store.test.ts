@@ -59,7 +59,7 @@ describe('reduce', () => {
   });
 
   it('records the winner and room:state clears the result', () => {
-    const winner = { userId: ANA, nickname: 'Ana', pointsAwarded: 20, grid };
+    const winner = { userId: ANA, nickname: 'Ana', pointsAwarded: 20, coinsAwarded: 100, grid };
     const won = reduce(withSnapshot(), { event: 'game:won', payload: winner });
     expect(won.winner).toEqual(winner);
     expect(won.snapshot!.status).toBe('WAITING');

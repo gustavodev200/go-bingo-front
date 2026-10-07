@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { MiniGlobe } from '@/components/stage/stage';
 import { Button } from '@/components/ui/button';
@@ -37,7 +37,7 @@ const EXIT_MESSAGES = {
 } as const;
 
 export function RoomScreen({ code }: { code: string }) {
-  const { profile } = useProfile();
+  const { profile, refresh } = useProfile();
   const router = useRouter();
   const reset = useGameStore((s) => s.reset);
   useEffect(() => reset(profile.id), [reset, profile.id]);
@@ -83,6 +83,21 @@ export function RoomScreen({ code }: { code: string }) {
     }
     prevRemaining.current = remaining;
   }, [remaining, snapshot, profile.id]);
+
+  // Moedas mudam no servidor (cartela automática ao começar, vitória/derrota no fim): recarrega o saldo.
+  useEffect(() => {
+    if (inGame) void refresh();
+  }, [inGame, showResult, refresh]);
+  const lobbyActions = useMemo(
+    () => ({
+      ...actions,
+      generateCard: async () => {
+        await actions.generateCard();
+        await refresh();
+      },
+    }),
+    [actions, refresh],
+  );
 
   async function leave() {
     await actions.leave();
@@ -143,7 +158,7 @@ export function RoomScreen({ code }: { code: string }) {
             </div>
           )}
           <SceneControls mode={scene.mode} quality={scene.quality} onModeChange={scene.setPreferred} onQualityChange={scene.setQuality} />
-          <LobbyView actions={actions} onLeave={() => void leave()} />
+          <LobbyView actions={lobbyActions} coins={profile.coins} onLeave={() => void leave()} />
         </>
       )}
       {showResult && resultReady && <ResultDialog onReplay={() => void actions.replay()} onLeave={() => void leave()} />}
