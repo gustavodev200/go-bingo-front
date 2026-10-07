@@ -236,12 +236,12 @@ describe('RoomScreen', () => {
     expect(push).toHaveBeenCalledWith('/');
   });
 
-  it('shows the game while in progress and announces players one away', () => {
+  it('shows the game while in progress without toasting players one away', () => {
     renderWith(room({ status: 'IN_GAME', myCard: { id: '00000000-0000-4000-8000-0000000000aa', grid, marked: [] }, game: { id: '00000000-0000-4000-8000-0000000000bb', drawn: [5], drawIntervalMs: 5000, remaining: { [ME]: 3, [ANA]: 2 } } }));
     expect(screen.getByRole('button', { name: /bingo/i })).toBeInTheDocument();
     act(() => useGameStore.getState().dispatch({ event: 'game:progress', payload: { remaining: { [ME]: 1, [ANA]: 1 } } }));
-    expect(toast).toHaveBeenCalledWith('Você está por 1!');
-    expect(toast).toHaveBeenCalledWith('Ana está por 1!');
+    expect(toast).not.toHaveBeenCalledWith('Você está por 1!');
+    expect(toast).not.toHaveBeenCalledWith('Ana está por 1!');
   });
 
   it('shows the result dialog after a win and replays', async () => {

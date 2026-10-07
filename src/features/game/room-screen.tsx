@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { MiniGlobe } from '@/components/stage/stage';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,6 @@ import { useWakeLock } from '@/features/pwa/use-wake-lock';
 import { ConnectionBanner } from './connection-banner';
 import { GameView } from './game-view';
 import { LobbyView } from './lobby-view';
-import { newlyOneAway } from './one-away';
 import { ResultDialog } from './result-dialog';
 import { SceneControls } from './scene-controls';
 import { StageErrorBoundary } from './stage-error-boundary';
@@ -71,18 +70,6 @@ export function RoomScreen({ code }: { code: string }) {
     if (scene.reason === 'context-lost') toast('Modo 2D ativado para economizar o aparelho');
     if (scene.reason === 'failed') toast('Não foi possível carregar o 3D; usando o modo 2D.');
   }, [scene.reason]);
-
-  // "Fulano está por 1!"
-  const prevRemaining = useRef<Record<string, number>>({});
-  const remaining = snapshot?.game?.remaining;
-  useEffect(() => {
-    if (!remaining || !snapshot) return;
-    for (const userId of newlyOneAway(prevRemaining.current, remaining)) {
-      const nick = snapshot.members.find((m) => m.userId === userId)?.nickname;
-      if (nick) toast(userId === profile.id ? 'Você está por 1!' : `${nick} está por 1!`);
-    }
-    prevRemaining.current = remaining;
-  }, [remaining, snapshot, profile.id]);
 
   // Moedas mudam no servidor (cartela automática ao começar, vitória/derrota no fim): recarrega o saldo.
   useEffect(() => {
