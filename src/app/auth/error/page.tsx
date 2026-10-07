@@ -10,13 +10,15 @@ const MESSAGES: Record<string, string> = {
 export default async function AuthErrorPage({ searchParams }: { searchParams: Promise<{ code?: string }> }) {
   const { code = '' } = await searchParams;
   return (
-    <div className="mx-auto flex max-w-sm flex-col gap-4 px-4 py-10" role="alert">
-      <h1 className="text-xl font-bold">Ops!</h1>
+    <div className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-4 py-10">
+      <div className="glass flex flex-col gap-4 p-6 text-center" role="alert">
+      <h1 className="font-display text-marquee text-3xl font-bold">Ops!</h1>
       <p>{Object.hasOwn(MESSAGES, code) ? MESSAGES[code] : 'Não foi possível entrar com Google. Tente novamente.'}</p>
       {code === 'identity_already_exists' && <SwitchToGoogleAccount />}
-      <Button asChild variant="outline">
+      <Button asChild variant="outline" className="h-11 rounded-xl">
         <Link href="/">Voltar ao início</Link>
       </Button>
+      </div>
     </div>
   );
 }

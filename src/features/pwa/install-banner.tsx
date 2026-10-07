@@ -9,8 +9,8 @@ export function InstallBanner() {
   if (mode === 'hidden') return null;
 
   return (
-    <aside className="bg-card flex flex-col gap-3 rounded-lg border p-4" aria-label="Instalar o aplicativo">
-      <p className="font-semibold">Instale o Go Bingo</p>
+    <aside className="glass flex flex-col gap-3 p-4" aria-label="Instalar o aplicativo">
+      <p className="font-display text-lg font-semibold">Instale o Go Bingo</p>
       {mode === 'prompt' ? (
         <>
           <p className="text-muted-foreground text-sm">Abra direto da tela inicial, em tela cheia.</p>

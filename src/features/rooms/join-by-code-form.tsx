@@ -23,8 +23,17 @@ export function JoinByCodeForm() {
     <form onSubmit={submit} className="flex flex-col gap-2">
       <Label htmlFor="room-code">Código da sala</Label>
       <div className="flex gap-2">
-        <Input id="room-code" value={code} maxLength={8} autoCapitalize="characters" autoComplete="off" className="h-11 uppercase" onChange={(e) => setCode(e.target.value)} />
-        <Button type="submit" className="h-11 px-5">
+        <Input
+          id="room-code"
+          value={code}
+          maxLength={8}
+          autoCapitalize="characters"
+          autoComplete="off"
+          placeholder="ABC234"
+          className="h-12 rounded-xl border-dashed border-amber-300/40 text-center font-mono text-xl font-bold tracking-[0.3em] text-amber-200 uppercase placeholder:text-white/20 md:text-xl"
+          onChange={(e) => setCode(e.target.value)}
+        />
+        <Button type="submit" className="h-12 rounded-xl px-5 text-base">
           Entrar
         </Button>
       </div>

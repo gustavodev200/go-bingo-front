@@ -147,16 +147,16 @@ export function AvatarCrowd({
   return (
     <group>
       <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.body = m)} args={[undefined, undefined, MAX_AVATARS]} castShadow={castShadow} onPointerDown={tap}>
-        <capsuleGeometry args={[0.28, 0.35, 4, 8]} />
-        <meshStandardMaterial flatShading roughness={0.5} />
+        <capsuleGeometry args={[0.28, 0.35, 6, 16]} />
+        <meshStandardMaterial roughness={0.28} metalness={0.05} />
       </instancedMesh>
       <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.head = m)} args={[undefined, undefined, MAX_AVATARS]} castShadow={castShadow} onPointerDown={tap}>
-        <sphereGeometry args={[0.26, 10, 8]} />
-        <meshStandardMaterial flatShading roughness={0.4} />
+        <sphereGeometry args={[0.26, 20, 16]} />
+        <meshStandardMaterial roughness={0.25} metalness={0.05} />
       </instancedMesh>
       <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.arms = m)} args={[undefined, undefined, MAX_AVATARS * 2]}>
-        <capsuleGeometry args={[0.07, 0.3, 2, 6]} />
-        <meshStandardMaterial flatShading />
+        <capsuleGeometry args={[0.07, 0.3, 4, 8]} />
+        <meshStandardMaterial roughness={0.3} />
       </instancedMesh>
       <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.eyes = m)} args={[undefined, undefined, MAX_AVATARS * 2]}>
         <sphereGeometry args={[0.045, 6, 6]} />

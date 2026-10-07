@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic';
 export const GameStageLazy = dynamic(() => import('./game-stage'), {
   ssr: false,
   loading: () => (
-    <div className="flex h-full w-full items-center justify-center bg-gradient-to-b from-violet-950 to-fuchsia-900 text-sm text-violet-100" aria-hidden="true">
+    <div className="flex h-full w-full items-center justify-center bg-linear-to-b from-violet-950 to-fuchsia-900 text-sm text-violet-100" aria-hidden="true">
       Ligando o telão…
     </div>
   ),

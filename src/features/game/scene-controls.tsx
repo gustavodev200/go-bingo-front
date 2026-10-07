@@ -22,7 +22,7 @@ export function SceneControls({
       {mode === '3d' && (
         <select
           aria-label="Qualidade 3D"
-          className="border-input bg-background h-9 rounded-md border px-2"
+          className="h-9 rounded-full border border-white/15 bg-white/5 px-3 backdrop-blur-sm [&>option]:bg-violet-950"
           value={quality}
           onChange={(e) => onQualityChange(e.target.value as QualityOverride)}
         >
@@ -33,7 +33,7 @@ export function SceneControls({
           ))}
         </select>
       )}
-      <Button variant="outline" size="sm" className="h-9" onClick={() => onModeChange(mode === '3d' ? '2d' : '3d')}>
+      <Button variant="outline" size="sm" className="h-9 rounded-full px-3" onClick={() => onModeChange(mode === '3d' ? '2d' : '3d')}>
         {mode === '3d' ? 'Ver em 2D' : 'Ver em 3D'}
       </Button>
     </div>

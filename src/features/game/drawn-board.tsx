@@ -33,7 +33,7 @@ export function DrawnBoard({ drawn }: { drawn: readonly number[] }) {
                   <li
                     key={n}
                     data-drawn={lit.has(n)}
-                    className={cn('rounded py-0.5 text-center text-[10px] font-bold tabular-nums', lit.has(n) ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground')}
+                    className={cn('rounded py-0.5 text-center text-[10px] font-bold tabular-nums', lit.has(n) ? 'bg-amber-300 text-violet-950 shadow-[0_0_8px_rgb(251_191_36/0.7)]' : 'bg-white/5 text-muted-foreground')}
                   >
                     {n}
                   </li>

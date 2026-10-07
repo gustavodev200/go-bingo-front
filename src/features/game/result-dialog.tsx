@@ -25,7 +25,7 @@ export function ResultDialog({ onReplay, onLeave }: { onReplay: () => void; onLe
     <Dialog open>
       <DialogContent showCloseButton={false} onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+          <DialogTitle className="text-marquee text-2xl">{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         {iWon && profile.isGuest && <UpgradeButton />}

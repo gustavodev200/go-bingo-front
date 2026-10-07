@@ -1,7 +1,10 @@
 'use client';
 
+import { LogOut, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Avatar } from '@/components/stage/avatar';
+import { MarqueeTitle } from '@/components/stage/stage';
 import { Button } from '@/components/ui/button';
 import { UpgradeButton } from '@/features/auth/upgrade-button';
 import { useProfile } from '@/features/profile/profile-context';
@@ -20,30 +23,56 @@ export default function HomePage() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 pt-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Go Bingo</h1>
-        <span className="text-sm">
-          {profile.nickname} {profile.isGuest ? '(convidado)' : `· ${profile.points} pts`}
+    <main className="mx-auto flex w-full max-w-md flex-col gap-5 px-4 pt-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+      <header className="flex items-center justify-between gap-3">
+        <MarqueeTitle compact />
+        <span className="glass flex min-w-0 items-center gap-2 rounded-full py-1 pr-3 pl-1">
+          <Avatar id={profile.id} className="w-8" />
+          <span className="flex min-w-0 flex-col leading-tight">
+            <span className="truncate text-sm font-semibold">{profile.nickname}</span>
+            <span className="text-xs font-semibold text-amber-300">{profile.isGuest ? 'convidado' : `${profile.points} pts`}</span>
+          </span>
         </span>
       </header>
+
       {profile.isGuest && <UpgradeButton />}
       <InstallBanner />
-      <JoinByCodeForm />
-      <Button asChild size="lg" className="h-11">
-        <Link href="/create">Criar sala</Link>
-      </Button>
-      <section className="flex flex-col gap-2">
-        <h2 className="font-semibold">Salas públicas</h2>
+
+      <section className="glass flex flex-col gap-4 p-5" aria-label="Jogar">
+        <h2 className="font-display text-marquee text-2xl font-bold">Bora jogar?</h2>
+        <JoinByCodeForm />
+        <div aria-hidden className="flex items-center gap-3 text-xs font-semibold tracking-widest text-violet-200/60 uppercase">
+          <span className="h-px flex-1 bg-white/15" />
+          ou
+          <span className="h-px flex-1 bg-white/15" />
+        </div>
+        <Button asChild size="lg" className="h-12 rounded-xl text-base">
+          <Link href="/create">Criar sala</Link>
+        </Button>
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="font-display flex items-center gap-2 text-lg font-semibold">
+          <span aria-hidden className="relative flex size-2.5">
+            <span className="absolute inline-flex size-full animate-ping rounded-full bg-pink-400 opacity-75 motion-reduce:animate-none" />
+            <span className="relative inline-flex size-2.5 rounded-full bg-pink-500" />
+          </span>
+          Salas públicas
+        </h2>
         <PublicRooms />
       </section>
-      <nav className="flex justify-between text-sm">
-        <Link href="/ranking" className="flex min-h-11 items-center underline">
-          Ranking
-        </Link>
-        <button onClick={() => void logout()} className="min-h-11 underline">
+
+      <nav className="flex justify-between gap-3 text-sm">
+        <Button asChild variant="outline" className="h-11 flex-1 gap-2 rounded-xl">
+          <Link href="/ranking">
+            <Trophy aria-hidden className="text-amber-300" />
+            Ranking
+          </Link>
+        </Button>
+        <Button variant="ghost" className="h-11 gap-2 rounded-xl text-violet-200" onClick={() => void logout()}>
+          <LogOut aria-hidden />
           Sair
-        </button>
+        </Button>
       </nav>
     </main>
   );

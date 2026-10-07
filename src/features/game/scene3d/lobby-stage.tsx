@@ -33,7 +33,7 @@ export default function LobbyStage({ roomName, code, celebrating, qualityOverrid
       {(settings, tier) => (
         <>
           <CameraRig view="lobby" />
-          <Hall screen={{ kind: 'lobby', name: roomName, code }} animatedBulbs={settings.animatedBulbs} shadows={settings.shadows === 'real'} />
+          <Hall screen={{ kind: 'lobby', name: roomName, code }} animatedBulbs={settings.animatedBulbs} shadows={settings.shadows === 'real'} tier={tier} />
           <Globe lastNumber={null} drawCount={0} innerBalls={tier === 'low' ? 8 : 18} />
           <AvatarCrowd statesRef={statesRef} onTap={dance} castShadow={settings.shadows === 'real'} fakeShadow={settings.shadows === 'fake'} />
           <NameLabels list={list} statesRef={statesRef} showAll={tier === 'high' || list.length <= 15} />

@@ -49,7 +49,7 @@ export default function GameStage({ roomName, code, qualityOverride, onContextLo
         <>
           {onFrame && <FpsProbe onFrame={onFrame} />}
           <CameraRig view="game" focus={focus} />
-          <Hall screen={screen} animatedBulbs={settings.animatedBulbs} shadows={settings.shadows === 'real'} />
+          <Hall screen={screen} animatedBulbs={settings.animatedBulbs} shadows={settings.shadows === 'real'} tier={tier} />
           <Globe lastNumber={drawn.at(-1) ?? null} drawCount={drawn.length} innerBalls={tier === 'low' ? 8 : 18} />
           <AvatarCrowd statesRef={statesRef} onTap={dance} castShadow={settings.shadows === 'real'} fakeShadow={settings.shadows === 'fake'} />
           <NameLabels list={list} statesRef={statesRef} showAll={tier === 'high' || list.length <= 15} />

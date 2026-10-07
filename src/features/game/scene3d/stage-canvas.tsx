@@ -83,8 +83,8 @@ export function StageCanvas({
           }}
         />
       )}
-      <color attach="background" args={['#2e1065']} />
-      <fog attach="fog" args={['#2e1065', 18, 40]} />
+      <color attach="background" args={['#1a0b3d']} />
+      <fog attach="fog" args={['#1a0b3d', 24, 60]} />
       {children(settings, quality.tier)}
     </Canvas>
   );

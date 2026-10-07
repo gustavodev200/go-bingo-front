@@ -1,4 +1,4 @@
-/* Cenário da tela de login: o mesmo salão de game show do jogo 3D, só que em CSS (sem three.js na primeira tela). */
+/* Salão de game show do jogo 3D, em CSS (sem three.js fora da sala). */
 
 .backdrop {
   background: radial-gradient(ellipse at 50% 30%, #6d28d9 0%, #3b0764 45%, #12082a 100%);
@@ -18,13 +18,13 @@
 }
 .beamLeft {
   left: -30vmax;
-  background: linear-gradient(to bottom, rgb(253 230 138 / 0.35), transparent 70%);
+  background: linear-gradient(to bottom, rgb(253 230 138 / 0.3), transparent 70%);
   --from: -28deg;
   --to: -4deg;
 }
 .beamRight {
   right: -30vmax;
-  background: linear-gradient(to bottom, rgb(244 114 182 / 0.3), transparent 70%);
+  background: linear-gradient(to bottom, rgb(244 114 182 / 0.26), transparent 70%);
   --from: 28deg;
   --to: 4deg;
   animation-delay: -3.5s;
@@ -42,8 +42,8 @@
   bottom: 0;
   height: 45%;
   background-image:
-    linear-gradient(rgb(167 139 250 / 0.35) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(167 139 250 / 0.35) 1px, transparent 1px);
+    linear-gradient(rgb(167 139 250 / 0.3) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(167 139 250 / 0.3) 1px, transparent 1px);
   background-size: 48px 48px;
   transform: perspective(320px) rotateX(62deg);
   transform-origin: bottom;
@@ -150,11 +150,10 @@
   25% { background: #fde68a; box-shadow: 0 0 10px #fbbf24, 0 0 2px #fff; }
 }
 
-/* --- bolas de bingo do título --- */
+/* --- bola de bingo (título, cartela, número sorteado) --- */
 .ball {
   display: grid;
   place-items: center;
-  width: 100%;
   aspect-ratio: 1;
   border-radius: 50%;
   background: radial-gradient(
@@ -165,13 +164,15 @@
     color-mix(in oklch, var(--c), black 50%) 100%
   );
   box-shadow: 0 10px 18px -6px rgb(0 0 0 / 0.6);
+}
+.bob {
   animation: bob 2.2s ease-in-out infinite alternate;
   animation-delay: var(--d);
 }
 .ballFace {
   display: grid;
   place-items: center;
-  width: 58%;
+  width: 62%;
   aspect-ratio: 1;
   border-radius: 50%;
   background: #fff;
@@ -185,23 +186,14 @@
   to { transform: translateY(-6px) rotate(6deg); }
 }
 
-/* --- botão de convidado estilo fliperama --- */
-.arcade {
-  box-shadow: 0 5px 0 #b45309, 0 10px 24px -6px rgb(245 158 11 / 0.7);
-  transition: transform 80ms, box-shadow 80ms, filter 150ms;
-}
-.arcade:hover {
-  filter: brightness(1.08);
-}
-.arcade:active {
-  transform: translateY(4px);
-  box-shadow: 0 1px 0 #b45309, 0 4px 12px -6px rgb(245 158 11 / 0.7);
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .scene *,
-  .scene *::before,
-  .scene *::after {
+  .beam,
+  .floor,
+  .confetti,
+  .globe,
+  .innerBall,
+  .bulb,
+  .bob {
     animation: none !important;
   }
 }

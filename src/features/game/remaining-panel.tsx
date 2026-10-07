@@ -11,7 +11,7 @@ export function RemainingPanel({ remaining, members }: { remaining: Record<strin
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="lg" className="h-12">
+        <Button variant="outline" size="lg" className="h-12 rounded-xl">
           Pedras que faltam
         </Button>
       </DialogTrigger>
@@ -21,7 +21,7 @@ export function RemainingPanel({ remaining, members }: { remaining: Record<strin
         </DialogHeader>
         <ol className="flex flex-col gap-1">
           {rows.map(([userId, left]) => (
-            <li key={userId} className={`flex justify-between rounded px-3 py-2 ${left === 1 ? 'bg-amber-500/15 font-semibold' : ''}`}>
+            <li key={userId} className={`flex justify-between rounded px-3 py-2 ${left === 1 ? 'bg-amber-400/20 font-semibold text-amber-200' : ''}`}>
               <span>{names.get(userId) ?? 'Jogador que saiu'}</span>
               <span>{left === 1 ? 'por 1!' : left}</span>
             </li>

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { MiniGlobe } from '@/components/stage/stage';
 import { Button } from '@/components/ui/button';
 import { useProfile } from '@/features/profile/profile-context';
 import { createSessionTelemetry, reportSessionSummary } from '@/lib/telemetry';
@@ -90,15 +91,24 @@ export function RoomScreen({ code }: { code: string }) {
 
   if (exit) {
     return (
-      <main className="mx-auto flex max-w-sm flex-col gap-4 px-4 py-10" role="alert">
-        <p>{exit.message ?? EXIT_MESSAGES[exit.reason]}</p>
-        <Button asChild className="h-11">
+      <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-4 py-10">
+        <div className="glass flex flex-col gap-4 p-6 text-center" role="alert">
+        <p className="font-display text-xl font-semibold">{exit.message ?? EXIT_MESSAGES[exit.reason]}</p>
+        <Button asChild className="h-12 rounded-xl text-base">
           <Link href="/">Voltar ao início</Link>
         </Button>
+        </div>
       </main>
     );
   }
-  if (!snapshot) return <div className="flex h-dvh items-center justify-center" aria-busy="true">Entrando na sala…</div>;
+  if (!snapshot) {
+    return (
+      <div className="flex h-dvh flex-col items-center justify-center gap-4" aria-busy="true">
+        <MiniGlobe />
+        <p className="font-display text-lg font-semibold text-amber-200">Entrando na sala…</p>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -119,7 +129,7 @@ export function RoomScreen({ code }: { code: string }) {
       ) : (
         <>
           {scene.mode === '3d' && (
-            <div className="h-[40dvh] w-full landscape:h-[55dvh]">
+            <div className="h-[40dvh] w-full overflow-hidden rounded-b-[2rem] border-b-2 border-amber-300/50 shadow-[0_10px_40px_-10px_rgb(245_158_11/0.5)] landscape:h-[55dvh]">
               <StageErrorBoundary onError={scene.reportFailure}>
                 <LobbyStageLazy
                   key={scene.stageKey}

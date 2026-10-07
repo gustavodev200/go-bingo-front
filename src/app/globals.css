@@ -9,7 +9,8 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-display);
+  --font-display: var(--font-display);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -83,25 +84,27 @@
   --foreground: oklch(0.145 0 0);
 }
 
+/* Tema "salão de game show" (o mesmo do palco 3D): roxo profundo, dourado das lâmpadas, magenta do palco. */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.541 0.281 293.009);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --background: oklch(0.17 0.08 295);
+  --foreground: oklch(0.97 0.02 300);
+  --card: oklch(0.24 0.12 295 / 0.6);
+  --card-foreground: oklch(0.97 0.02 300);
+  --popover: oklch(0.24 0.12 295);
+  --popover-foreground: oklch(0.97 0.02 300);
+  --primary: oklch(0.84 0.16 84);
+  --primary-foreground: oklch(0.22 0.11 295);
+  --primary-shadow: oklch(0.55 0.15 55);
+  --secondary: oklch(0.36 0.16 295);
+  --secondary-foreground: oklch(0.97 0.02 300);
+  --muted: oklch(0.32 0.12 295 / 0.6);
+  --muted-foreground: oklch(0.82 0.06 300);
+  --accent: oklch(0.36 0.16 295);
+  --accent-foreground: oklch(0.97 0.02 300);
+  --destructive: oklch(0.72 0.19 18);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 16%);
+  --ring: oklch(0.84 0.16 84);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -115,6 +118,23 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+}
+
+/* Painel de vidro sobre o salão (cartões, listas, formulários). */
+@utility glass {
+  border-radius: var(--radius-3xl);
+  border: 1px solid oklch(1 0 0 / 0.1);
+  background: oklch(0.22 0.12 295 / 0.55);
+  box-shadow: 0 0 60px -24px oklch(0.77 0.17 70 / 0.55), inset 0 1px 0 oklch(1 0 0 / 0.06);
+  backdrop-filter: blur(12px);
+}
+
+/* Título com o dourado das lâmpadas. */
+@utility text-marquee {
+  background: linear-gradient(to bottom, #fef9c3, #fcd34d 45%, #f59e0b);
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 12px rgb(251 191 36 / 0.45));
 }
 
 @layer base {

@@ -1,3 +1,4 @@
+import { BingoBall } from '@/components/stage/stage';
 import { letterFor } from '@/contracts';
 
 export function LastNumbers({ drawn }: { drawn: readonly number[] }) {
@@ -6,23 +7,27 @@ export function LastNumbers({ drawn }: { drawn: readonly number[] }) {
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <div role="status" aria-live="polite" className="bg-primary text-primary-foreground flex size-28 flex-col items-center justify-center rounded-full shadow-lg">
+      <div role="status" aria-live="polite">
         {current === undefined ? (
-          <span className="px-3 text-center text-sm">Aguardando o primeiro número</span>
+          <BingoBall color="#a78bfa" className="w-32" faceClassName="w-[70%] px-2 text-center text-xs font-semibold">
+            Aguardando o primeiro número
+          </BingoBall>
         ) : (
-          <>
-            <span className="text-lg font-bold">{letterFor(current)}</span>
+          <BingoBall key={current} letter={letterFor(current)} className="animate-in zoom-in-50 spin-in-12 w-32 duration-500" faceClassName="flex flex-col">
+            <span className="text-base font-bold">{letterFor(current)}</span>
             <span className="sr-only"> </span>
-            <span className="text-5xl leading-none font-black">{current}</span>
-          </>
+            <span className="font-display text-5xl leading-none font-bold">{current}</span>
+          </BingoBall>
         )}
       </div>
       {previous.length > 0 && (
         <ol aria-label="Números anteriores" className="flex gap-2">
           {previous.map((n) => (
-            <li key={n} className="bg-muted flex size-11 items-center justify-center rounded-full text-sm font-bold">
-              {letterFor(n)}
-              {n}
+            <li key={n}>
+              <BingoBall letter={letterFor(n)} className="w-12" faceClassName="text-[11px]">
+                {letterFor(n)}
+                {n}
+              </BingoBall>
             </li>
           ))}
         </ol>

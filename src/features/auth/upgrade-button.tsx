@@ -4,6 +4,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { createClient } from '@/lib/supabase/client';
+import { GoogleIcon } from './google-icon';
 import { OpenInBrowserNotice, useIsInAppBrowser } from './open-in-browser';
 
 export function UpgradeButton() {
@@ -22,7 +23,8 @@ export function UpgradeButton() {
   // Só renderiza no cliente com embedded=true, então navigator existe.
   if (embedded) return <OpenInBrowserNotice userAgent={navigator.userAgent} />;
   return (
-    <Button onClick={() => void upgrade()} className="h-11 w-full">
+    <Button variant="google" onClick={() => void upgrade()} className="h-11 w-full gap-2 rounded-xl">
+      <GoogleIcon />
       Entrar com Google para salvar seus pontos
     </Button>
   );
@@ -40,7 +42,8 @@ export function SwitchToGoogleAccount() {
 
   if (embedded) return <OpenInBrowserNotice userAgent={navigator.userAgent} />;
   return (
-    <Button onClick={() => void switchAccount()} className="h-11 w-full">
+    <Button variant="google" onClick={() => void switchAccount()} className="h-11 w-full gap-2 rounded-xl">
+      <GoogleIcon />
       Entrar na conta Google existente
     </Button>
   );

@@ -19,30 +19,36 @@ export function LobbyView({ actions, onLeave }: { actions: GameActions; onLeave:
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-col gap-5 px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-      <header>
-        <h1 className="text-xl font-bold">{snapshot.name}</h1>
+      <header className="text-center">
+        <h1 className="font-display text-marquee text-3xl font-bold">{snapshot.name}</h1>
         <p className="text-muted-foreground text-sm">
           {snapshot.members.length}/{snapshot.maxPlayers} jogadores · {ready} prontos
         </p>
       </header>
       <ShareCode code={snapshot.code} />
-      <MembersList members={snapshot.members} hostId={snapshot.hostId} myUserId={myUserId} onKick={isHost ? (id) => void actions.kick(id) : undefined} />
 
-      <section className="flex flex-col gap-2">
-        <h2 className="font-semibold">Sua cartela</h2>
+      <section className="glass flex flex-col gap-3 p-4">
+        <h2 className="font-display text-lg font-semibold">Plateia</h2>
+        <MembersList members={snapshot.members} hostId={snapshot.hostId} myUserId={myUserId} onKick={isHost ? (id) => void actions.kick(id) : undefined} />
+      </section>
+
+      <section className="glass flex flex-col gap-3 p-4">
+        <h2 className="font-display text-lg font-semibold">Sua cartela</h2>
         {snapshot.myCard ? (
           <CardGrid grid={snapshot.myCard.grid} marked={[]} drawn={NO_DRAWS} />
         ) : (
-          <p className="text-muted-foreground text-sm">Gere uma cartela para ficar pronto. Se não gerar, recebe uma automática no início.</p>
+          <p className="text-muted-foreground rounded-2xl border border-dashed border-white/15 px-4 py-6 text-center text-sm">
+            Gere uma cartela para ficar pronto. Se não gerar, recebe uma automática no início.
+          </p>
         )}
-        <Button variant="secondary" className="h-11" onClick={() => void actions.generateCard()}>
+        <Button variant="secondary" className="h-11 rounded-xl" onClick={() => void actions.generateCard()}>
           {snapshot.myCard ? `Trocar cartela (até ${MAX_CARD_REGENS}x)` : 'Gerar cartela'}
         </Button>
       </section>
 
       {isHost ? (
         <div className="flex flex-col gap-2">
-          <Button size="lg" className="h-12" disabled={!canStart} onClick={() => void actions.start()}>
+          <Button size="lg" className="font-display h-14 rounded-2xl text-xl" disabled={!canStart} onClick={() => void actions.start()}>
             {canStart ? 'Iniciar partida' : 'Aguardando 2 jogadores prontos'}
           </Button>
           <Button variant="ghost" className="text-destructive h-11" onClick={() => void actions.cancel()}>

@@ -1,5 +1,6 @@
 'use client';
 
+import { BingoBall } from '@/components/stage/stage';
 import { BINGO_LETTERS, FREE_CELL, FREE_INDEX, letterFor } from '@/contracts';
 import { cn } from '@/lib/utils';
 
@@ -11,49 +12,57 @@ interface CardGridProps {
   onLocked?: (number: number) => void;
 }
 
+/** Cartela de papel: casas creme, número sorteado brilha em dourado, marcado leva o "carimbo" magenta. */
 export function CardGrid({ grid, marked, drawn, onMark, onLocked }: CardGridProps) {
   const markedSet = new Set(marked);
   const cells: number[] = [];
   for (let row = 0; row < 5; row++) for (let col = 0; col < 5; col++) cells.push(col * 5 + row);
 
   return (
-    <div className="mx-auto grid w-full max-w-md touch-manipulation grid-cols-5 gap-1.5 select-none">
-      {BINGO_LETTERS.map((letter) => (
-        <div key={letter} className="text-primary text-center text-lg font-black" aria-hidden="true">
-          {letter}
-        </div>
-      ))}
-      {cells.map((index) => {
-        const number = grid[index];
-        const free = index === FREE_INDEX || number === FREE_CELL;
-        const isMarked = free || markedSet.has(index);
-        const isDrawn = !free && drawn.has(number);
-        const label = free ? 'Casa livre' : `${letterFor(number)} ${number}${isMarked ? ', marcado' : isDrawn ? ', sorteado' : ''}`;
+    <div className="mx-auto w-full max-w-md rounded-2xl bg-linear-to-b from-fuchsia-800 to-violet-950 p-2 shadow-[0_0_0_2px_rgb(251_191_36/0.6),0_0_40px_-10px_rgb(245_158_11/0.6)]">
+      <div className="grid touch-manipulation grid-cols-5 gap-1.5 select-none">
+        {BINGO_LETTERS.map((letter) => (
+          <div key={letter} className="flex justify-center pb-0.5" aria-hidden="true">
+            <BingoBall letter={letter} className="w-8" faceClassName="text-sm">
+              {letter}
+            </BingoBall>
+          </div>
+        ))}
+        {cells.map((index) => {
+          const number = grid[index];
+          const free = index === FREE_INDEX || number === FREE_CELL;
+          const isMarked = free || markedSet.has(index);
+          const isDrawn = !free && drawn.has(number);
+          const label = free ? 'Casa livre' : `${letterFor(number)} ${number}${isMarked ? ', marcado' : isDrawn ? ', sorteado' : ''}`;
 
-        function click() {
-          if (free || isMarked || !onMark) return;
-          if (!isDrawn) return onLocked?.(number);
-          onMark(index);
-        }
+          function click() {
+            if (free || isMarked || !onMark) return;
+            if (!isDrawn) return onLocked?.(number);
+            onMark(index);
+          }
 
-        return (
-          <button
-            key={index}
-            type="button"
-            aria-label={label}
-            aria-pressed={isMarked}
-            onClick={click}
-            className={cn(
-              'flex aspect-square min-h-11 min-w-11 items-center justify-center rounded-md border text-lg font-bold transition-colors',
-              isMarked && 'bg-primary text-primary-foreground border-primary',
-              !isMarked && isDrawn && 'border-primary ring-primary/60 animate-pulse ring-2',
-              !isMarked && !isDrawn && 'bg-muted/40 text-foreground/80',
-            )}
-          >
-            {free ? '★' : number}
-          </button>
-        );
-      })}
+          return (
+            <button
+              key={index}
+              type="button"
+              aria-label={label}
+              aria-pressed={isMarked}
+              onClick={click}
+              className={cn(
+                'font-display relative isolate flex aspect-square min-h-11 min-w-11 items-center justify-center overflow-hidden rounded-lg bg-amber-50 text-xl font-bold text-violet-950 shadow-[inset_0_-3px_0_rgb(0_0_0/0.12)] transition',
+                // carimbo: círculo magenta atrás do número
+                'before:absolute before:inset-[12%] before:-z-10 before:scale-0 before:rounded-full before:bg-pink-500/90 before:transition-transform before:duration-200',
+                isMarked && 'text-white before:scale-100',
+                free && 'before:bg-linear-to-b before:from-amber-300 before:to-amber-500 text-violet-950',
+                !isMarked && isDrawn && 'bg-amber-200 ring-3 ring-amber-400 motion-safe:animate-pulse',
+                !isMarked && !isDrawn && onMark && 'text-violet-950/70',
+              )}
+            >
+              {free ? '★' : number}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

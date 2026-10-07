@@ -7,7 +7,6 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { env } from '@/lib/env';
 import { createClient } from '@/lib/supabase/client';
-import { arcadeButtonClass } from './login-stage';
 
 export function GuestButton({ next }: { next: string }) {
   const router = useRouter();
@@ -27,11 +26,7 @@ export function GuestButton({ next }: { next: string }) {
     return <Turnstile siteKey={env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} onSuccess={(token) => void signIn(token)} options={{ size: 'flexible' }} />;
   }
   return (
-    <Button
-      size="lg"
-      className={`${arcadeButtonClass} h-12 w-full rounded-xl bg-linear-to-b from-yellow-300 to-amber-500 text-base font-extrabold text-violet-950`}
-      onClick={() => setVerifying(true)}
-    >
+    <Button size="lg" className="h-12 w-full rounded-xl text-base font-extrabold" onClick={() => setVerifying(true)}>
       Jogar como convidado
     </Button>
   );

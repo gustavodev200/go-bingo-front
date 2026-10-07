@@ -56,20 +56,26 @@ export function Globe({ lastNumber, drawCount, innerBalls }: { lastNumber: numbe
     <group>
       <mesh ref={cage} position={GLOBE_CENTER}>
         <icosahedronGeometry args={[0.8, 1]} />
-        <meshStandardMaterial color="#fbbf24" emissive="#f59e0b" emissiveIntensity={0.6} wireframe />
+        <meshStandardMaterial color="#fbbf24" emissive="#f59e0b" emissiveIntensity={1.1} wireframe toneMapped={false} />
       </mesh>
+      {/* aro de sustentação + brilho dourado de dentro da gaiola */}
+      <mesh position={GLOBE_CENTER} rotation-y={0.5}>
+        <torusGeometry args={[0.95, 0.045, 8, 48]} />
+        <meshStandardMaterial color="#fcd34d" metalness={0.8} roughness={0.25} emissive="#b45309" emissiveIntensity={0.3} />
+      </mesh>
+      <pointLight position={GLOBE_CENTER} intensity={5} color="#fbbf24" distance={4} />
       <instancedMesh ref={inner} args={[undefined, undefined, innerBalls]} frustumCulled={false}>
         <sphereGeometry args={[0.11, 8, 6]} />
-        <meshStandardMaterial color="#fef3c7" />
+        <meshStandardMaterial color="#fef3c7" emissive="#fde68a" emissiveIntensity={0.25} roughness={0.3} />
       </instancedMesh>
       <mesh position={[GLOBE_CENTER[0], 0.45, GLOBE_CENTER[2]]}>
-        <cylinderGeometry args={[0.3, 0.5, 0.6, 8]} />
-        <meshStandardMaterial color="#be185d" flatShading />
+        <cylinderGeometry args={[0.3, 0.55, 0.6, 24]} />
+        <meshStandardMaterial color="#be185d" metalness={0.3} roughness={0.35} />
       </mesh>
       <group ref={ball} visible={false}>
         <mesh>
           <sphereGeometry args={[0.34, 16, 12]} />
-          <meshStandardMaterial color="#fde047" roughness={0.3} />
+          <meshStandardMaterial color="#fde047" emissive="#f59e0b" emissiveIntensity={0.35} roughness={0.25} />
         </mesh>
         {lastNumber !== null && (
           <Billboard>

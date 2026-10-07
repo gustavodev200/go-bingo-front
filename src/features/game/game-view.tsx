@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { toast } from 'sonner';
+import { BingoBall } from '@/components/stage/stage';
 import { Button } from '@/components/ui/button';
 import { letterFor } from '@/contracts';
 import { cn } from '@/lib/utils';
@@ -43,8 +44,10 @@ export function GameView({
             <div className="absolute inset-0">{stage}</div>
             {current !== undefined && (
               // Número visível na HUD na hora (o telão é cosmético e pode demorar a carregar); o anúncio fica no LastNumbers.
-              <div data-testid="current-number" aria-hidden="true" className="bg-primary text-primary-foreground absolute top-2 left-2 rounded-full px-3 py-1 text-lg font-black shadow">
-                {letterFor(current)} {current}
+              <div data-testid="current-number" aria-hidden="true" className="absolute top-2 left-2">
+                <BingoBall key={current} letter={letterFor(current)} className="animate-in zoom-in-50 w-16 duration-500" faceClassName="flex flex-col">
+                  <span className="text-[10px] font-bold">{letterFor(current)}</span> <span className="font-display text-xl leading-none font-bold">{current}</span>
+                </BingoBall>
               </div>
             )}
             <div className="sr-only">
@@ -59,7 +62,7 @@ export function GameView({
           <SoundToggle muted={muted} onChange={onToggleMute} />
         </div>
       </section>
-      <section className="flex items-center overflow-y-auto px-3">
+      <section className="flex items-center overflow-y-auto px-3 py-2">
         {card && (
           <CardGrid
             grid={card.grid}
@@ -70,9 +73,17 @@ export function GameView({
           />
         )}
       </section>
-      <footer className="bg-background/95 flex gap-2 border-t px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+      <footer className="flex gap-2 rounded-t-3xl border-t border-white/10 bg-violet-950/80 px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-md">
         <RemainingPanel remaining={snapshot.game?.remaining ?? {}} members={snapshot.members} />
-        <Button size="lg" className="h-12 flex-1 text-lg font-black" disabled={!canClaim} onClick={() => void actions.claim()}>
+        <Button
+          size="lg"
+          className={cn(
+            "font-display h-12 flex-1 rounded-xl text-2xl font-bold tracking-wider",
+            canClaim && "ring-4 ring-amber-300/60 motion-safe:animate-pulse",
+          )}
+          disabled={!canClaim}
+          onClick={() => void actions.claim()}
+        >
           BINGO!
         </Button>
       </footer>
