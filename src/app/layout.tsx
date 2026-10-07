@@ -18,8 +18,8 @@ export const metadata: Metadata = {
   formatDetection: { telephone: false },
   icons: {
     icon: [
+      { url: '/pwa-icons/favicon-64.png', sizes: '64x64', type: 'image/png' },
       { url: '/pwa-icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-      { url: '/pwa-icons/icon-512.png', sizes: '512x512', type: 'image/png' },
     ],
     apple: '/pwa-icons/icon-192.png',
   },
