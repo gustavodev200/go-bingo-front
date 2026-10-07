@@ -1,0 +1,207 @@
+/* Cenário da tela de login: o mesmo salão de game show do jogo 3D, só que em CSS (sem three.js na primeira tela). */
+
+.backdrop {
+  background: radial-gradient(ellipse at 50% 30%, #6d28d9 0%, #3b0764 45%, #12082a 100%);
+}
+
+/* --- holofotes --- */
+.beam {
+  position: absolute;
+  top: -10%;
+  width: 70vmax;
+  height: 130%;
+  clip-path: polygon(46% 0, 54% 0, 100% 100%, 0 100%);
+  transform-origin: top center;
+  mix-blend-mode: screen;
+  filter: blur(8px);
+  animation: sway 7s ease-in-out infinite alternate;
+}
+.beamLeft {
+  left: -30vmax;
+  background: linear-gradient(to bottom, rgb(253 230 138 / 0.35), transparent 70%);
+  --from: -28deg;
+  --to: -4deg;
+}
+.beamRight {
+  right: -30vmax;
+  background: linear-gradient(to bottom, rgb(244 114 182 / 0.3), transparent 70%);
+  --from: 28deg;
+  --to: 4deg;
+  animation-delay: -3.5s;
+}
+@keyframes sway {
+  from { transform: rotate(var(--from)); }
+  to { transform: rotate(var(--to)); }
+}
+
+/* --- chão do palco em perspectiva --- */
+.floor {
+  position: absolute;
+  left: -50%;
+  right: -50%;
+  bottom: 0;
+  height: 45%;
+  background-image:
+    linear-gradient(rgb(167 139 250 / 0.35) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(167 139 250 / 0.35) 1px, transparent 1px);
+  background-size: 48px 48px;
+  transform: perspective(320px) rotateX(62deg);
+  transform-origin: bottom;
+  mask-image: linear-gradient(to top, black 25%, transparent);
+  animation: floor 2.4s linear infinite;
+}
+@keyframes floor {
+  to { background-position: 0 48px; }
+}
+
+/* --- confete (mesmas cores da comemoração no 3D) --- */
+.confetti {
+  position: absolute;
+  top: 0;
+  left: var(--x);
+  width: 7px;
+  height: 11px;
+  border-radius: 2px;
+  background: var(--c);
+  opacity: 0.85;
+  animation: fall var(--dur) linear infinite;
+  animation-delay: var(--d);
+}
+@keyframes fall {
+  from { transform: translate3d(0, -10vh, 0) rotate(0deg); }
+  50% { transform: translate3d(18px, 50vh, 0) rotate(360deg); }
+  to { transform: translate3d(-12px, 110vh, 0) rotate(720deg); }
+}
+
+/* --- globo-gaiola dourado --- */
+.globeWrap {
+  position: relative;
+  width: 104px;
+  height: 104px;
+  perspective: 520px;
+}
+.globe {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  animation: spin 8s linear infinite;
+}
+.ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid #fbbf24;
+  box-shadow: 0 0 10px #f59e0b, inset 0 0 10px rgb(245 158 11 / 0.6);
+  transform: rotateY(var(--r));
+}
+.equator {
+  transform: rotateX(90deg);
+}
+@keyframes spin {
+  from { transform: rotateX(-16deg) rotateY(0deg); }
+  to { transform: rotateX(-16deg) rotateY(360deg); }
+}
+.innerBalls {
+  position: absolute;
+  inset: 12%;
+  border-radius: 50%;
+  overflow: hidden;
+}
+.innerBall {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 30%, #fff 0 15%, #fef3c7 35%, #d6a94a 100%);
+  animation: tumble 1.3s ease-in-out infinite alternate;
+  animation-delay: var(--d);
+}
+@keyframes tumble {
+  from { transform: translate(-10px, 12px); }
+  to { transform: translate(12px, -14px); }
+}
+.stand {
+  width: 52px;
+  height: 26px;
+  margin-top: -4px;
+  background: linear-gradient(#db2777, #831843);
+  clip-path: polygon(28% 0, 72% 0, 100% 100%, 0 100%);
+}
+
+/* --- letreiro com lâmpadas de game show --- */
+.sign {
+  background: linear-gradient(to bottom, rgb(112 26 117 / 0.85), rgb(46 16 101 / 0.9));
+  box-shadow: 0 0 0 2px rgb(251 191 36 / 0.75), 0 0 40px -6px rgb(245 158 11 / 0.7), inset 0 0 30px rgb(0 0 0 / 0.35);
+}
+/* Mesma onda do bulbLevel do 3D: período ~1,13 s, cada lâmpada 108 ms atrás da vizinha. */
+.bulb {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fde68a;
+  box-shadow: 0 0 8px #fbbf24;
+  animation: chase 1.13s linear infinite;
+  animation-delay: calc(var(--i) * 0.108s - 4.52s);
+}
+@keyframes chase {
+  0%, 50%, 100% { background: #78350f; box-shadow: none; }
+  25% { background: #fde68a; box-shadow: 0 0 10px #fbbf24, 0 0 2px #fff; }
+}
+
+/* --- bolas de bingo do título --- */
+.ball {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 32% 28%,
+    #fff 0 6%,
+    color-mix(in oklch, var(--c), white 40%) 16%,
+    var(--c) 45%,
+    color-mix(in oklch, var(--c), black 50%) 100%
+  );
+  box-shadow: 0 10px 18px -6px rgb(0 0 0 / 0.6);
+  animation: bob 2.2s ease-in-out infinite alternate;
+  animation-delay: var(--d);
+}
+.ballFace {
+  display: grid;
+  place-items: center;
+  width: 58%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #fff;
+  color: #1e1b4b;
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: inset 0 -2px 4px rgb(0 0 0 / 0.15);
+}
+@keyframes bob {
+  from { transform: translateY(4px) rotate(-6deg); }
+  to { transform: translateY(-6px) rotate(6deg); }
+}
+
+/* --- botão de convidado estilo fliperama --- */
+.arcade {
+  box-shadow: 0 5px 0 #b45309, 0 10px 24px -6px rgb(245 158 11 / 0.7);
+  transition: transform 80ms, box-shadow 80ms, filter 150ms;
+}
+.arcade:hover {
+  filter: brightness(1.08);
+}
+.arcade:active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 #b45309, 0 4px 12px -6px rgb(245 158 11 / 0.7);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene *,
+  .scene *::before,
+  .scene *::after {
+    animation: none !important;
+  }
+}
