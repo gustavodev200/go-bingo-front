@@ -1,6 +1,6 @@
 'use client';
 
-import { PerformanceMonitor } from '@react-three/drei';
+import { PerformanceMonitor, Preload } from '@react-three/drei';
 import { Canvas, useThree } from '@react-three/fiber';
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { contextLossGuard } from './context-loss';
@@ -67,7 +67,8 @@ export function StageCanvas({
       dpr={quality.dpr}
       frameloop={hidden ? 'never' : 'always'}
       shadows={settings.shadows === 'real'}
-      gl={{ antialias: settings.antialias, powerPreference: 'high-performance' }}
+      // stencil: nenhum efeito usa; sem ele o framebuffer fica menor (menos banda de memória no celular).
+      gl={{ antialias: settings.antialias, powerPreference: 'high-performance', stencil: false }}
       camera={{ fov: 45, near: 0.1, far: 100, position: [0, 9, 20] }}
       style={{ touchAction: 'pan-y' }}
     >
@@ -86,6 +87,8 @@ export function StageCanvas({
       <color attach="background" args={['#1a0b3d']} />
       <fog attach="fog" args={['#1a0b3d', 24, 60]} />
       {children(settings, quality.tier)}
+      {/* Compila todos os shaders (inclusive de objetos escondidos, como o confete) na montagem: sem engasgo na 1ª aparição. */}
+      <Preload all />
     </Canvas>
   );
 }

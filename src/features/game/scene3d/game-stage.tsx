@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { useGameStore } from '../store';
 import { AvatarCrowd } from './avatar-crowd';
 import { parseBots } from './bots';
@@ -28,7 +28,7 @@ export interface GameStageProps {
 const NO_DRAWS: readonly number[] = [];
 
 /** Palco 3D da partida: telão, globo, plateia com "por 1" e cena de vitória. */
-export default function GameStage({ roomName, code, qualityOverride, onContextLost, onFrame }: GameStageProps) {
+function GameStage({ roomName, code, qualityOverride, onContextLost, onFrame }: GameStageProps) {
   const [bots] = useState(() => parseBots(window.location.search, BOTS_ENABLED));
   const { statesRef, list, dance } = useAvatarStates(bots);
   const drawn = useGameStore((s) => s.snapshot?.game?.drawn ?? NO_DRAWS);
@@ -53,9 +53,12 @@ export default function GameStage({ roomName, code, qualityOverride, onContextLo
           <Globe lastNumber={drawn.at(-1) ?? null} drawCount={drawn.length} innerBalls={tier === 'low' ? 8 : 18} />
           <AvatarCrowd statesRef={statesRef} onTap={dance} castShadow={settings.shadows === 'real'} fakeShadow={settings.shadows === 'fake'} />
           <NameLabels list={list} statesRef={statesRef} showAll={tier === 'high' || list.length <= 15} />
-          {winner && settings.confetti > 0 && <Confetti count={settings.confetti} />}
+          {settings.confetti > 0 && <Confetti count={settings.confetti} active={winner !== null} />}
         </>
       )}
     </StageCanvas>
   );
 }
+
+/** memo: a sala re-renderiza a cada marcação/progresso; a cena só precisa quando as próprias props mudam (o resto vem da store). */
+export default memo(GameStage);

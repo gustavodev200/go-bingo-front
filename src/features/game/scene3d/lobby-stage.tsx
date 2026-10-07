@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { AvatarCrowd } from './avatar-crowd';
 import { parseBots } from './bots';
 import { CameraRig } from './camera-rig';
@@ -25,24 +25,28 @@ export interface LobbyStageProps {
 export const BOTS_ENABLED = process.env.NODE_ENV !== 'production' || process.env.NEXT_PUBLIC_ENABLE_BOTS === '1';
 
 /** Palco 3D do lobby. Carregado só via `next/dynamic` (ssr:false). */
-export default function LobbyStage({ roomName, code, celebrating, qualityOverride, onContextLost }: LobbyStageProps) {
+function LobbyStage({ roomName, code, celebrating, qualityOverride, onContextLost }: LobbyStageProps) {
   const [bots] = useState(() => parseBots(window.location.search, BOTS_ENABLED));
   const { statesRef, list, dance } = useAvatarStates(bots);
   // Enquadra só quem está na sala: com poucos jogadores a câmera chega perto.
   const spread = Math.max(0, ...list.map((s) => Math.abs(slotPosition(s.slot)[0])));
+  // Objeto estável: um novo a cada render redesenharia o telão e reenviaria a textura à GPU.
+  const screen = useMemo(() => ({ kind: 'lobby' as const, name: roomName, code }), [roomName, code]);
 
   return (
     <StageCanvas qualityOverride={qualityOverride} onContextLost={onContextLost}>
       {(settings, tier) => (
         <>
           <CameraRig view="lobby" spread={spread} />
-          <Hall screen={{ kind: 'lobby', name: roomName, code }} animatedBulbs={settings.animatedBulbs} shadows={settings.shadows === 'real'} tier={tier} />
+          <Hall screen={screen} animatedBulbs={settings.animatedBulbs} shadows={settings.shadows === 'real'} tier={tier} />
           <Globe lastNumber={null} drawCount={0} innerBalls={tier === 'low' ? 8 : 18} />
           <AvatarCrowd statesRef={statesRef} onTap={dance} castShadow={settings.shadows === 'real'} fakeShadow={settings.shadows === 'fake'} />
           <NameLabels list={list} statesRef={statesRef} showAll={tier === 'high' || list.length <= 15} />
-          {celebrating && settings.confetti > 0 && <Confetti count={settings.confetti} />}
+          {settings.confetti > 0 && <Confetti count={settings.confetti} active={celebrating} />}
         </>
       )}
     </StageCanvas>
   );
 }
+
+export default memo(LobbyStage);

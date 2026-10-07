@@ -66,6 +66,12 @@ function allMeshes(p: Parts): InstancedMesh[] {
   return [...Object.values(rest), ...Object.values(hats)].filter((m): m is InstancedMesh => m !== null);
 }
 
+/** Instâncias por boneco em cada peça (pares = 2, espetos = 5, o resto = 1). */
+function perAvatar(p: Parts, mesh: InstancedMesh): number {
+  if (mesh === p.spikes) return SPIKES.length;
+  return PAIRED.some((k) => p[k] === mesh) ? 2 : 1;
+}
+
 /** Bonecos chibi (pele, cabelo, roupa e rosto derivados do id): 1 InstancedMesh por peça para toda a plateia. */
 export function AvatarCrowd({
   statesRef,
@@ -128,22 +134,10 @@ export function AvatarCrowd({
       mesh.setMatrixAt(index, tmp.out);
     };
     const hide = (mesh: InstancedMesh | null, index: number) => mesh?.setMatrixAt(index, ZERO);
-    const hideAvatar = (i: number) => {
-      for (const k of SINGLE) hide(p[k], i);
-      for (const k of PAIRED) {
-        hide(p[k], i * 2);
-        hide(p[k], i * 2 + 1);
-      }
-      for (let k = 0; k < SPIKES.length; k++) hide(p.spikes, i * SPIKES.length + k);
-      for (const mesh of Object.values(p.hats)) hide(mesh, i);
-    };
 
-    for (let i = 0; i < MAX_AVATARS; i++) {
+    // Só os bonecos presentes passam por aqui; o `count` (abaixo) faz a GPU desenhar só eles.
+    for (let i = 0; i < states.length; i++) {
       const s = states[i];
-      if (!s) {
-        hideAvatar(i);
-        continue;
-      }
       const ps = pose(s, now);
       const look = s.look;
       tmp.base.compose(tmp.v.set(...ps.position), tmp.q.setFromEuler(tmp.e.set(0, ps.rotationY, 0)), tmp.s.setScalar(Math.max(ps.scale, 0.0001)));
@@ -254,6 +248,8 @@ export function AvatarCrowd({
     }
 
     for (const mesh of allMeshes(p)) {
+      // Sala com 2 pessoas desenha 2 bonecos, não 32 escondidos em escala zero (que ainda custam vértices na GPU).
+      mesh.count = states.length * perAvatar(p, mesh);
       mesh.instanceMatrix.needsUpdate = true;
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
       // A bounding sphere do InstancedMesh é calculada uma vez e não acompanha setMatrixAt:
