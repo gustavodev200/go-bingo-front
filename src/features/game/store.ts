@@ -64,9 +64,19 @@ export function selectDrawnSet(state: GameStoreState): Set<number> {
   return new Set(state.snapshot?.game?.drawn ?? []);
 }
 
+/** Quantos números sorteados ainda faltam para mim, pela conta do servidor (null sem cartela/partida). */
+export function selectMyRemaining(state: GameStoreState): number | null {
+  const s = state.snapshot;
+  if (!s?.game || !s.myCard || !state.myUserId) return null;
+  return s.game.remaining[state.myUserId] ?? null;
+}
+
 export function selectCanClaim(state: GameStoreState): boolean {
   const s = state.snapshot;
   if (!s || s.status !== 'IN_GAME' || !s.myCard) return false;
+  // O servidor valida pelos números sorteados, não pela marcação (PRD US-4.4): quem esqueceu
+  // de tocar numa casa não perde o bingo. A marcação local cobre o intervalo até o próximo progress.
+  if (selectMyRemaining(state) === 0) return true;
   const marked = new Set(s.myCard.marked);
   if (s.winPattern === 'LINE') return closestLine((i) => marked.has(i)) === 0;
   marked.delete(FREE_INDEX);

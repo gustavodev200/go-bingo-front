@@ -31,6 +31,7 @@ export function GameView({
   const snapshot = useGameStore((s) => s.snapshot)!;
   const canClaim = useGameStore(selectCanClaim);
   const winner = useGameStore((s) => s.winner);
+  const myUserId = useGameStore((s) => s.myUserId)!;
   const drawn = snapshot.game?.drawn ?? [];
   const card = snapshot.myCard;
 
@@ -69,7 +70,7 @@ export function GameView({
         )}
       </section>
       <footer className="flex gap-2 rounded-t-3xl border-t border-white/10 bg-violet-950/80 px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-md">
-        <RemainingPanel remaining={snapshot.game?.remaining ?? {}} members={snapshot.members} />
+        <RemainingPanel remaining={snapshot.game?.remaining ?? {}} members={snapshot.members} myUserId={myUserId} />
         <Button
           size="lg"
           className={cn(

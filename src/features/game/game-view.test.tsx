@@ -7,12 +7,12 @@ import { initialGameState, reduce, useGameStore } from './store';
 const ME = '00000000-0000-4000-8000-000000000001';
 const grid = Array.from({ length: 25 }, (_, i) => (i === 12 ? 0 : i + 1));
 
-function load(marked: number[]) {
+function load(marked: number[], left = 0) {
   const snapshot: RoomSnapshot = {
     code: 'ABC234', name: 'Sala', hostId: ME, maxPlayers: 10, isPublic: true, status: 'IN_GAME', winPattern: 'FULL_CARD',
     members: [{ userId: ME, nickname: 'Eu', slot: 0, isGuest: false, connected: true, hasCard: true }],
     myCard: { id: '00000000-0000-4000-8000-0000000000aa', grid, marked },
-    game: { id: '00000000-0000-4000-8000-0000000000bb', drawn: grid.filter((n) => n !== 0), drawIntervalMs: 5000, remaining: { [ME]: 0 } },
+    game: { id: '00000000-0000-4000-8000-0000000000bb', drawn: grid.filter((n) => n !== 0), drawIntervalMs: 5000, remaining: { [ME]: left } },
   };
   useGameStore.setState(reduce(initialGameState(ME), { event: 'room:state', payload: snapshot }));
 }
@@ -22,14 +22,20 @@ const actions = { generateCard: vi.fn(), start: vi.fn(), cancel: vi.fn(), leave:
 describe('GameView', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('keeps BINGO disabled until every cell is marked', () => {
-    load([0, 1]);
+  it('keeps BINGO disabled while the server still counts missing numbers and the card is not fully marked', () => {
+    load([0, 1], 2);
     render(<GameView actions={actions} muted={false} onToggleMute={vi.fn()} />);
     expect(screen.getByRole('button', { name: /bingo/i })).toBeDisabled();
   });
 
+  it('enables BINGO when the server says nothing is missing, even with nothing marked', () => {
+    load([], 0);
+    render(<GameView actions={actions} muted={false} onToggleMute={vi.fn()} />);
+    expect(screen.getByRole('button', { name: /bingo/i })).toBeEnabled();
+  });
+
   it('enables BINGO and claims', async () => {
-    load(Array.from({ length: 25 }, (_, i) => i).filter((i) => i !== 12));
+    load(Array.from({ length: 25 }, (_, i) => i).filter((i) => i !== 12), 3);
     render(<GameView actions={actions} muted={false} onToggleMute={vi.fn()} />);
     await userEvent.click(screen.getByRole('button', { name: /bingo/i }));
     expect(actions.claim).toHaveBeenCalled();

@@ -1,5 +1,5 @@
 import type { RoomSnapshot } from '@/contracts';
-import { initialGameState, reduce, selectCanClaim, selectDrawnSet, selectIsHost, selectReadyCount, type GameStoreState } from './store';
+import { initialGameState, reduce, selectCanClaim, selectDrawnSet, selectIsHost, selectMyRemaining, selectReadyCount, type GameStoreState } from './store';
 
 const ME = '00000000-0000-4000-8000-000000000001';
 const ANA = '00000000-0000-4000-8000-000000000002';
@@ -104,5 +104,27 @@ describe('selectors', () => {
   it('exposes drawn set and host flag', () => {
     expect(selectDrawnSet(withSnapshot())).toEqual(new Set([1]));
     expect(selectIsHost(withSnapshot())).toBe(true);
+  });
+});
+
+describe('selectCanClaim (o servidor manda)', () => {
+  const ALL_BUT_FREE = Array.from({ length: 25 }, (_, i) => i).filter((i) => i !== 12);
+  function game(left: number, marked: number[]) {
+    return withSnapshot(snapshot({ myCard: { id: '00000000-0000-4000-8000-0000000000aa', grid, marked }, game: { id: '00000000-0000-4000-8000-0000000000bb', drawn: [1], drawIntervalMs: 5000, remaining: { [ME]: left, [ANA]: 24 } } }));
+  }
+
+  it('libera com 0 faltando mesmo sem nada marcado', () => expect(selectCanClaim(game(0, []))).toBe(true));
+  it('libera pela marcação local completa antes do progress chegar', () => expect(selectCanClaim(game(2, ALL_BUT_FREE))).toBe(true));
+  it('bloqueia com 1 faltando e marcação incompleta', () => expect(selectCanClaim(game(1, [0]))).toBe(false));
+  it('não libera fora da partida mesmo com 0 faltando', () => {
+    const s = game(0, []);
+    expect(selectCanClaim({ ...s, snapshot: { ...s.snapshot!, status: 'WAITING' } })).toBe(false);
+  });
+
+  it('selectMyRemaining devolve o meu número, ou null sem cartela', () => {
+    expect(selectMyRemaining(game(3, []))).toBe(3);
+    const s = game(3, []);
+    expect(selectMyRemaining({ ...s, snapshot: { ...s.snapshot!, myCard: null } })).toBeNull();
+    expect(selectMyRemaining(withSnapshot(snapshot({ game: null })))).toBeNull();
   });
 });
