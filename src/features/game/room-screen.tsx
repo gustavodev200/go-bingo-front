@@ -19,6 +19,7 @@ import { GameStageLazy } from './scene3d/game-stage-lazy';
 import { LobbyStageLazy } from './scene3d/lobby-stage-lazy';
 import { useGameSounds } from './sound/use-game-sounds';
 import { useMuted } from './sound/use-muted';
+import { useNarration, useNarrationEnabled } from './sound/use-narration';
 import { useGameStore } from './store';
 import { useCelebrationDelay } from './use-celebration-delay';
 import { useGameConnection } from './use-game-connection';
@@ -66,6 +67,9 @@ export function RoomScreen({ code }: { code: string }) {
   const resultReady = useCelebrationDelay(snapshot ? showResult : null, scene.mode === '3d', RESULT_DELAY_MS);
   const [muted, setMuted] = useMuted();
   useGameSounds(muted);
+  const [narration, setNarration] = useNarrationEnabled();
+  // Mudo geral cala a narração também.
+  useNarration(!muted && narration);
   useEffect(() => {
     if (scene.reason === 'context-lost') toast('Modo 2D ativado para economizar o aparelho');
     if (scene.reason === 'failed') toast('Não foi possível carregar o 3D; usando o modo 2D.');
@@ -120,6 +124,8 @@ export function RoomScreen({ code }: { code: string }) {
           actions={actions}
           muted={muted}
           onToggleMute={setMuted}
+          narration={narration}
+          onToggleNarration={setNarration}
           stage={
             scene.mode === '3d' ? (
               <StageErrorBoundary onError={scene.reportFailure}>

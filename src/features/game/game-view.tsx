@@ -10,6 +10,8 @@ import { EmotePicker } from './emotes/emote-picker';
 import { ReactionFeed } from './emotes/reaction-feed';
 import { LastNumbers } from './last-numbers';
 import { RemainingPanel } from './remaining-panel';
+import { NarrationToggle } from './sound/narration-toggle';
+import type { Narrator } from './sound/narration';
 import { SoundToggle } from './sound-toggle';
 import { selectCanClaim, selectIsSpectator, useGameStore } from './store';
 import type { GameActions } from './use-game-connection';
@@ -23,12 +25,19 @@ export function GameView({
   stage,
   muted,
   onToggleMute,
+  narration = false,
+  onToggleNarration,
+  narrator,
 }: {
   actions: GameActions;
   /** Palco 3D (modo 3D); sem ele, a região mostra os últimos números em DOM. */
   stage?: ReactNode;
   muted: boolean;
   onToggleMute: (muted: boolean) => void;
+  /** Narração das bolas; sem `onToggleNarration` o botão não aparece. */
+  narration?: boolean;
+  onToggleNarration?: (enabled: boolean) => void;
+  narrator?: Narrator;
 }) {
   const snapshot = useGameStore((s) => s.snapshot)!;
   const canClaim = useGameStore(selectCanClaim);
@@ -61,6 +70,7 @@ export function GameView({
         <div className="absolute top-2 right-2 flex gap-2">
           <EmotePicker onEmote={(emote) => void actions.emote(emote)} />
           <DrawnBoard drawn={drawn} />
+          {onToggleNarration && <NarrationToggle enabled={narration} onChange={onToggleNarration} narrator={narrator} />}
           <SoundToggle muted={muted} onChange={onToggleMute} />
         </div>
       </section>

@@ -89,4 +89,12 @@ describe('GameView', () => {
     expect(screen.getByText(/entra na próxima rodada/i)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^bingo!$/i })).not.toBeInTheDocument();
   });
+
+  it('offers the narration toggle when the room wires it', async () => {
+    load([]);
+    const onToggleNarration = vi.fn();
+    render(<GameView actions={actions} muted={false} onToggleMute={vi.fn()} narration={false} onToggleNarration={onToggleNarration} narrator={{ supported: true, speak: vi.fn() }} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Ligar narração' }));
+    expect(onToggleNarration).toHaveBeenCalledWith(true);
+  });
 });
