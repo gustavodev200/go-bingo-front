@@ -21,13 +21,11 @@ describe('CardGrid', () => {
     expect(onMark).toHaveBeenCalledWith(6);
   });
 
-  it('locked cell: does not mark and reports the number', async () => {
+  it('locked cell: tapping does nothing', async () => {
     const onMark = vi.fn();
-    const onLocked = vi.fn();
-    render(<CardGrid grid={grid} marked={[]} drawn={new Set()} onMark={onMark} onLocked={onLocked} />);
+    render(<CardGrid grid={grid} marked={[]} drawn={new Set()} onMark={onMark} />);
     await userEvent.click(screen.getByRole('button', { name: 'B 1' }));
     expect(onMark).not.toHaveBeenCalled();
-    expect(onLocked).toHaveBeenCalledWith(1);
   });
 
   it('shows marked cells as pressed and ignores clicks on them', async () => {

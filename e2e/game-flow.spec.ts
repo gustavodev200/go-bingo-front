@@ -14,7 +14,7 @@ async function cardNumbers(page: Page): Promise<string[]> {
 
 /**
  * Toca na próxima casa não marcada, em rodízio. A cartela não mostra o que já saiu (como no bingo real):
- * casa sorteada vira marcada, as outras só avisam "ainda não saiu".
+ * casa sorteada vira marcada, as outras ignoram o toque.
  */
 async function tapUnmarked(page: Page, i: number): Promise<void> {
   const cells = cardCells(page).and(page.locator('[aria-pressed="false"]'));

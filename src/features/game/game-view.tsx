@@ -1,9 +1,8 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { letterFor, WIN_PATTERN_LABELS } from '@/contracts';
+import { WIN_PATTERN_LABELS } from '@/contracts';
 import { cn } from '@/lib/utils';
 import { CardGrid } from './card-grid';
 import { DrawnBoard } from './drawn-board';
@@ -66,7 +65,6 @@ export function GameView({
             marked={card.marked}
             drawn={new Set(drawn)}
             onMark={(index) => void actions.mark(index)}
-            onLocked={(n) => toast(`${letterFor(n)} ${n} ainda não saiu`)}
           />
         )}
       </section>

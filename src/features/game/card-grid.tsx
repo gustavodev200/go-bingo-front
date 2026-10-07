@@ -9,14 +9,13 @@ interface CardGridProps {
   marked: readonly number[];
   drawn: ReadonlySet<number>;
   onMark?: (index: number) => void;
-  onLocked?: (number: number) => void;
 }
 
 /**
  * Cartela de papel: casas creme, marcado leva o "carimbo" magenta.
  * Como no bingo de verdade, a cartela não entrega o que já saiu: quem não prestar atenção esquece de marcar.
  */
-export function CardGrid({ grid, marked, drawn, onMark, onLocked }: CardGridProps) {
+export function CardGrid({ grid, marked, drawn, onMark }: CardGridProps) {
   const markedSet = new Set(marked);
   const cells: number[] = [];
   for (let row = 0; row < 5; row++) for (let col = 0; col < 5; col++) cells.push(col * 5 + row);
@@ -39,8 +38,8 @@ export function CardGrid({ grid, marked, drawn, onMark, onLocked }: CardGridProp
           const label = free ? 'Casa livre' : `${letterFor(number)} ${number}${isMarked ? ', marcado' : ''}`;
 
           function click() {
-            if (free || isMarked || !onMark) return;
-            if (!isDrawn) return onLocked?.(number);
+            // Casa que ainda não saiu: o toque não faz nada (sem aviso).
+            if (free || isMarked || !isDrawn || !onMark) return;
             onMark(index);
           }
 
