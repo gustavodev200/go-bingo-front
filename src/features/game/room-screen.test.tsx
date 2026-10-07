@@ -52,7 +52,7 @@ vi.mock('./scene3d/lobby-stage-lazy', () => ({
 
 function room(overrides: Partial<RoomSnapshot> = {}): RoomSnapshot {
   return {
-    code: 'ABC234', name: 'Amigos', hostId: ME, maxPlayers: 10, isPublic: true, status: 'WAITING',
+    code: 'ABC234', name: 'Amigos', hostId: ME, maxPlayers: 10, isPublic: true, status: 'WAITING', winPattern: 'FULL_CARD',
     members: [
       { userId: ME, nickname: 'Eu', slot: 0, isGuest: false, connected: true, hasCard: false },
       { userId: ANA, nickname: 'Ana', slot: 1, isGuest: true, connected: true, hasCard: true },

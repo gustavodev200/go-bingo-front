@@ -2,7 +2,7 @@
 
 import { Coin, Coins } from '@/components/stage/coin';
 import { Button } from '@/components/ui/button';
-import { CARD_COST, DAILY_COINS, MAX_CARD_REGENS } from '@/contracts';
+import { CARD_COST, DAILY_COINS, MAX_CARD_REGENS, WIN_COINS, WIN_PATTERN_LABELS } from '@/contracts';
 import { CardGrid } from './card-grid';
 import type { GameActions } from './use-game-connection';
 import { MembersList } from './members-list';
@@ -26,6 +26,9 @@ export function LobbyView({ actions, onLeave, coins }: { actions: GameActions; o
         <h1 className="font-display text-marquee text-3xl font-bold">{snapshot.name}</h1>
         <p className="text-muted-foreground text-sm">
           {snapshot.members.length}/{snapshot.maxPlayers} jogadores · {ready} prontos
+        </p>
+        <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-300/15 px-3 py-1 text-sm text-amber-200 ring-1 ring-amber-300/30">
+          Modo: <strong>{WIN_PATTERN_LABELS[snapshot.winPattern]}</strong> · prêmio <Coins amount={WIN_COINS[snapshot.winPattern]} />
         </p>
       </header>
       <ShareCode code={snapshot.code} />

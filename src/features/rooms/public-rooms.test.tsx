@@ -5,7 +5,7 @@ import { PublicRooms } from './public-rooms';
 let socket: FakeSocket;
 vi.mock('@/lib/socket', async (orig) => ({ ...(await orig<typeof import('@/lib/socket')>()), createGameSocket: () => socket.asSocket() }));
 
-const room = { code: 'ABC234', name: 'Amigos', playerCount: 2, maxPlayers: 10, status: 'WAITING' as const };
+const room = { code: 'ABC234', name: 'Amigos', playerCount: 2, maxPlayers: 10, status: 'WAITING' as const, winPattern: 'LINE' as const };
 
 describe('PublicRooms', () => {
   beforeEach(() => {
@@ -25,7 +25,7 @@ describe('PublicRooms', () => {
 
     act(() => socket.fire('rooms:updated', { rooms: [room] }));
     expect(screen.getByRole('link', { name: /amigos/i })).toHaveAttribute('href', '/ABC234');
-    expect(screen.getByText('2/10 · #ABC234')).toBeInTheDocument();
+    expect(screen.getByText('2/10 · Quina · #ABC234')).toBeInTheDocument();
 
     unmount();
     expect(socket.connected).toBe(false);

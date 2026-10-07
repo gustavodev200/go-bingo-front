@@ -15,7 +15,7 @@ function member(userId: string, nickname: string, slot: number, extra: Partial<M
 
 function load(overrides: Partial<RoomSnapshot>) {
   const snapshot: RoomSnapshot = {
-    code: 'ABC234', name: 'Amigos', hostId: ME, maxPlayers: 10, isPublic: true, status: 'WAITING',
+    code: 'ABC234', name: 'Amigos', hostId: ME, maxPlayers: 10, isPublic: true, status: 'WAITING', winPattern: 'FULL_CARD',
     members: [member(ME, 'Eu', 0), member(ANA, 'Ana', 1)], myCard: null, game: null,
     ...overrides,
   };
@@ -30,6 +30,12 @@ describe('LobbyView', () => {
     render(<LobbyView actions={actions} coins={100} onLeave={vi.fn()} />);
     expect(screen.getByRole('button', { name: /aguardando 2 jogadores prontos/i })).toBeDisabled();
     expect(screen.getByText('2/10 jogadores · 1 prontos')).toBeInTheDocument();
+  });
+
+  it('shows the win mode chosen by the host', () => {
+    load({ winPattern: 'LINE' });
+    render(<LobbyView actions={actions} coins={100} onLeave={vi.fn()} />);
+    expect(screen.getByText('Quina')).toBeInTheDocument();
   });
 
   it('host starts, kicks and cancels', async () => {

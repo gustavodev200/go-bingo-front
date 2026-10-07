@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { FREE_INDEX, type Card, type Member, type RoomSnapshot, type ServerEventName, type ServerEventPayloads, type Winner } from '@/contracts';
+import { closestLine, FREE_INDEX, type Card, type Member, type RoomSnapshot, type ServerEventName, type ServerEventPayloads, type Winner } from '@/contracts';
 
 export type ServerMessage = { [E in ServerEventName]: { event: E; payload: ServerEventPayloads[E] } }[ServerEventName];
 export type ExitReason = 'kicked' | 'host_cancelled' | 'empty' | 'not_found' | 'error';
@@ -67,7 +67,10 @@ export function selectDrawnSet(state: GameStoreState): Set<number> {
 export function selectCanClaim(state: GameStoreState): boolean {
   const s = state.snapshot;
   if (!s || s.status !== 'IN_GAME' || !s.myCard) return false;
-  return new Set(s.myCard.marked.filter((i) => i !== FREE_INDEX)).size === 24;
+  const marked = new Set(s.myCard.marked);
+  if (s.winPattern === 'LINE') return closestLine((i) => marked.has(i)) === 0;
+  marked.delete(FREE_INDEX);
+  return marked.size === 24;
 }
 
 export function selectIsHost(state: GameStoreState): boolean {

@@ -2,6 +2,7 @@
 
 import { ChevronRight, Users } from 'lucide-react';
 import Link from 'next/link';
+import { WIN_PATTERN_LABELS } from '@/contracts';
 import { usePublicRooms } from './use-public-rooms';
 
 export function PublicRooms() {
@@ -25,7 +26,7 @@ export function PublicRooms() {
             <span className="flex min-w-0 flex-1 flex-col">
               <span className="truncate font-semibold">{room.name}</span>
               <span className="text-muted-foreground text-sm">
-                {room.playerCount}/{room.maxPlayers} · #{room.code}
+                {room.playerCount}/{room.maxPlayers} · {WIN_PATTERN_LABELS[room.winPattern]} · #{room.code}
               </span>
             </span>
             <Users aria-hidden className="size-4 text-pink-300" />

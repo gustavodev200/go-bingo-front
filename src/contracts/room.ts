@@ -1,6 +1,12 @@
 // GERADO por go-bingo-back/scripts/sync-contracts.mjs — NÃO EDITAR. Edite no back e rode `npm run contracts:sync`.
 import { z } from 'zod';
-import { MAX_DRAW_INTERVAL_MS, MIN_DRAW_INTERVAL_MS } from './bingo';
+import {
+  MAX_DRAW_INTERVAL_MS,
+  MIN_DRAW_INTERVAL_MS,
+  WIN_PATTERNS,
+} from './bingo';
+
+export const winPatternSchema = z.enum(WIN_PATTERNS);
 
 export const ROOM_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
@@ -25,6 +31,8 @@ export const createRoomSchema = z.object({
     .min(MIN_DRAW_INTERVAL_MS)
     .max(MAX_DRAW_INTERVAL_MS)
     .optional(),
+  /** Modo de vitória; ausente = cartela cheia. */
+  winPattern: winPatternSchema.optional(),
 });
 export type CreateRoomInput = z.infer<typeof createRoomSchema>;
 
@@ -37,6 +45,7 @@ export const publicRoomSchema = z.object({
   playerCount: z.number().int(),
   maxPlayers: z.number().int(),
   status: roomStatusSchema,
+  winPattern: winPatternSchema,
 });
 export type PublicRoom = z.infer<typeof publicRoomSchema>;
 
@@ -72,6 +81,7 @@ export const roomSnapshotSchema = z.object({
   maxPlayers: z.number().int(),
   isPublic: z.boolean(),
   status: roomStatusSchema,
+  winPattern: winPatternSchema,
   members: z.array(memberSchema),
   myCard: cardSchema.nullable(),
   game: gameStateSchema.nullable(),

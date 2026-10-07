@@ -9,7 +9,7 @@ const grid = Array.from({ length: 25 }, (_, i) => (i === 12 ? 0 : i + 1));
 
 function load(marked: number[]) {
   const snapshot: RoomSnapshot = {
-    code: 'ABC234', name: 'Sala', hostId: ME, maxPlayers: 10, isPublic: true, status: 'IN_GAME',
+    code: 'ABC234', name: 'Sala', hostId: ME, maxPlayers: 10, isPublic: true, status: 'IN_GAME', winPattern: 'FULL_CARD',
     members: [{ userId: ME, nickname: 'Eu', slot: 0, isGuest: false, connected: true, hasCard: true }],
     myCard: { id: '00000000-0000-4000-8000-0000000000aa', grid, marked },
     game: { id: '00000000-0000-4000-8000-0000000000bb', drawn: grid.filter((n) => n !== 0), drawIntervalMs: 5000, remaining: { [ME]: 0 } },

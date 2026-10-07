@@ -12,6 +12,7 @@ function snapshot(overrides: Partial<RoomSnapshot> = {}): RoomSnapshot {
     hostId: ME,
     maxPlayers: 10,
     isPublic: true,
+    winPattern: 'FULL_CARD',
     status: 'IN_GAME',
     members: [
       { userId: ME, nickname: 'Eu', slot: 0, isGuest: false, connected: true, hasCard: true },
@@ -89,6 +90,15 @@ describe('selectors', () => {
     expect(selectCanClaim(s)).toBe(true);
     expect(selectCanClaim(withSnapshot())).toBe(false);
     expect(selectCanClaim(withSnapshot(snapshot({ status: 'WAITING', myCard: { id: '00000000-0000-4000-8000-0000000000aa', grid, marked: allMarked } })))).toBe(false);
+  });
+
+  it('canClaim in Quina once a row, column or diagonal is marked (free center counts)', () => {
+    const quina = (marked: number[]) => selectCanClaim(withSnapshot(snapshot({ winPattern: 'LINE', myCard: { id: '00000000-0000-4000-8000-0000000000aa', grid, marked } })));
+    expect(quina([0, 1, 2, 3, 4])).toBe(true); // coluna B
+    expect(quina([2, 7, 17, 22])).toBe(true); // linha do meio, passa pelo FREE
+    expect(quina([0, 6, 18, 24])).toBe(true); // diagonal
+    expect(quina([0, 1, 2, 3])).toBe(false);
+    expect(quina([0, 6, 13, 19])).toBe(false);
   });
 
   it('exposes drawn set and host flag', () => {
