@@ -62,6 +62,24 @@ Cobertura mínima: 80% (statements/branches/functions/lines), conforme a constit
 - [ ] Recarregar no meio da partida: sem som e sem bola voando; telão com o estado certo.
 - [ ] Mudo persiste após recarregar; modo 2D joga a partida inteira com "Painel" e som.
 
+### Melhorias de UX (out/2026)
+
+- **BINGO! pelo servidor:** o botão acende quando o servidor conta 0 números faltando, mesmo sem tudo marcado (PRD US-4.4). O rodapé mostra "Faltam N / Por 1! / Completa!".
+- **Espectador:** quem abre o link com a partida rolando entra assistindo (sem cartela, sem perder moedas) e joga a próxima rodada. Se todos com cartela saírem, a partida acaba na hora ("Todos os jogadores com cartela saíram").
+- **Perfil (`/perfil`, tocando no avatar da Home):** trocar apelido, partidas, vitórias, pontos, posição e as últimas 20 movimentações de moedas.
+- **Emotes:** botão "Reagir" (👏 😱 😂 🔥) no lobby e na partida; feed em DOM e bolha sobre o boneco no 3D. Limite de 1 a cada 1,5 s.
+- **Narração:** botão de voz ao lado do mudo ("B, 7" em pt-BR, Web Speech API). Desligada por padrão; o mudo também a cala; some onde o navegador não tem voz.
+- Back: nova migration `20261010000000_game_winner_index` — rodar `npx prisma migrate deploy` no banco de cada ambiente.
+
+**Checklist manual (2 abas ou 2 aparelhos):**
+
+- [ ] Não marcar nada; quando "Pedras" mostrar "Completa!", o BINGO! acende e vence.
+- [ ] Terceira pessoa abre o link no meio da partida: vê "Você está assistindo"; no fim não vê perda de moedas; após "Jogar de novo" gera cartela.
+- [ ] Os dois jogadores saem com o espectador na sala: ele vê "Todos os jogadores com cartela saíram".
+- [ ] Perfil: trocar apelido (aparece na Home), estatísticas e extrato batem com a partida jogada.
+- [ ] Emote aparece para os dois (feed + bolha no 3D); tocar várias vezes seguidas não gera erro.
+- [ ] Narração ligada no iPhone e no Android fala cada bola; com mudo, fica quieta.
+
 ### E2E (Playwright)
 
 - Pré-requisitos: o back rodando (`npm run start:dev` em `go-bingo-back`), um projeto Supabase **dedicado a teste** com *anonymous sign-ins* habilitado e o Turnstile de teste (secret `1x0000000000000000000000000000000AA`), e `E2E_DATABASE_URL` apontando para o Postgres desse projeto (usado para preparar/limpar dados).
