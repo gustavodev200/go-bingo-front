@@ -8,12 +8,16 @@ const nextConfig: NextConfig = {
     // Em `next dev` o React/Turbopack precisam de eval e websocket de HMR, que a CSP estrita bloquearia;
     // por isso os headers de segurança só valem no build de produção.
     if (process.env.NODE_ENV !== 'production') return [];
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (!apiUrl) throw new Error('NEXT_PUBLIC_API_URL is required for production builds');
+    if (!supabaseUrl) throw new Error('NEXT_PUBLIC_SUPABASE_URL is required for production builds');
     return [
       {
         source: '/:path*',
         headers: securityHeaders({
-          apiUrl: process.env.NEXT_PUBLIC_API_URL!,
-          supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          apiUrl,
+          supabaseUrl,
           sentryDsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
         }),
       },
