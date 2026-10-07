@@ -23,6 +23,7 @@ export const ClientEvents = {
   CARD_MARK: 'card:mark',
   BINGO_CLAIM: 'bingo:claim',
   GAME_REPLAY: 'game:replay',
+  ROOM_EMOTE: 'room:emote',
 } as const;
 
 export const ServerEvents = {
@@ -38,11 +39,24 @@ export const ServerEvents = {
   GAME_PROGRESS: 'game:progress',
   GAME_WON: 'game:won',
   GAME_ENDED: 'game:ended',
+  EMOTED: 'room:emoted',
 } as const;
 
 export const emptyPayloadSchema = z.object({}).strict();
 export const joinRoomPayloadSchema = z.object({ code: roomCodeSchema });
 export const kickPayloadSchema = z.object({ userId: z.uuid() });
+/** Reações rápidas fixas (sem texto livre): o cliente desenha o emoji a partir da chave. */
+export const EMOTES = ['clap', 'wow', 'laugh', 'fire'] as const;
+export const emoteSchema = z.enum(EMOTES);
+export type Emote = z.infer<typeof emoteSchema>;
+export const EMOTE_SYMBOLS: Record<Emote, string> = {
+  clap: '👏',
+  wow: '😱',
+  laugh: '😂',
+  fire: '🔥',
+};
+export const emotePayloadSchema = z.object({ emote: emoteSchema });
+
 export const markPayloadSchema = z.object({
   index: z.number().int().min(0).max(24),
 });
@@ -94,6 +108,7 @@ export interface ServerEventPayloads {
   'game:progress': { remaining: Record<string, number> };
   'game:won': Winner;
   'game:ended': { reason: GameEndedReason };
+  'room:emoted': { userId: string; emote: Emote };
 }
 export type ServerEventName = keyof ServerEventPayloads;
 
@@ -108,6 +123,7 @@ export interface ClientAckData {
   'card:mark': { marked: number[] };
   'bingo:claim': Winner;
   'game:replay': null;
+  'room:emote': null;
 }
 
 export const PUBLIC_ROOMS_CHANNEL = 'public-rooms';
