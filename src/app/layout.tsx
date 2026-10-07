@@ -16,7 +16,13 @@ export const metadata: Metadata = {
   description: 'Bingo multiplayer com os amigos',
   appleWebApp: { capable: true, title: 'Go Bingo', statusBarStyle: 'black-translucent' },
   formatDetection: { telephone: false },
-  icons: { apple: '/pwa-icons/icon-192.png' },
+  icons: {
+    icon: [
+      { url: '/pwa-icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/pwa-icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: '/pwa-icons/icon-192.png',
+  },
 };
 
 export const viewport: Viewport = {
