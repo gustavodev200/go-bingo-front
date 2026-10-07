@@ -8,6 +8,7 @@ const ME = '00000000-0000-4000-8000-000000000001';
 const ANA = '00000000-0000-4000-8000-000000000002';
 const grid = Array.from({ length: 25 }, (_, i) => (i === 12 ? 0 : i + 1));
 let isGuest = false;
+let points = 20;
 
 vi.mock('@/features/profile/profile-context', () => ({
   useProfile: () => ({ profile: { id: ME, nickname: 'Eu', isGuest, points: 0, coins: 100 }, refresh: vi.fn() }),
@@ -21,7 +22,7 @@ function setup(hostId: string, winnerId: string | null) {
   };
   let state = reduce(initialGameState(ME), { event: 'room:state', payload: snapshot });
   state = winnerId
-    ? reduce(state, { event: 'game:won', payload: { userId: winnerId, nickname: winnerId === ME ? 'Eu' : 'Ana', pointsAwarded: winnerId === ME && !isGuest ? 20 : 0, coinsAwarded: 100, grid } })
+    ? reduce(state, { event: 'game:won', payload: { userId: winnerId, nickname: winnerId === ME ? 'Eu' : 'Ana', pointsAwarded: winnerId === ME && !isGuest ? points : 0, coinsAwarded: 100, grid } })
     : reduce(state, { event: 'game:ended', payload: { reason: 'exhausted' } });
   useGameStore.setState(state);
 }
@@ -29,6 +30,7 @@ function setup(hostId: string, winnerId: string | null) {
 describe('ResultDialog', () => {
   beforeEach(() => {
     isGuest = false;
+    points = 20;
   });
 
   it('registered winner sees the points', () => {
@@ -36,6 +38,13 @@ describe('ResultDialog', () => {
     render(<ResultDialog onReplay={vi.fn()} onLeave={vi.fn()} />);
     expect(screen.getByText(/você venceu/i)).toBeInTheDocument();
     expect(screen.getByText(/\+20 pontos/i)).toBeInTheDocument();
+  });
+
+  it('registered winner who only beat guests learns why there are no points', () => {
+    points = 0;
+    setup(ME, ME);
+    render(<ResultDialog onReplay={vi.fn()} onLeave={vi.fn()} />);
+    expect(screen.getByText(/só vitória contra outro jogador logado pontua/i)).toBeInTheDocument();
   });
 
   it('winner sees the coins won; others see the coins lost', () => {

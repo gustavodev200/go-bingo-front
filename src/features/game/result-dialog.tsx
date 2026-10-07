@@ -8,6 +8,13 @@ import { UpgradeButton } from '@/features/auth/upgrade-button';
 import { useProfile } from '@/features/profile/profile-context';
 import { selectIsHost, useGameStore } from './store';
 
+function myWinText(isGuest: boolean, points: number): string {
+  if (isGuest) return 'Convidados não pontuam no ranking.';
+  if (points > 0) return `+${points} pontos no ranking.`;
+  // O back só pontua vitória sobre outro jogador logado (evita inflar o ranking contra convidados).
+  return 'Só vitória contra outro jogador logado pontua no ranking.';
+}
+
 export function ResultDialog({ onReplay, onLeave }: { onReplay: () => void; onLeave: () => void }) {
   const { profile } = useProfile();
   const winner = useGameStore((s) => s.winner);
@@ -15,13 +22,7 @@ export function ResultDialog({ onReplay, onLeave }: { onReplay: () => void; onLe
   const iWon = winner?.userId === profile.id;
 
   const title = winner ? (iWon ? 'Você venceu! 🎉' : `${winner.nickname} fez BINGO!`) : 'Fim de jogo';
-  const description = winner
-    ? iWon
-      ? profile.isGuest
-        ? 'Convidados não pontuam no ranking.'
-        : `+${winner.pointsAwarded} pontos no ranking.`
-      : 'Não foi dessa vez.'
-    : 'Todos os números saíram sem vencedor.';
+  const description = !winner ? 'Todos os números saíram sem vencedor.' : iWon ? myWinText(profile.isGuest, winner.pointsAwarded) : 'Não foi dessa vez.';
 
   return (
     <Dialog open>
