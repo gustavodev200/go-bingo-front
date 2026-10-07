@@ -67,7 +67,7 @@ Cobertura mínima: 80% (statements/branches/functions/lines), conforme a constit
 - Pré-requisitos: o back rodando (`npm run start:dev` em `go-bingo-back`), um projeto Supabase **dedicado a teste** com *anonymous sign-ins* habilitado e o Turnstile de teste (secret `1x0000000000000000000000000000000AA`), e `E2E_DATABASE_URL` apontando para o Postgres desse projeto (usado para preparar/limpar dados).
 - Comandos: `npm run e2e` (suíte completa) e `npm run e2e:smoke` (só os `@smoke`).
 - `workers=1`: as partidas compartilham o mesmo back e o mesmo banco de teste, então rodar em paralelo cria interferência entre salas e rate limits. `serviceWorkers` fica bloqueado nos contextos do Playwright para o SW do PWA não interceptar requisições nem cachear estado entre testes.
-- No CI, o job de e2e precisa dos secrets `E2E_SUPABASE_URL`, `E2E_SUPABASE_PUBLISHABLE_KEY` e `BACK_REPO_TOKEN` (para clonar o back).
+- No CI, o job de e2e só roda quando a variável de repositório `E2E_ENABLED` é `true` e precisa dos secrets `E2E_SUPABASE_URL`, `E2E_SUPABASE_PUBLISHABLE_KEY` e `BACK_REPO_TOKEN` (para clonar o back).
 - Convidados ganham 0 pontos e não entram no ranking; por isso o e2e da partida completa só confere que a página de ranking carrega.
 - Testes unitários: `npm test` (ou `npm run test:cov` com limiar de 80%). Os e2e **não** rodam em `npm test`.
 
