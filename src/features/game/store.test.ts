@@ -1,5 +1,5 @@
 import type { RoomSnapshot } from '@/contracts';
-import { initialGameState, reduce, selectCanClaim, selectDrawnSet, selectIsHost, selectIsSpectator, selectMyRemaining, selectReadyCount, type GameStoreState } from './store';
+import { initialGameState, MAX_REACTIONS, reduce, selectCanClaim, selectDrawnSet, selectIsHost, selectIsSpectator, selectMyRemaining, selectReadyCount, type GameStoreState } from './store';
 
 const ME = '00000000-0000-4000-8000-000000000001';
 const ANA = '00000000-0000-4000-8000-000000000002';
@@ -141,5 +141,30 @@ describe('espectador e fim sem jogadores', () => {
     expect(ended.endReason).toBe('no_players');
     expect(ended.endedWithoutWinner).toBe(true);
     expect(reduce(ended, { event: 'room:state', payload: snapshot({ status: 'WAITING' }) }).endReason).toBeNull();
+  });
+});
+
+describe('reações (emotes)', () => {
+  const emoted = (userId: string, emote: 'clap' | 'fire' = 'clap') => ({ event: 'room:emoted', payload: { userId, emote } }) as const;
+
+  it('guarda emotes de quem está na sala, com ids crescentes', () => {
+    const one = reduce(withSnapshot(), emoted(ANA));
+    const two = reduce(one, emoted(ME, 'fire'));
+    expect(two.reactions).toEqual([
+      { id: 1, userId: ANA, emote: 'clap' },
+      { id: 2, userId: ME, emote: 'fire' },
+    ]);
+  });
+
+  it('ignora emote de quem não é membro e emote antes do snapshot', () => {
+    expect(reduce(withSnapshot(), emoted('00000000-0000-4000-8000-0000000000ff')).reactions).toEqual([]);
+    expect(reduce(initialGameState(ME), emoted(ANA)).reactions).toEqual([]);
+  });
+
+  it('mantém só as últimas MAX_REACTIONS', () => {
+    let s = withSnapshot();
+    for (let i = 0; i < MAX_REACTIONS + 5; i++) s = reduce(s, emoted(ANA));
+    expect(s.reactions).toHaveLength(MAX_REACTIONS);
+    expect(s.reactions.at(-1)!.id).toBe(MAX_REACTIONS + 5);
   });
 });

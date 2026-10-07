@@ -4,6 +4,8 @@ import { Coin, Coins } from '@/components/stage/coin';
 import { Button } from '@/components/ui/button';
 import { CARD_COST, DAILY_COINS, MAX_CARD_REGENS, WIN_COINS, WIN_PATTERN_LABELS } from '@/contracts';
 import { CardGrid } from './card-grid';
+import { EmotePicker } from './emotes/emote-picker';
+import { ReactionFeed } from './emotes/reaction-feed';
 import type { GameActions } from './use-game-connection';
 import { MembersList } from './members-list';
 import { ShareCode } from './share-code';
@@ -34,7 +36,10 @@ export function LobbyView({ actions, onLeave, coins }: { actions: GameActions; o
       <ShareCode code={snapshot.code} />
 
       <section className="glass flex flex-col gap-3 p-4">
-        <h2 className="font-display text-lg font-semibold">Plateia</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-lg font-semibold">Plateia</h2>
+          <EmotePicker onEmote={(emote) => void actions.emote(emote)} />
+        </div>
         <MembersList members={snapshot.members} hostId={snapshot.hostId} myUserId={myUserId} onKick={isHost ? (id) => void actions.kick(id) : undefined} />
       </section>
 
@@ -79,6 +84,8 @@ export function LobbyView({ actions, onLeave, coins }: { actions: GameActions; o
           Sair da sala
         </Button>
       )}
+      {/* reações por cima de tudo, perto do polegar */}
+      <ReactionFeed className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] left-4 z-30" />
     </main>
   );
 }

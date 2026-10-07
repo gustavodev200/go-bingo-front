@@ -1,9 +1,20 @@
 import { create } from 'zustand';
-import { closestLine, FREE_INDEX, type Card, type GameEndedReason, type Member, type RoomSnapshot, type ServerEventName, type ServerEventPayloads, type Winner } from '@/contracts';
+import { closestLine, FREE_INDEX, type Card, type Emote, type GameEndedReason, type Member, type RoomSnapshot, type ServerEventName, type ServerEventPayloads, type Winner } from '@/contracts';
 
 export type ServerMessage = { [E in ServerEventName]: { event: E; payload: ServerEventPayloads[E] } }[ServerEventName];
 export type ExitReason = 'kicked' | 'host_cancelled' | 'empty' | 'not_found' | 'error';
 export type ConnectionStatus = 'connecting' | 'online' | 'reconnecting';
+
+/** Reação rápida ao vivo (some sozinha depois de REACTION_MS). */
+export interface Reaction {
+  id: number;
+  userId: string;
+  emote: Emote;
+}
+/** Teto da fila de reações (rajada de muita gente não cresce a memória). */
+export const MAX_REACTIONS = 12;
+/** Quanto tempo cada reação fica na tela. */
+export const REACTION_MS = 2600;
 
 export interface GameStoreState {
   myUserId: string | null;
@@ -13,11 +24,13 @@ export interface GameStoreState {
   endedWithoutWinner: boolean;
   /** Por que a partida acabou sem vencedor (null enquanto não acabou assim). */
   endReason: GameEndedReason | null;
+  reactions: Reaction[];
+  reactionSeq: number;
   exit: { reason: ExitReason; message?: string } | null;
 }
 
 export function initialGameState(myUserId: string | null): GameStoreState {
-  return { myUserId, snapshot: null, connection: 'connecting', winner: null, endedWithoutWinner: false, endReason: null, exit: null };
+  return { myUserId, snapshot: null, connection: 'connecting', winner: null, endedWithoutWinner: false, endReason: null, reactions: [], reactionSeq: 0, exit: null };
 }
 
 function withMembers(snapshot: RoomSnapshot, members: Member[]): RoomSnapshot {
@@ -55,6 +68,13 @@ export function reduce(state: GameStoreState, msg: ServerMessage): GameStoreStat
       return s.game ? { ...state, snapshot: { ...s, game: { ...s.game, remaining: msg.payload.remaining } } } : state;
     case 'game:won':
       return { ...state, winner: msg.payload, snapshot: { ...s, status: 'WAITING' } };
+    case 'room:emoted': {
+      // Só de quem está na sala (um emote atrasado de quem saiu não aparece solto).
+      if (!s.members.some((m) => m.userId === msg.payload.userId)) return state;
+      const id = state.reactionSeq + 1;
+      const reactions = [...state.reactions, { id, userId: msg.payload.userId, emote: msg.payload.emote }].slice(-MAX_REACTIONS);
+      return { ...state, reactionSeq: id, reactions };
+    }
     case 'game:ended':
       return { ...state, endedWithoutWinner: true, endReason: msg.payload.reason, snapshot: { ...s, status: 'WAITING' } };
     default:
@@ -106,6 +126,7 @@ interface GameStoreActions {
   setExit(exit: GameStoreState['exit']): void;
   setMyCard(card: Card): void;
   setMarked(marked: number[]): void;
+  dismissReaction(id: number): void;
 }
 
 export const useGameStore = create<GameStoreState & GameStoreActions>((set) => ({
@@ -120,6 +141,7 @@ export const useGameStore = create<GameStoreState & GameStoreActions>((set) => (
       const members = state.snapshot.members.map((m) => (m.userId === state.myUserId ? { ...m, hasCard: true } : m));
       return { snapshot: { ...state.snapshot, myCard: card, members } };
     }),
+  dismissReaction: (id) => set((state) => ({ reactions: state.reactions.filter((r) => r.id !== id) })),
   setMarked: (marked) =>
     set((state) => (state.snapshot?.myCard ? { snapshot: { ...state.snapshot, myCard: { ...state.snapshot.myCard, marked } } } : state)),
 }));

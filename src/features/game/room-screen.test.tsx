@@ -10,7 +10,7 @@ const grid = Array.from({ length: 25 }, (_, i) => (i === 12 ? 0 : i + 1));
 
 const push = vi.fn();
 const toast = vi.fn();
-const actions = { generateCard: vi.fn(), start: vi.fn(), cancel: vi.fn(), leave: vi.fn(async () => undefined), kick: vi.fn(), mark: vi.fn(), claim: vi.fn(), replay: vi.fn() };
+const actions = { generateCard: vi.fn(), start: vi.fn(), cancel: vi.fn(), leave: vi.fn(async () => undefined), kick: vi.fn(), mark: vi.fn(), claim: vi.fn(), replay: vi.fn(), emote: vi.fn() };
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push }), usePathname: () => '/ABC234' }));
 vi.mock('sonner', () => ({ toast: Object.assign((msg: string) => toast(msg), { error: vi.fn(), success: vi.fn() }) }));

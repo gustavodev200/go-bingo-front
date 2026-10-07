@@ -7,7 +7,7 @@ import { initialGameState, reduce, useGameStore } from './store';
 const ME = '00000000-0000-4000-8000-000000000001';
 const ANA = '00000000-0000-4000-8000-000000000002';
 const grid = Array.from({ length: 25 }, (_, i) => (i === 12 ? 0 : i + 1));
-const actions = { generateCard: vi.fn(), start: vi.fn(), cancel: vi.fn(), leave: vi.fn(), kick: vi.fn(), mark: vi.fn(), claim: vi.fn(), replay: vi.fn() };
+const actions = { generateCard: vi.fn(), start: vi.fn(), cancel: vi.fn(), leave: vi.fn(), kick: vi.fn(), mark: vi.fn(), claim: vi.fn(), replay: vi.fn(), emote: vi.fn() };
 
 function member(userId: string, nickname: string, slot: number, extra: Partial<Member> = {}): Member {
   return { userId, nickname, slot, isGuest: false, connected: true, hasCard: false, ...extra };

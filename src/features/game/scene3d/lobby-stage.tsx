@@ -5,6 +5,7 @@ import { AvatarCrowd } from './avatar-crowd';
 import { parseBots } from './bots';
 import { CameraRig } from './camera-rig';
 import { Confetti } from './confetti';
+import { EmoteBubbles } from './emote-bubbles';
 import { Globe } from './globe-mesh';
 import { Hall } from './hall';
 import { NameLabels } from './name-labels';
@@ -42,6 +43,7 @@ function LobbyStage({ roomName, code, celebrating, qualityOverride, onContextLos
           <Globe lastNumber={null} drawCount={0} innerBalls={tier === 'low' ? 8 : 18} />
           <AvatarCrowd statesRef={statesRef} onTap={dance} castShadow={settings.shadows === 'real'} fakeShadow={settings.shadows === 'fake'} />
           <NameLabels list={list} statesRef={statesRef} showAll={tier === 'high' || list.length <= 15} />
+          <EmoteBubbles statesRef={statesRef} />
           {settings.confetti > 0 && <Confetti count={settings.confetti} active={celebrating} />}
         </>
       )}

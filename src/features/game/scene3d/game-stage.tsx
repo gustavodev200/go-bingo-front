@@ -6,6 +6,7 @@ import { AvatarCrowd } from './avatar-crowd';
 import { parseBots } from './bots';
 import { CameraRig } from './camera-rig';
 import { Confetti } from './confetti';
+import { EmoteBubbles } from './emote-bubbles';
 import { Globe } from './globe-mesh';
 import { FpsProbe } from './fps-probe';
 import { Hall } from './hall';
@@ -53,6 +54,7 @@ function GameStage({ roomName, code, qualityOverride, onContextLost, onFrame }: 
           <Globe lastNumber={drawn.at(-1) ?? null} drawCount={drawn.length} innerBalls={tier === 'low' ? 8 : 18} />
           <AvatarCrowd statesRef={statesRef} onTap={dance} castShadow={settings.shadows === 'real'} fakeShadow={settings.shadows === 'fake'} />
           <NameLabels list={list} statesRef={statesRef} showAll={tier === 'high' || list.length <= 15} />
+          <EmoteBubbles statesRef={statesRef} />
           {settings.confetti > 0 && <Confetti count={settings.confetti} active={winner !== null} />}
         </>
       )}

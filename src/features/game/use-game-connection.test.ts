@@ -213,4 +213,20 @@ describe('useGameConnection robustness', () => {
       vi.useRealTimers();
     }
   });
+
+  it('emote sends the reaction and stays silent on errors (no toast spam)', async () => {
+    const { result } = await connect();
+    socket.acks.set('room:emote', { ok: false, error: { code: 'RATE_LIMITED', message: 'Calma!' } });
+    await act(async () => {
+      await result.current.emote('wow');
+    });
+    expect(socket.emitted.at(-1)).toEqual({ event: 'room:emote', payload: { emote: 'wow' } });
+    expect(toastError).not.toHaveBeenCalled();
+  });
+
+  it('feeds room:emoted into the store', async () => {
+    await connect();
+    act(() => socket.fire('room:emoted', { userId: ME, emote: 'fire' }));
+    expect(useGameStore.getState().reactions).toEqual([{ id: 1, userId: ME, emote: 'fire' }]);
+  });
 });

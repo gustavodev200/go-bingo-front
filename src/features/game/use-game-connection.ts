@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import type { Socket } from 'socket.io-client';
 import { toast } from 'sonner';
-import { ServerEvents, type Ack, type ClientAckData } from '@/contracts';
+import { ServerEvents, type Ack, type ClientAckData, type Emote } from '@/contracts';
 import { createGameSocket, emitAck } from '@/lib/socket';
 import { useGameStore, type ServerMessage } from './store';
 
@@ -16,6 +16,7 @@ export interface GameActions {
   mark(index: number): Promise<void>;
   claim(): Promise<void>;
   replay(): Promise<void>;
+  emote(emote: Emote): Promise<void>;
 }
 
 const JOIN_RETRY_MS = 1_000;
@@ -132,6 +133,8 @@ export function useGameConnection(code: string, onDrawLatency?: (ms: number) => 
       },
       claim: async () => void report(await call('bingo:claim')),
       replay: async () => void report(await call('game:replay')),
+      // Reação é enfeite: RATE_LIMITED ou queda não viram toast.
+      emote: async (emote) => void (await call('room:emote', { emote })),
     };
   }, []);
 }

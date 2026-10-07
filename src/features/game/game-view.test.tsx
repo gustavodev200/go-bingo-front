@@ -17,7 +17,7 @@ function load(marked: number[], left = 0) {
   useGameStore.setState(reduce(initialGameState(ME), { event: 'room:state', payload: snapshot }));
 }
 
-const actions = { generateCard: vi.fn(), start: vi.fn(), cancel: vi.fn(), leave: vi.fn(), kick: vi.fn(), mark: vi.fn(), claim: vi.fn(), replay: vi.fn() };
+const actions = { generateCard: vi.fn(), start: vi.fn(), cancel: vi.fn(), leave: vi.fn(), kick: vi.fn(), mark: vi.fn(), claim: vi.fn(), replay: vi.fn(), emote: vi.fn() };
 
 describe('GameView', () => {
   beforeEach(() => vi.clearAllMocks());

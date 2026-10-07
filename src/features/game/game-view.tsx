@@ -6,6 +6,8 @@ import { WIN_PATTERN_LABELS } from '@/contracts';
 import { cn } from '@/lib/utils';
 import { CardGrid } from './card-grid';
 import { DrawnBoard } from './drawn-board';
+import { EmotePicker } from './emotes/emote-picker';
+import { ReactionFeed } from './emotes/reaction-feed';
 import { LastNumbers } from './last-numbers';
 import { RemainingPanel } from './remaining-panel';
 import { SoundToggle } from './sound-toggle';
@@ -55,7 +57,9 @@ export function GameView({
         <p className="absolute bottom-2 left-2 rounded-full bg-black/40 px-2.5 py-1 text-xs font-semibold text-amber-200 backdrop-blur-sm">
           {WIN_PATTERN_LABELS[snapshot.winPattern]}
         </p>
+        <ReactionFeed className="absolute bottom-10 left-2 z-10" />
         <div className="absolute top-2 right-2 flex gap-2">
+          <EmotePicker onEmote={(emote) => void actions.emote(emote)} />
           <DrawnBoard drawn={drawn} />
           <SoundToggle muted={muted} onChange={onToggleMute} />
         </div>
