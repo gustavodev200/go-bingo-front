@@ -15,15 +15,15 @@ vi.mock('@/features/profile/profile-context', () => ({
 }));
 vi.mock('@/features/auth/upgrade-button', () => ({ UpgradeButton: () => <button>upgrade</button> }));
 
-function setup(hostId: string, winnerId: string | null, drawn: number[] = []) {
+function setup(hostId: string, winnerId: string | null, drawn: number[] = [], { spectator = false, reason = 'exhausted' as 'exhausted' | 'no_players' } = {}) {
   const snapshot: RoomSnapshot = {
     code: 'ABC234', name: 'Sala', hostId, maxPlayers: 10, isPublic: true, status: 'IN_GAME', winPattern: 'FULL_CARD',
-    members: [], myCard: null, game: { id: '00000000-0000-4000-8000-0000000000bb', drawn, drawIntervalMs: 5000, remaining: {} },
+    members: [], myCard: spectator ? null : { id: '00000000-0000-4000-8000-0000000000aa', grid, marked: [] }, game: { id: '00000000-0000-4000-8000-0000000000bb', drawn, drawIntervalMs: 5000, remaining: {} },
   };
   let state = reduce(initialGameState(ME), { event: 'room:state', payload: snapshot });
   state = winnerId
     ? reduce(state, { event: 'game:won', payload: { userId: winnerId, nickname: winnerId === ME ? 'Eu' : 'Ana', pointsAwarded: winnerId === ME && !isGuest ? points : 0, coinsAwarded: 100, grid } })
-    : reduce(state, { event: 'game:ended', payload: { reason: 'exhausted' } });
+    : reduce(state, { event: 'game:ended', payload: { reason } });
   useGameStore.setState(state);
 }
 
@@ -93,5 +93,19 @@ describe('ResultDialog', () => {
     setup(ME, null);
     render(<ResultDialog onReplay={vi.fn()} onLeave={vi.fn()} />);
     expect(screen.queryByRole('group')).not.toBeInTheDocument();
+  });
+
+  it('spectator sees who won, loses nothing and learns they play next round', () => {
+    setup(ANA, ANA, [], { spectator: true });
+    render(<ResultDialog onReplay={vi.fn()} onLeave={vi.fn()} />);
+    expect(screen.getByText(/ana fez bingo/i)).toBeInTheDocument();
+    expect(screen.getByRole('dialog')).not.toHaveTextContent('moedas');
+    expect(screen.getByText(/você entra na próxima rodada/i)).toBeInTheDocument();
+  });
+
+  it('explains a game that ended because every player left', () => {
+    setup(ME, null, [], { reason: 'no_players' });
+    render(<ResultDialog onReplay={vi.fn()} onLeave={vi.fn()} />);
+    expect(screen.getByText(/todos os jogadores com cartela saíram/i)).toBeInTheDocument();
   });
 });

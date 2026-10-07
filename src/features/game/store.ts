@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { closestLine, FREE_INDEX, type Card, type Member, type RoomSnapshot, type ServerEventName, type ServerEventPayloads, type Winner } from '@/contracts';
+import { closestLine, FREE_INDEX, type Card, type GameEndedReason, type Member, type RoomSnapshot, type ServerEventName, type ServerEventPayloads, type Winner } from '@/contracts';
 
 export type ServerMessage = { [E in ServerEventName]: { event: E; payload: ServerEventPayloads[E] } }[ServerEventName];
 export type ExitReason = 'kicked' | 'host_cancelled' | 'empty' | 'not_found' | 'error';
@@ -11,11 +11,13 @@ export interface GameStoreState {
   connection: ConnectionStatus;
   winner: Winner | null;
   endedWithoutWinner: boolean;
+  /** Por que a partida acabou sem vencedor (null enquanto não acabou assim). */
+  endReason: GameEndedReason | null;
   exit: { reason: ExitReason; message?: string } | null;
 }
 
 export function initialGameState(myUserId: string | null): GameStoreState {
-  return { myUserId, snapshot: null, connection: 'connecting', winner: null, endedWithoutWinner: false, exit: null };
+  return { myUserId, snapshot: null, connection: 'connecting', winner: null, endedWithoutWinner: false, endReason: null, exit: null };
 }
 
 function withMembers(snapshot: RoomSnapshot, members: Member[]): RoomSnapshot {
@@ -23,7 +25,7 @@ function withMembers(snapshot: RoomSnapshot, members: Member[]): RoomSnapshot {
 }
 
 export function reduce(state: GameStoreState, msg: ServerMessage): GameStoreState {
-  if (msg.event === 'room:state') return { ...state, snapshot: msg.payload, winner: null, endedWithoutWinner: false };
+  if (msg.event === 'room:state') return { ...state, snapshot: msg.payload, winner: null, endedWithoutWinner: false, endReason: null };
   if (msg.event === 'room:closed') return { ...state, exit: { reason: msg.payload.reason } };
   const s = state.snapshot;
   if (!s) return state;
@@ -54,7 +56,7 @@ export function reduce(state: GameStoreState, msg: ServerMessage): GameStoreStat
     case 'game:won':
       return { ...state, winner: msg.payload, snapshot: { ...s, status: 'WAITING' } };
     case 'game:ended':
-      return { ...state, endedWithoutWinner: true, snapshot: { ...s, status: 'WAITING' } };
+      return { ...state, endedWithoutWinner: true, endReason: msg.payload.reason, snapshot: { ...s, status: 'WAITING' } };
     default:
       return state;
   }
@@ -81,6 +83,12 @@ export function selectCanClaim(state: GameStoreState): boolean {
   if (s.winPattern === 'LINE') return closestLine((i) => marked.has(i)) === 0;
   marked.delete(FREE_INDEX);
   return marked.size === 24;
+}
+
+/** Entrou com a partida rolando: assiste sem cartela e joga a próxima rodada. */
+export function selectIsSpectator(state: GameStoreState): boolean {
+  const s = state.snapshot;
+  return !!s && s.status === 'IN_GAME' && !s.myCard;
 }
 
 export function selectIsHost(state: GameStoreState): boolean {

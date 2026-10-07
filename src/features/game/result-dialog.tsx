@@ -23,10 +23,21 @@ export function ResultDialog({ onReplay, onLeave }: { onReplay: () => void; onLe
   const winner = useGameStore((s) => s.winner);
   const isHost = useGameStore(selectIsHost);
   const drawn = useGameStore((s) => s.snapshot?.game?.drawn ?? NO_DRAWS);
+  // Espectador não tinha cartela: não perdeu moedas e entra na próxima rodada.
+  const hadCard = useGameStore((s) => !!s.snapshot?.myCard);
+  const endReason = useGameStore((s) => s.endReason);
   const iWon = winner?.userId === profile.id;
 
   const title = winner ? (iWon ? 'Você venceu! 🎉' : `${winner.nickname} fez BINGO!`) : 'Fim de jogo';
-  const description = !winner ? 'Todos os números saíram sem vencedor.' : iWon ? myWinText(profile.isGuest, winner.pointsAwarded) : 'Não foi dessa vez.';
+  const description = !winner
+    ? endReason === 'no_players'
+      ? 'Todos os jogadores com cartela saíram.'
+      : 'Todos os números saíram sem vencedor.'
+    : iWon
+      ? myWinText(profile.isGuest, winner.pointsAwarded)
+      : hadCard
+        ? 'Não foi dessa vez.'
+        : 'Você entra na próxima rodada.';
 
   return (
     <Dialog open>
@@ -35,7 +46,7 @@ export function ResultDialog({ onReplay, onLeave }: { onReplay: () => void; onLe
           <DialogTitle className="text-marquee text-2xl">{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        {winner && (
+        {winner && (iWon || hadCard) && (
           <p className="flex items-center justify-center gap-2 rounded-2xl bg-white/5 py-3 text-lg">
             {iWon ? (
               <Coins amount={winner.coinsAwarded} signed className="text-amber-300" />

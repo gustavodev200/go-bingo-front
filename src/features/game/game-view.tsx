@@ -9,7 +9,7 @@ import { DrawnBoard } from './drawn-board';
 import { LastNumbers } from './last-numbers';
 import { RemainingPanel } from './remaining-panel';
 import { SoundToggle } from './sound-toggle';
-import { selectCanClaim, useGameStore } from './store';
+import { selectCanClaim, selectIsSpectator, useGameStore } from './store';
 import type { GameActions } from './use-game-connection';
 
 /**
@@ -30,6 +30,7 @@ export function GameView({
 }) {
   const snapshot = useGameStore((s) => s.snapshot)!;
   const canClaim = useGameStore(selectCanClaim);
+  const spectator = useGameStore(selectIsSpectator);
   const winner = useGameStore((s) => s.winner);
   const myUserId = useGameStore((s) => s.myUserId)!;
   const drawn = snapshot.game?.drawn ?? [];
@@ -60,6 +61,15 @@ export function GameView({
         </div>
       </section>
       <section className="flex items-center overflow-y-auto px-3 py-2">
+        {spectator && (
+          <p className="glass mx-auto flex w-full max-w-md flex-col items-center gap-1 rounded-2xl px-4 py-6 text-center">
+            <span aria-hidden className="text-3xl">
+              👀
+            </span>
+            <strong className="font-display text-lg text-amber-200">Você está assistindo</strong>
+            <span className="text-muted-foreground text-sm">A partida já tinha começado. Você entra na próxima rodada.</span>
+          </p>
+        )}
         {card && (
           <CardGrid
             grid={card.grid}
@@ -71,17 +81,23 @@ export function GameView({
       </section>
       <footer className="flex gap-2 rounded-t-3xl border-t border-white/10 bg-violet-950/80 px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-md">
         <RemainingPanel remaining={snapshot.game?.remaining ?? {}} members={snapshot.members} myUserId={myUserId} />
-        <Button
-          size="lg"
-          className={cn(
-            "font-display h-12 flex-1 rounded-xl text-2xl font-bold tracking-wider",
-            canClaim && "ring-4 ring-amber-300/60 motion-safe:animate-pulse",
-          )}
-          disabled={!canClaim}
-          onClick={() => void actions.claim()}
-        >
-          BINGO!
-        </Button>
+        {spectator ? (
+          <span className="font-display flex h-12 flex-1 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-lg font-semibold text-violet-200">
+            Assistindo
+          </span>
+        ) : (
+          <Button
+            size="lg"
+            className={cn(
+              'font-display h-12 flex-1 rounded-xl text-2xl font-bold tracking-wider',
+              canClaim && 'ring-4 ring-amber-300/60 motion-safe:animate-pulse',
+            )}
+            disabled={!canClaim}
+            onClick={() => void actions.claim()}
+          >
+            BINGO!
+          </Button>
+        )}
       </footer>
     </main>
   );

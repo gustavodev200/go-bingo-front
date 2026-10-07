@@ -80,4 +80,13 @@ describe('GameView', () => {
     render(<GameView actions={actions} muted={false} onToggleMute={vi.fn()} stage={<div />} />);
     expect(screen.getByRole('status').parentElement).toHaveClass('sr-only');
   });
+
+  it('spectator: watches without a card or BINGO button', () => {
+    load([]);
+    useGameStore.setState((s) => ({ snapshot: { ...s.snapshot!, myCard: null } }));
+    render(<GameView actions={actions} muted={false} onToggleMute={vi.fn()} />);
+    expect(screen.getByText(/você está assistindo/i)).toBeInTheDocument();
+    expect(screen.getByText(/entra na próxima rodada/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^bingo!$/i })).not.toBeInTheDocument();
+  });
 });

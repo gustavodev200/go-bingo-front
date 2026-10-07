@@ -1,5 +1,5 @@
 import type { RoomSnapshot } from '@/contracts';
-import { initialGameState, reduce, selectCanClaim, selectDrawnSet, selectIsHost, selectMyRemaining, selectReadyCount, type GameStoreState } from './store';
+import { initialGameState, reduce, selectCanClaim, selectDrawnSet, selectIsHost, selectIsSpectator, selectMyRemaining, selectReadyCount, type GameStoreState } from './store';
 
 const ME = '00000000-0000-4000-8000-000000000001';
 const ANA = '00000000-0000-4000-8000-000000000002';
@@ -126,5 +126,20 @@ describe('selectCanClaim (o servidor manda)', () => {
     const s = game(3, []);
     expect(selectMyRemaining({ ...s, snapshot: { ...s.snapshot!, myCard: null } })).toBeNull();
     expect(selectMyRemaining(withSnapshot(snapshot({ game: null })))).toBeNull();
+  });
+});
+
+describe('espectador e fim sem jogadores', () => {
+  it('quem está na partida sem cartela é espectador', () => {
+    expect(selectIsSpectator(withSnapshot(snapshot({ myCard: null })))).toBe(true);
+    expect(selectIsSpectator(withSnapshot())).toBe(false);
+    expect(selectIsSpectator(withSnapshot(snapshot({ status: 'WAITING', myCard: null })))).toBe(false);
+  });
+
+  it('guarda o motivo do fim e zera no próximo snapshot', () => {
+    const ended = reduce(withSnapshot(), { event: 'game:ended', payload: { reason: 'no_players' } });
+    expect(ended.endReason).toBe('no_players');
+    expect(ended.endedWithoutWinner).toBe(true);
+    expect(reduce(ended, { event: 'room:state', payload: snapshot({ status: 'WAITING' }) }).endReason).toBeNull();
   });
 });
