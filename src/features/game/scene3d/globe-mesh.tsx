@@ -2,10 +2,38 @@
 
 import { Billboard, Text } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
-import { useEffect, useMemo, useRef } from 'react';
-import { Object3D, type Group, type InstancedMesh, type Mesh } from 'three';
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { Color, Object3D, type Group, type InstancedMesh, type Mesh } from 'three';
 import { letterFor } from '@/contracts';
+import { LETTER_COLORS } from './ambience';
 import { GLOBE_CENTER, ballFlight, globeSpin, innerBall } from './globe';
+
+const INK = '#0f0f14';
+
+/** Bola de sinuca: cor da coluna, verniz e disco branco (sempre de frente) com a letra sobre o número. */
+function DrawnBall({ number }: { number: number }) {
+  const letter = letterFor(number);
+  return (
+    <>
+      <mesh>
+        <sphereGeometry args={[0.44, 32, 24]} />
+        <meshPhysicalMaterial color={LETTER_COLORS[letter]} roughness={0.18} clearcoat={1} clearcoatRoughness={0.05} />
+      </mesh>
+      <Billboard>
+        <mesh position={[0, 0, 0.45]}>
+          <circleGeometry args={[0.26, 32]} />
+          <meshBasicMaterial color="#ffffff" />
+        </mesh>
+        <Text position={[0, 0.11, 0.46]} fontSize={0.12} fontWeight={700} color={INK} anchorX="center" anchorY="middle">
+          {letter}
+        </Text>
+        <Text position={[0, -0.04, 0.46]} fontSize={0.22} fontWeight={700} color={INK} anchorX="center" anchorY="middle">
+          {String(number)}
+        </Text>
+      </Billboard>
+    </>
+  );
+}
 
 /** Globo-gaiola girando com bolinhas dentro; a cada sorteio acelera e solta a bola com letra e número. */
 export function Globe({ lastNumber, drawCount, innerBalls }: { lastNumber: number | null; drawCount: number; innerBalls: number }) {
@@ -16,6 +44,15 @@ export function Globe({ lastNumber, drawCount, innerBalls }: { lastNumber: numbe
   const lastDrawAt = useRef(0);
   const seenCount = useRef<number | null>(null);
   const o = useMemo(() => new Object3D(), []);
+
+  // Bolinhas da gaiola nas cores das colunas, como as sorteadas.
+  useLayoutEffect(() => {
+    const mesh = inner.current;
+    if (!mesh) return;
+    const colors = Object.values(LETTER_COLORS).map((c) => new Color(c));
+    for (let i = 0; i < innerBalls; i++) mesh.setColorAt(i, colors[i % colors.length]);
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+  }, [innerBalls]);
 
   // Só anima um sorteio novo (+1) com a cena montada; recarga, remontagem e ressincronização não animam.
   useEffect(() => {
@@ -65,25 +102,15 @@ export function Globe({ lastNumber, drawCount, innerBalls }: { lastNumber: numbe
       </mesh>
       <pointLight position={GLOBE_CENTER} intensity={5} color="#fbbf24" distance={4} />
       <instancedMesh ref={inner} args={[undefined, undefined, innerBalls]} frustumCulled={false}>
-        <sphereGeometry args={[0.11, 8, 6]} />
-        <meshStandardMaterial color="#fef3c7" emissive="#fde68a" emissiveIntensity={0.25} roughness={0.3} />
+        <sphereGeometry args={[0.11, 10, 8]} />
+        <meshStandardMaterial roughness={0.2} />
       </instancedMesh>
       <mesh position={[GLOBE_CENTER[0], 0.45, GLOBE_CENTER[2]]}>
         <cylinderGeometry args={[0.3, 0.55, 0.6, 24]} />
         <meshStandardMaterial color="#be185d" metalness={0.3} roughness={0.35} />
       </mesh>
       <group ref={ball} visible={false}>
-        <mesh>
-          <sphereGeometry args={[0.34, 16, 12]} />
-          <meshStandardMaterial color="#fde047" emissive="#f59e0b" emissiveIntensity={0.35} roughness={0.25} />
-        </mesh>
-        {lastNumber !== null && (
-          <Billboard>
-            <Text position={[0, 0, 0.35]} fontSize={0.17} lineHeight={1} color="#111827" anchorX="center" anchorY="middle" textAlign="center">
-              {`${letterFor(lastNumber)}\n${lastNumber}`}
-            </Text>
-          </Billboard>
-        )}
+        {lastNumber !== null && <DrawnBall number={lastNumber} />}
       </group>
     </group>
   );

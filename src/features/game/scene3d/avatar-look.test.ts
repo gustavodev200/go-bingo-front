@@ -1,4 +1,4 @@
-import { ACCENT_COLORS, BODY_COLORS, FACES, HATS, avatarFromId, hashId } from './avatar-look';
+import { ACCENT_COLORS, BODY_COLORS, FACES, HAIR_COLORS, HATS, PANTS_COLORS, SKIN_COLORS, avatarFromId, hashId } from './avatar-look';
 
 const ids = Array.from({ length: 300 }, (_, i) => `00000000-0000-4000-8000-${i.toString(16).padStart(12, '0')}`);
 
@@ -25,5 +25,17 @@ describe('avatarFromId', () => {
     expect(new Set(looks.map((l) => l.body)).size).toBe(BODY_COLORS.length);
     expect(new Set(looks.map((l) => l.hat)).size).toBe(HATS.length);
     expect(new Set(looks.map((l) => l.face)).size).toBe(FACES.length);
+  });
+});
+
+describe('avatarFromId (person)', () => {
+  it('always picks skin, hair and pants from the palettes and spreads skin tones', () => {
+    const looks = ids.map(avatarFromId);
+    for (const look of looks) {
+      expect(SKIN_COLORS).toContain(look.skin);
+      expect(HAIR_COLORS).toContain(look.hair);
+      expect(PANTS_COLORS).toContain(look.pants);
+    }
+    expect(new Set(looks.map((l) => l.skin)).size).toBe(SKIN_COLORS.length);
   });
 });

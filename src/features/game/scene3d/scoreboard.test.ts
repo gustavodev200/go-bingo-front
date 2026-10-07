@@ -1,3 +1,4 @@
+import { LETTER_COLORS } from './ambience';
 import { LIT, drawScoreboard, scoreboardView, type ScoreboardCtx, type ScoreboardView } from './scoreboard';
 
 type Call = { op: 'fillRect' | 'fillText' | 'arc'; args: unknown[]; fillStyle: string; font: string };
@@ -34,8 +35,11 @@ describe('drawScoreboard', () => {
     const drawn = [3, 18, 33, 48, 63, 70];
     const f = draw({ kind: 'game', drawn });
     const texts = f.texts();
-    expect(texts).toEqual(expect.arrayContaining(['O', '70', 'O63', 'G48', 'N33', 'I18']));
-    expect(texts).not.toContain('B3'); // só as 4 anteriores
+    expect(texts).toEqual(expect.arrayContaining(['O', '70', '63', 'G', '48', 'N', '33', 'I', '18']));
+    // bolas estilo sinuca na cor da coluna; o B3 fica de fora (só as 4 anteriores)
+    const ballColors = f.calls.filter((c) => c.op === 'arc').map((c) => c.fillStyle);
+    expect(ballColors).toEqual(expect.arrayContaining([LETTER_COLORS.O, LETTER_COLORS.G, LETTER_COLORS.N, LETTER_COLORS.I]));
+    expect(ballColors).not.toContain(LETTER_COLORS.B);
     const litCells = f.calls.filter((c) => c.op === 'fillRect' && c.fillStyle === LIT);
     expect(litCells).toHaveLength(drawn.length);
     expect(f.calls.filter((c) => c.op === 'fillRect' && c.args[2] === 30)).toHaveLength(75); // 75 células

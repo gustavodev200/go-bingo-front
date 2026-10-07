@@ -67,6 +67,37 @@ describe('cameraFor(game)', () => {
   });
 });
 
+describe('cameraFor(lobby, spread)', () => {
+  const distance = (s: ReturnType<typeof cameraFor>) => Math.hypot(s.position[0] - s.target[0], s.position[1] - s.target[1], s.position[2] - s.target[2]);
+
+  it('comes closer when only the center avatars are present', () => {
+    expect(distance(cameraFor(0.9, 'lobby', 0.55))).toBeLessThan(distance(cameraFor(0.9, 'lobby')) * 0.7);
+  });
+
+  it.each([0.5, 1.15, 2.2])('still frames every present avatar at aspect %s', (aspect) => {
+    for (const count of [1, 2, 5, 9, MAX_SLOTS]) {
+      const present = Array.from({ length: count }, (_, s) => slotPosition(s));
+      const spread = Math.max(...present.map((p) => Math.abs(p[0])));
+      const setup = cameraFor(aspect, 'lobby', spread);
+      const cam = new PerspectiveCamera(setup.fov, aspect, 0.1, 200);
+      cam.position.set(...setup.position);
+      cam.lookAt(...setup.target);
+      cam.updateMatrixWorld();
+      for (const p of present) {
+        for (const dy of [0, 1.3]) {
+          const v = new Vector3(p[0], p[1] + dy, p[2]).project(cam);
+          expect(Math.abs(v.x)).toBeLessThanOrEqual(1);
+          expect(Math.abs(v.y)).toBeLessThanOrEqual(1);
+        }
+      }
+    }
+  });
+
+  it('never goes wider than the full-room framing', () => {
+    expect(cameraFor(1, 'lobby', 99)).toEqual(cameraFor(1, 'lobby'));
+  });
+});
+
 describe('focusOn', () => {
   it('centers the avatar in view', () => {
     const slot = [2.2, 0.4, 0.1] as const;

@@ -129,7 +129,7 @@ export function RoomScreen({ code }: { code: string }) {
       ) : (
         <>
           {scene.mode === '3d' && (
-            <div className="h-[40dvh] w-full overflow-hidden rounded-b-[2rem] border-b-2 border-amber-300/50 shadow-[0_10px_40px_-10px_rgb(245_158_11/0.5)] landscape:h-[55dvh]">
+            <div className="h-[50dvh] w-full overflow-hidden rounded-b-[2rem] border-b-2 border-amber-300/50 shadow-[0_10px_40px_-10px_rgb(245_158_11/0.5)] landscape:h-[55dvh]">
               <StageErrorBoundary onError={scene.reportFailure}>
                 <LobbyStageLazy
                   key={scene.stageKey}

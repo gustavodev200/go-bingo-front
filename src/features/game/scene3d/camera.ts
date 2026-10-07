@@ -7,14 +7,23 @@ const FOV = 45;
 const MAX_DISTANCE = 26;
 const VIEWS: Record<CameraView, { target: Vec3; halfWidth: number; halfHeight: number; elevation: number }> = {
   lobby: { target: [0, 1.1, -0.6], halfWidth: 5.6, halfHeight: 3.2, elevation: 0.32 },
-  game: { target: [0.6, 2.6, -3.8], halfWidth: 4.9, halfHeight: 3.2, elevation: 0.12 },
+  game: { target: [0.5, 2.7, -3.8], halfWidth: 4.35, halfHeight: 2.9, elevation: 0.12 },
 };
 
-/** Enquadramento por aspect: `lobby` = plateia + palco; `game` = telão + globo (plateia aparece embaixo quando cabe). */
-export function cameraFor(aspect: number, view: CameraView = 'lobby'): CameraSetup {
+/** Menor meia-largura do lobby: mesmo com 1–2 jogadores o palco e o globo continuam em cena. */
+const MIN_LOBBY_HALF_WIDTH = 3.2;
+/** Folga lateral além do boneco mais afastado do centro (largura do boneco + respiro). */
+const SPREAD_MARGIN = 1.3;
+
+/**
+ * Enquadramento por aspect: `lobby` = plateia + palco; `game` = telão + globo (plateia aparece embaixo quando cabe).
+ * `spread` (lobby) = maior |x| entre os bonecos presentes: sala vazia aproxima a câmera e eles aparecem grandes.
+ */
+export function cameraFor(aspect: number, view: CameraView = 'lobby', spread?: number): CameraSetup {
   const v = VIEWS[view];
+  const halfWidth = view === 'lobby' && spread !== undefined ? Math.min(v.halfWidth, Math.max(MIN_LOBBY_HALF_WIDTH, spread + SPREAD_MARGIN)) : v.halfWidth;
   const tanHalf = Math.tan(((FOV / 2) * Math.PI) / 180);
-  const forWidth = v.halfWidth / (tanHalf * Math.max(aspect, 0.3));
+  const forWidth = halfWidth / (tanHalf * Math.max(aspect, 0.3));
   const forHeight = v.halfHeight / tanHalf;
   const distance = Math.min(Math.max(forWidth, forHeight), MAX_DISTANCE);
   return { fov: FOV, target: v.target, position: [v.target[0], v.target[1] + distance * v.elevation, v.target[2] + distance] };

@@ -12,14 +12,22 @@ async function cardNumbers(page: Page): Promise<string[]> {
   return labels.map((l) => l.split(',')[0]).sort();
 }
 
+/**
+ * Toca na próxima casa não marcada, em rodízio. A cartela não mostra o que já saiu (como no bingo real):
+ * casa sorteada vira marcada, as outras só avisam "ainda não saiu".
+ */
+async function tapUnmarked(page: Page, i: number): Promise<void> {
+  const cells = cardCells(page).and(page.locator('[aria-pressed="false"]'));
+  const n = await cells.count();
+  if (n === 0) return;
+  await cells.nth(i % n).click();
+  await page.waitForTimeout(60);
+}
+
 /** Marca todo número já sorteado na cartela de `page`, até o botão BINGO! habilitar. */
 async function playUntilBingo(page: Page): Promise<void> {
   const bingo = page.getByRole('button', { name: 'BINGO!' });
-  for (let i = 0; i < 400 && !(await bingo.isEnabled()); i++) {
-    const drawn = page.locator('button[aria-label$=", sorteado"]');
-    if ((await drawn.count()) > 0) await drawn.first().click();
-    else await page.waitForTimeout(150);
-  }
+  for (let i = 0; i < 3000 && !(await bingo.isEnabled()); i++) await tapUnmarked(page, i);
   await expect(bingo).toBeEnabled();
 }
 
@@ -65,10 +73,9 @@ test('recarregar no meio da partida volta à mesma partida e à mesma cartela', 
   await expect(guest.page.getByRole('button', { name: 'BINGO!' })).toBeVisible({ timeout: 30_000 });
 
   // Espera um número sorteado, marca-o e guarda a cartela antes do reload.
-  const drawn = guest.page.locator('button[aria-label$=", sorteado"]');
-  await expect(drawn.first()).toBeVisible({ timeout: 30_000 });
-  await drawn.first().click();
-  await expect(guest.page.locator('button[aria-label$=", marcado"]')).toHaveCount(1);
+  const marked = guest.page.locator('button[aria-label$=", marcado"]');
+  for (let i = 0; i < 1500 && (await marked.count()) === 0; i++) await tapUnmarked(guest.page, i);
+  await expect(marked).toHaveCount(1);
   const markedLabel = ((await guest.page.locator('button[aria-label$=", marcado"]').first().getAttribute('aria-label')) ?? '').split(',')[0];
   const before = await cardNumbers(guest.page);
   expect(before).toHaveLength(24);

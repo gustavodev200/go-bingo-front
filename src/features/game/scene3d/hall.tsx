@@ -1,6 +1,6 @@
 'use client';
 
-import { Sparkles } from '@react-three/drei';
+import { Environment, Lightformer, Sparkles } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import { Color, Object3D, type InstancedMesh } from 'three';
@@ -83,6 +83,13 @@ export function Hall({ screen, animatedBulbs, shadows, tier = 'medium' }: { scre
 
   return (
     <group>
+      {/* Reflexos do salão nas bolas e nos bonecos: cubo renderizado 1 vez a partir de "painéis de luz" (sem HDR externo). */}
+      <Environment resolution={64} frames={1} environmentIntensity={0.6}>
+        <Lightformer form="rect" intensity={2.5} color="#fff1d6" position={[0, 6, 4]} scale={[10, 3, 1]} target={[0, 0, 0]} />
+        <Lightformer form="rect" intensity={2} color="#ec4899" position={[-6, 2, 2]} scale={[3, 6, 1]} target={[0, 1, 0]} />
+        <Lightformer form="rect" intensity={2} color="#22d3ee" position={[6, 2, 2]} scale={[3, 6, 1]} target={[0, 1, 0]} />
+        <Lightformer form="ring" intensity={3} color="#fbbf24" position={[0, 3, -6]} scale={3} target={[0, 1, 0]} />
+      </Environment>
       <hemisphereLight args={['#c4b5fd', '#831843', 0.7]} />
       <ambientLight intensity={0.25} color="#fde7ff" />
       <directionalLight position={[4, 9, 6]} intensity={1.3} color="#fff1d6" castShadow={shadows} shadow-mapSize={[1024, 1024]} />

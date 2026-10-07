@@ -37,7 +37,7 @@ export function GameView({
   const current = drawn.at(-1);
 
   return (
-    <main className="grid h-[calc(100dvh-env(safe-area-inset-top))] grid-rows-[minmax(0,2fr)_minmax(0,3fr)_auto] landscape:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] landscape:grid-rows-[minmax(0,1fr)_auto]">
+    <main className="grid h-[calc(100dvh-env(safe-area-inset-top))] grid-rows-[minmax(10rem,1fr)_minmax(0,auto)_auto] landscape:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] landscape:grid-rows-[minmax(0,1fr)_auto]">
       <section data-stage className={cn('relative flex items-center justify-center overflow-hidden landscape:row-span-2', !stage && 'p-2')}>
         {stage ? (
           <>

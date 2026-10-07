@@ -2,6 +2,9 @@ import type { Vec3 } from './slots';
 
 export const CONFETTI_COLORS = ['#fde047', '#f472b6', '#60a5fa', '#34d399', '#fb923c'] as const;
 
+/** Cor de cada coluna (bolas estilo sinuca): igual no telão, no globo, na HUD e na cartela. */
+export const LETTER_COLORS = { B: '#2563eb', I: '#db2777', N: '#eab308', G: '#16a34a', O: '#ea580c' } as const;
+
 /** Onda de "lâmpadas de game show": cada lâmpada atrasada em relação à vizinha. */
 export function bulbLevel(index: number, now: number): number {
   return 0.35 + 0.65 * Math.max(0, Math.sin(now / 180 - index * 0.6));

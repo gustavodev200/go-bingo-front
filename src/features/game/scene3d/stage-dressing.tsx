@@ -3,15 +3,10 @@
 import { Text } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
+import { LETTER_COLORS } from './ambience';
 import { AdditiveBlending, CanvasTexture, Color, CylinderGeometry, DoubleSide, SRGBColorSpace, ShaderMaterial, type Group } from 'three';
 
-const LETTER_BALLS = [
-  { letter: 'B', color: '#60a5fa' },
-  { letter: 'I', color: '#f472b6' },
-  { letter: 'N', color: '#fde047' },
-  { letter: 'G', color: '#34d399' },
-  { letter: 'O', color: '#fb923c' },
-] as const;
+const LETTER_BALLS = Object.entries(LETTER_COLORS).map(([letter, color]) => ({ letter, color }));
 
 /** Chão do palco: espiral de raios e anéis dourados/rosa como em programa de auditório (1 textura de canvas). */
 function useStageFloorTexture() {
@@ -188,13 +183,13 @@ export function BingoSign() {
     });
   });
   return (
-    <group position={[-3.9, 0.75, -3.4]}>
+    <group position={[-3.45, 0.75, -3.4]}>
       {LETTER_BALLS.map((b, i) => (
         <group key={b.letter} position={[i * 0.62, Math.sin((i / 4) * Math.PI) * 0.25, -Math.sin((i / 4) * Math.PI) * 0.3]}>
           <group ref={(g) => void (balls.current[i] = g)}>
             <mesh>
               <sphereGeometry args={[0.3, 24, 16]} />
-              <meshStandardMaterial color={b.color} emissive={b.color} emissiveIntensity={0.35} roughness={0.25} metalness={0.1} />
+              <meshPhysicalMaterial color={b.color} roughness={0.18} clearcoat={1} clearcoatRoughness={0.05} />
             </mesh>
             <mesh position={[0, 0, 0.305]}>
               <circleGeometry args={[0.18, 24]} />

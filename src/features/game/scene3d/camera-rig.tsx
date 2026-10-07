@@ -12,7 +12,7 @@ const MAX_YAW = 0.26; // ~15°
  * Enquadra pelo aspect da região do canvas (lobby ou partida); arrasto horizontal gira até ±15° e volta com mola.
  * Com `focus`, a câmera desliza até o avatar vencedor.
  */
-export function CameraRig({ view = 'lobby', focus = null }: { view?: CameraView; focus?: Vec3 | null }) {
+export function CameraRig({ view = 'lobby', focus = null, spread }: { view?: CameraView; focus?: Vec3 | null; spread?: number }) {
   const gl = useThree((s) => s.gl);
   const yaw = useRef(0);
   const targetYaw = useRef(0);
@@ -49,7 +49,7 @@ export function CameraRig({ view = 'lobby', focus = null }: { view?: CameraView;
   useFrame((state, delta) => {
     const camera = state.camera as PerspectiveCamera;
     yaw.current += (targetYaw.current - yaw.current) * Math.min(1, delta * 8);
-    const setup = focus ? focusOn(focus) : cameraFor(state.size.width / Math.max(1, state.size.height), view);
+    const setup = focus ? focusOn(focus) : cameraFor(state.size.width / Math.max(1, state.size.height), view, spread);
     const desired = focus ? setup.position : orbitPosition(setup, yaw.current);
     pos.current = pos.current ? approach(pos.current, desired, delta, 2.5) : desired;
     look.current = look.current ? approach(look.current, setup.target, delta, 2.5) : setup.target;

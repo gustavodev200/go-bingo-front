@@ -17,7 +17,7 @@ describe('CardGrid', () => {
   it('marks a drawn number', async () => {
     const onMark = vi.fn();
     render(<CardGrid grid={grid} marked={[]} drawn={new Set([17])} onMark={onMark} />);
-    await userEvent.click(screen.getByRole('button', { name: 'I 17, sorteado' }));
+    await userEvent.click(screen.getByRole('button', { name: 'I 17' }));
     expect(onMark).toHaveBeenCalledWith(6);
   });
 
@@ -37,5 +37,13 @@ describe('CardGrid', () => {
     expect(cell).toHaveAttribute('aria-pressed', 'true');
     await userEvent.click(cell);
     expect(onMark).not.toHaveBeenCalled();
+  });
+});
+
+describe('CardGrid (como no bingo de verdade)', () => {
+  it('does not reveal which numbers were drawn', () => {
+    const { container: drawn } = render(<CardGrid grid={grid} marked={[]} drawn={new Set([1, 17, 33])} onMark={vi.fn()} />);
+    const { container: none } = render(<CardGrid grid={grid} marked={[]} drawn={new Set()} onMark={vi.fn()} />);
+    expect(drawn.innerHTML).toBe(none.innerHTML);
   });
 });

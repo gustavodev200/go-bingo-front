@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { isNicknameAllowed, nicknameSchema, profileSchema } from '@/contracts';
 import { ApiError, apiFetch } from '@/lib/api';
 
-const PREVIEW_LOOK = { body: '#3b82f6', accent: '#fde047', hat: 'party', face: 'grin', seed: 0 } as const;
+const PREVIEW_LOOK = { body: '#3b82f6', accent: '#fde047', hat: 'party', face: 'grin', seed: 0, skin: '#f5c6a0', hair: '#4a2c12', pants: '#1e293b' } as const;
 
 export function NicknameForm({ next, suggestion }: { next: string; suggestion: string }) {
   const router = useRouter();

@@ -1,4 +1,5 @@
 import { letterFor } from '@/contracts';
+import { LETTER_COLORS } from './ambience';
 import type { Vec3 } from './slots';
 
 export const SCOREBOARD_W = 1024;
@@ -39,11 +40,23 @@ function text(ctx: ScoreboardCtx, value: string, x: number, y: number, font: str
   ctx.fillText(value, x, y);
 }
 
-function ball(ctx: ScoreboardCtx, x: number, y: number, r: number) {
-  ctx.fillStyle = LIT;
+function disc(ctx: ScoreboardCtx, x: number, y: number, r: number, color: string) {
+  ctx.fillStyle = color;
   ctx.beginPath();
   ctx.arc(x, y, r, 0, Math.PI * 2);
   ctx.fill();
+}
+
+const INK = '#0f0f14';
+
+/** Bola estilo sinuca: cor da coluna, reflexo e disco branco com a letra em cima do número. */
+function ball(ctx: ScoreboardCtx, n: number, x: number, y: number, r: number) {
+  const letter = letterFor(n);
+  disc(ctx, x, y, r, LETTER_COLORS[letter]);
+  disc(ctx, x - r * 0.42, y - r * 0.5, r * 0.16, 'rgba(255,255,255,0.75)');
+  disc(ctx, x, y, r * 0.6, '#ffffff');
+  text(ctx, letter, x, y - r * 0.26, `bold ${Math.round(r * 0.26)}px sans-serif`, INK);
+  text(ctx, String(n), x, y + r * 0.12, `bold ${Math.round(r * 0.5)}px sans-serif`, INK);
 }
 
 function drawGame(ctx: ScoreboardCtx, drawn: readonly number[]) {
@@ -51,16 +64,13 @@ function drawGame(ctx: ScoreboardCtx, drawn: readonly number[]) {
   if (current === undefined) {
     text(ctx, 'Aguardando', 200, 230, 'bold 44px sans-serif', '#c4b5fd');
   } else {
-    ball(ctx, 200, 220, 150);
-    text(ctx, letterFor(current), 200, 140, 'bold 64px sans-serif', BG);
-    text(ctx, String(current), 200, 245, 'bold 150px sans-serif', BG);
+    ball(ctx, current, 200, 215, 165);
   }
   drawn
     .slice(-5, -1)
     .reverse()
     .forEach((n, i) => {
-      ball(ctx, 65 + i * 90, 445, 38);
-      text(ctx, `${letterFor(n)}${n}`, 65 + i * 90, 447, 'bold 26px sans-serif', BG);
+      ball(ctx, n, 65 + i * 90, 448, 40);
     });
   const lit = new Set(drawn);
   ['B', 'I', 'N', 'G', 'O'].forEach((letter, row) => text(ctx, letter, 440, 75 + row * 92, 'bold 40px sans-serif', LIT));

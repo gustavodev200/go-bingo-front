@@ -12,7 +12,10 @@ interface CardGridProps {
   onLocked?: (number: number) => void;
 }
 
-/** Cartela de papel: casas creme, número sorteado brilha em dourado, marcado leva o "carimbo" magenta. */
+/**
+ * Cartela de papel: casas creme, marcado leva o "carimbo" magenta.
+ * Como no bingo de verdade, a cartela não entrega o que já saiu: quem não prestar atenção esquece de marcar.
+ */
 export function CardGrid({ grid, marked, drawn, onMark, onLocked }: CardGridProps) {
   const markedSet = new Set(marked);
   const cells: number[] = [];
@@ -33,7 +36,7 @@ export function CardGrid({ grid, marked, drawn, onMark, onLocked }: CardGridProp
           const free = index === FREE_INDEX || number === FREE_CELL;
           const isMarked = free || markedSet.has(index);
           const isDrawn = !free && drawn.has(number);
-          const label = free ? 'Casa livre' : `${letterFor(number)} ${number}${isMarked ? ', marcado' : isDrawn ? ', sorteado' : ''}`;
+          const label = free ? 'Casa livre' : `${letterFor(number)} ${number}${isMarked ? ', marcado' : ''}`;
 
           function click() {
             if (free || isMarked || !onMark) return;
@@ -49,13 +52,11 @@ export function CardGrid({ grid, marked, drawn, onMark, onLocked }: CardGridProp
               aria-pressed={isMarked}
               onClick={click}
               className={cn(
-                'font-display relative isolate flex aspect-square min-h-11 min-w-11 items-center justify-center overflow-hidden rounded-lg bg-amber-50 text-xl font-bold text-violet-950 shadow-[inset_0_-3px_0_rgb(0_0_0/0.12)] transition',
+                'font-display relative isolate flex aspect-6/5 min-h-11 min-w-11 items-center justify-center overflow-hidden rounded-lg bg-amber-50 text-xl font-bold text-violet-950 shadow-[inset_0_-3px_0_rgb(0_0_0/0.12)] transition active:scale-95',
                 // carimbo: círculo magenta atrás do número
-                'before:absolute before:inset-[12%] before:-z-10 before:scale-0 before:rounded-full before:bg-pink-500/90 before:transition-transform before:duration-200',
+                'before:absolute before:top-[10%] before:bottom-[10%] before:left-1/2 before:aspect-square before:-translate-x-1/2 before:-z-10 before:scale-0 before:rounded-full before:bg-pink-500/90 before:transition-transform before:duration-200',
                 isMarked && 'text-white before:scale-100',
                 free && 'before:bg-linear-to-b before:from-amber-300 before:to-amber-500 text-violet-950',
-                !isMarked && isDrawn && 'bg-amber-200 ring-3 ring-amber-400 motion-safe:animate-pulse',
-                !isMarked && !isDrawn && onMark && 'text-violet-950/70',
               )}
             >
               {free ? '★' : number}

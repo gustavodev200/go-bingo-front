@@ -1,12 +1,10 @@
 import type { CSSProperties, ReactNode } from 'react';
-import { CONFETTI_COLORS } from '@/features/game/scene3d/ambience';
+import { CONFETTI_COLORS, LETTER_COLORS } from '@/features/game/scene3d/ambience';
 import { cn } from '@/lib/utils';
 import styles from './stage.module.css';
 
 type Vars = CSSProperties & Record<`--${string}`, string | number>;
 
-/** Cor de cada coluna, igual nas bolas do título, na cartela e no número sorteado. */
-export const LETTER_COLORS = { B: '#60a5fa', I: '#f472b6', N: '#fde047', G: '#34d399', O: '#fb923c' } as const;
 type Letter = keyof typeof LETTER_COLORS;
 const LETTERS = Object.keys(LETTER_COLORS) as Letter[];
 
@@ -76,7 +74,7 @@ export function MiniGlobe() {
   );
 }
 
-/** Bola de bingo brilhante com a face branca. A cor vem da letra (ou `color`). */
+/** Bola estilo sinuca: cor da coluna, brilho especular e disco branco com texto escuro. A cor vem da letra (ou `color`). */
 export function BingoBall({ letter, color, bob, delay = 0, className, faceClassName, children }: {
   letter?: Letter;
   color?: string;

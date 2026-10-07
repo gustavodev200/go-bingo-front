@@ -24,9 +24,9 @@ export function LastNumbers({ drawn }: { drawn: readonly number[] }) {
         <ol aria-label="Números anteriores" className="flex gap-2">
           {previous.map((n) => (
             <li key={n}>
-              <BingoBall letter={letterFor(n)} className="w-12" faceClassName="text-[11px]">
-                {letterFor(n)}
-                {n}
+              <BingoBall letter={letterFor(n)} className="w-12" faceClassName="flex flex-col">
+                <span className="text-[8px] font-bold">{letterFor(n)}</span>
+                <span className="text-xs">{n}</span>
               </BingoBall>
             </li>
           ))}

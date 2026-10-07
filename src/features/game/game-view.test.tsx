@@ -38,7 +38,7 @@ describe('GameView', () => {
   it('marks through the actions', async () => {
     load([]);
     render(<GameView actions={actions} muted={false} onToggleMute={vi.fn()} />);
-    await userEvent.click(screen.getByRole('button', { name: 'B 1, sorteado' }));
+    await userEvent.click(screen.getByRole('button', { name: 'B 1' }));
     expect(actions.mark).toHaveBeenCalledWith(0);
   });
 
