@@ -227,7 +227,7 @@ Correção recomendada: `permissions: { contents: read }` no topo; opcionalmente
 - **SQL Injection**: N/A (o front não acessa banco; `e2e/support/db.ts` usa query parametrizada e só no banco de teste).
 - **XSS**: `grep dangerouslySetInnerHTML|innerHTML|outerHTML|insertAdjacentHTML|document.write|eval(` em `src`/`e2e` = 0.
   Apelido/nome da sala renderizados como texto JSX (`members-list.tsx:18`, `lobby-view.tsx:23`, `public-rooms.tsx:15`,
-  `ranking-list.tsx:48`, `result-dialog.tsx:15`), `fillText` no telão (`telao.ts:87,93`) e `<Text>` do drei
+  `ranking-list.tsx:48`, `result-dialog.tsx:15`), `fillText` no telão (`scoreboard.ts:87,93`) e `<Text>` do drei
   (`name-labels.tsx:25`). Link "Abrir no Chrome" (`in-app-browser.ts:10`) monta `intent://` com host/path/search do
   próprio `location`; o `#` não pode vir na query, então não há injeção de extras do Intent.
 - **CSRF**: API usa header `Authorization`; cookies do Supabase são `SameSite=Lax`; o único GET com efeito é o
