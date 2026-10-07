@@ -62,7 +62,7 @@ describe('GameView', () => {
     expect(screen.getByRole('button', { name: 'Ligar som' })).toBeInTheDocument();
   });
 
-  it('3D mode still shows the current number visibly in the HUD', () => {
+  it('3D mode shows the current number big in the DOM, over the stage', () => {
     load([]);
     render(<GameView actions={actions} muted={false} onToggleMute={vi.fn()} stage={<div />} />);
     expect(screen.getByTestId('current-number')).toHaveTextContent('I 25');

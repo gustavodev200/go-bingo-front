@@ -1,4 +1,3 @@
-import { letterFor } from '@/contracts';
 import { LETTER_COLORS } from './ambience';
 import type { Vec3 } from './slots';
 
@@ -9,7 +8,6 @@ export const SCOREBOARD_CENTER: Vec3 = [0, 3.3, -5.09];
 export const SCOREBOARD_SIZE: [number, number] = [6.8, 3.4];
 export const LIT = '#fde047';
 const BG = '#111827';
-const DIM = '#374151';
 
 export type ScoreboardView =
   | { kind: 'lobby'; name: string; code: string }
@@ -47,42 +45,23 @@ function disc(ctx: ScoreboardCtx, x: number, y: number, r: number, color: string
   ctx.fill();
 }
 
-const INK = '#0f0f14';
-
-/** Bola estilo sinuca: cor da coluna, reflexo e disco branco com a letra em cima do número. */
-function ball(ctx: ScoreboardCtx, n: number, x: number, y: number, r: number) {
-  const letter = letterFor(n);
-  disc(ctx, x, y, r, LETTER_COLORS[letter]);
-  disc(ctx, x - r * 0.42, y - r * 0.5, r * 0.16, 'rgba(255,255,255,0.75)');
-  disc(ctx, x, y, r * 0.6, '#ffffff');
-  text(ctx, letter, x, y - r * 0.26, `bold ${Math.round(r * 0.26)}px sans-serif`, INK);
-  text(ctx, String(n), x, y + r * 0.12, `bold ${Math.round(r * 0.5)}px sans-serif`, INK);
-}
-
+/**
+ * Partida: a bola da vez e as anteriores ficam na HUD em DOM (nítidas no celular); o telão vira cenário legível
+ * de longe — letreiro BINGO nas cores das colunas e quantas bolas já saíram.
+ */
 function drawGame(ctx: ScoreboardCtx, drawn: readonly number[]) {
-  const current = drawn.at(-1);
-  if (current === undefined) {
-    text(ctx, 'Aguardando', 200, 230, 'bold 44px sans-serif', '#c4b5fd');
-  } else {
-    ball(ctx, current, 200, 215, 165);
+  (['B', 'I', 'N', 'G', 'O'] as const).forEach((letter, i) => {
+    const x = SCOREBOARD_W / 2 + (i - 2) * 150;
+    disc(ctx, x, 150, 62, LETTER_COLORS[letter]);
+    disc(ctx, x, 150, 38, '#ffffff');
+    text(ctx, letter, x, 152, 'bold 46px sans-serif', '#0f0f14');
+  });
+  if (drawn.length === 0) {
+    text(ctx, 'Aguardando', SCOREBOARD_W / 2, 360, 'bold 96px sans-serif', '#c4b5fd');
+    return;
   }
-  drawn
-    .slice(-5, -1)
-    .reverse()
-    .forEach((n, i) => {
-      ball(ctx, n, 65 + i * 90, 448, 40);
-    });
-  const lit = new Set(drawn);
-  ['B', 'I', 'N', 'G', 'O'].forEach((letter, row) => text(ctx, letter, 440, 75 + row * 92, 'bold 40px sans-serif', LIT));
-  for (let n = 1; n <= 75; n++) {
-    const row = Math.floor((n - 1) / 15);
-    const col = (n - 1) % 15;
-    const x = 470 + col * 36;
-    const y = 40 + row * 92;
-    ctx.fillStyle = lit.has(n) ? LIT : DIM;
-    ctx.fillRect(x, y, 30, 70);
-    text(ctx, String(n), x + 15, y + 35, 'bold 18px sans-serif', lit.has(n) ? BG : '#9ca3af');
-  }
+  text(ctx, `${drawn.length}/75`, SCOREBOARD_W / 2, 340, 'bold 150px sans-serif', LIT);
+  text(ctx, 'bolas sorteadas', SCOREBOARD_W / 2, 455, '44px sans-serif', '#c4b5fd');
 }
 
 /** Desenha o telão numa canvas 2D (vira CanvasTexture). Testável com um ctx falso. */

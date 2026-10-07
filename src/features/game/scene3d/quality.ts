@@ -12,8 +12,9 @@ export interface TierSettings {
 
 export const TIER_SETTINGS: Record<Tier, TierSettings> = {
   high: { maxDpr: 2, minDpr: 1, shadows: 'real', animatedBulbs: true, confetti: 300, antialias: true },
-  medium: { maxDpr: 1.5, minDpr: 0.75, shadows: 'fake', animatedBulbs: true, confetti: 120, antialias: true },
-  low: { maxDpr: 1, minDpr: 0.75, shadows: 'none', animatedBulbs: false, confetti: 0, antialias: false },
+  medium: { maxDpr: 2, minDpr: 1, shadows: 'fake', animatedBulbs: true, confetti: 120, antialias: true },
+  // Mesmo no mais leve: DPR < 1 e sem antialias deixam bonecos e globo serrilhados/borrados na tela retina do celular.
+  low: { maxDpr: 1.5, minDpr: 1, shadows: 'none', animatedBulbs: false, confetti: 0, antialias: true },
 };
 
 const ORDER: Tier[] = ['low', 'medium', 'high'];
@@ -30,7 +31,8 @@ export interface DeviceSignals {
 export function pickInitialTier({ cores, memoryGb, screenWidth }: DeviceSignals): Tier {
   const memory = memoryGb ?? 8;
   let tier: Tier = 'medium';
-  if (cores <= 4 || memory <= 3) tier = 'low';
+  // Safari (iPhone/iPad) não informa memória e limita hardwareConcurrency; a GPU aguenta o médio — o PerformanceMonitor desce se precisar.
+  if ((cores <= 4 && memoryGb !== null) || memory <= 3) tier = 'low';
   else if (cores >= 8 && memory >= 6) tier = 'high';
   if (tier === 'high' && screenWidth < 400) tier = 'medium';
   return tier;
@@ -41,9 +43,9 @@ export interface QualityState {
   dpr: number;
 }
 
-/** RNF-3D-04: começa em min(devicePixelRatio, 1.5), respeitando o teto do nível. */
+/** Começa em min(devicePixelRatio, 2, teto do nível): abaixo de 2 a cena fica borrada em telas retina. */
 export function initialQuality(tier: Tier, devicePixelRatio: number): QualityState {
-  return { tier, dpr: Math.min(devicePixelRatio, 1.5, TIER_SETTINGS[tier].maxDpr) };
+  return { tier, dpr: Math.min(devicePixelRatio, 2, TIER_SETTINGS[tier].maxDpr) };
 }
 
 export function stepDown(q: QualityState): QualityState {

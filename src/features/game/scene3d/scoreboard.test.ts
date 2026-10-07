@@ -1,5 +1,5 @@
 import { LETTER_COLORS } from './ambience';
-import { LIT, drawScoreboard, scoreboardView, type ScoreboardCtx, type ScoreboardView } from './scoreboard';
+import { drawScoreboard, scoreboardView, type ScoreboardCtx, type ScoreboardView } from './scoreboard';
 
 type Call = { op: 'fillRect' | 'fillText' | 'arc'; args: unknown[]; fillStyle: string; font: string };
 
@@ -31,24 +31,17 @@ describe('drawScoreboard', () => {
     expect(f.texts()).toEqual(expect.arrayContaining(['Amigos', 'ABC234']));
   });
 
-  it('game: current ball with letter, the 4 previous, and exactly the drawn cells lit', () => {
-    const drawn = [3, 18, 33, 48, 63, 70];
-    const f = draw({ kind: 'game', drawn });
-    const texts = f.texts();
-    expect(texts).toEqual(expect.arrayContaining(['O', '70', '63', 'G', '48', 'N', '33', 'I', '18']));
-    // bolas estilo sinuca na cor da coluna; o B3 fica de fora (só as 4 anteriores)
+  it('game: BINGO sign in the column colors and how many balls came out (the balls themselves live in the DOM HUD)', () => {
+    const f = draw({ kind: 'game', drawn: [3, 18, 33, 48, 63, 70] });
+    expect(f.texts()).toEqual(expect.arrayContaining(['B', 'I', 'N', 'G', 'O', '6/75']));
     const ballColors = f.calls.filter((c) => c.op === 'arc').map((c) => c.fillStyle);
-    expect(ballColors).toEqual(expect.arrayContaining([LETTER_COLORS.O, LETTER_COLORS.G, LETTER_COLORS.N, LETTER_COLORS.I]));
-    expect(ballColors).not.toContain(LETTER_COLORS.B);
-    const litCells = f.calls.filter((c) => c.op === 'fillRect' && c.fillStyle === LIT);
-    expect(litCells).toHaveLength(drawn.length);
-    expect(f.calls.filter((c) => c.op === 'fillRect' && c.args[2] === 30)).toHaveLength(75); // 75 células
+    expect(ballColors).toEqual(expect.arrayContaining(Object.values(LETTER_COLORS)));
   });
 
-  it('game without draws yet: waiting message, nothing lit', () => {
+  it('game without draws yet: waiting message', () => {
     const f = draw({ kind: 'game', drawn: [] });
     expect(f.texts()).toContain('Aguardando');
-    expect(f.calls.filter((c) => c.op === 'fillRect' && c.fillStyle === LIT)).toHaveLength(0);
+    expect(f.texts()).not.toContain('0/75');
   });
 
   it('won: BINGO and the winner nickname, or "Você!" for me', () => {

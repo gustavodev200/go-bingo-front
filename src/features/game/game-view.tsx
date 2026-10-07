@@ -2,7 +2,6 @@
 
 import type { ReactNode } from 'react';
 import { toast } from 'sonner';
-import { BingoBall } from '@/components/stage/stage';
 import { Button } from '@/components/ui/button';
 import { letterFor, WIN_PATTERN_LABELS } from '@/contracts';
 import { cn } from '@/lib/utils';
@@ -16,7 +15,7 @@ import type { GameActions } from './use-game-connection';
 
 /**
  * Layout: retrato = palco (topo) / cartela / barra fixa; paisagem = palco | cartela+barra.
- * A <section data-stage> é onde o canvas 3D entra nos marcos M3/M4; hoje ela é o "modo 2D".
+ * A <section data-stage> recebe o canvas 3D; a bola da vez fica sempre em DOM no centro (3D só de cenário).
  */
 export function GameView({
   actions,
@@ -34,7 +33,6 @@ export function GameView({
   const canClaim = useGameStore(selectCanClaim);
   const drawn = snapshot.game?.drawn ?? [];
   const card = snapshot.myCard;
-  const current = drawn.at(-1);
 
   return (
     <main className="grid h-[calc(100dvh-env(safe-area-inset-top))] grid-rows-[minmax(10rem,1fr)_minmax(0,auto)_auto] landscape:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] landscape:grid-rows-[minmax(0,1fr)_auto]">
@@ -42,17 +40,9 @@ export function GameView({
         {stage ? (
           <>
             <div className="absolute inset-0">{stage}</div>
-            {current !== undefined && (
-              // Número visível na HUD na hora (o telão é cosmético e pode demorar a carregar); o anúncio fica no LastNumbers.
-              <div data-testid="current-number" aria-hidden="true" className="absolute top-2 left-2">
-                <BingoBall key={current} letter={letterFor(current)} className="animate-in zoom-in-50 w-16 duration-500" faceClassName="flex flex-col">
-                  <span className="text-[10px] font-bold">{letterFor(current)}</span> <span className="font-display text-xl leading-none font-bold">{current}</span>
-                </BingoBall>
-              </div>
-            )}
-            <div className="sr-only">
-              <LastNumbers drawn={drawn} />
-            </div>
+            {/* Números em DOM por cima do 3D: nítidos em qualquer DPR (texto em textura 3D fica ilegível no celular). */}
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_50%_at_50%_45%,rgb(18_8_42/0.7),transparent_75%)]" />
+            <LastNumbers drawn={drawn} className="pointer-events-none relative" />
           </>
         ) : (
           <LastNumbers drawn={drawn} />

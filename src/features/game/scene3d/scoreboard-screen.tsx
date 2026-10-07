@@ -12,7 +12,7 @@ function paint(canvas: HTMLCanvasElement, texture: CanvasTexture, view: Scoreboa
   texture.needsUpdate = true;
 }
 
-/** Telão como uma única textura de canvas 2D: bola atual, 4 anteriores e painel 1–75 (1 draw call). */
+/** Telão como uma única textura de canvas 2D (1 draw call). */
 export function ScoreboardScreen({ view }: { view: ScoreboardView }) {
   const canvas = useMemo(() => {
     const c = document.createElement('canvas');
@@ -23,7 +23,7 @@ export function ScoreboardScreen({ view }: { view: ScoreboardView }) {
   const texture = useMemo(() => {
     const t = new CanvasTexture(canvas);
     t.colorSpace = SRGBColorSpace;
-    t.anisotropy = 4;
+    t.anisotropy = 8;
     return t;
   }, [canvas]);
 
