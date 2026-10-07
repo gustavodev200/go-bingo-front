@@ -2,32 +2,26 @@
 
 import { LogOut, Trophy } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Avatar } from '@/components/stage/avatar';
 import { Coins } from '@/components/stage/coin';
 import { MarqueeTitle } from '@/components/stage/stage';
 import { Button } from '@/components/ui/button';
 import { UpgradeButton } from '@/features/auth/upgrade-button';
+import { useLogout } from '@/features/auth/use-logout';
 import { useProfile } from '@/features/profile/profile-context';
 import { InstallBanner } from '@/features/pwa/install-banner';
 import { JoinByCodeForm } from '@/features/rooms/join-by-code-form';
 import { PublicRooms } from '@/features/rooms/public-rooms';
-import { createClient } from '@/lib/supabase/client';
 
 export default function HomePage() {
   const { profile } = useProfile();
-  const router = useRouter();
-
-  async function logout() {
-    await createClient().auth.signOut();
-    router.replace('/login');
-  }
+  const logout = useLogout();
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-col gap-5 px-4 pt-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
       <header className="flex items-center justify-between gap-3">
         <MarqueeTitle compact />
-        <span className="glass flex min-w-0 items-center gap-2 rounded-full py-1 pr-3 pl-1">
+        <Link href="/perfil" aria-label={`Abrir seu perfil (${profile.nickname})`} className="glass flex min-h-11 min-w-0 items-center gap-2 rounded-full py-1 pr-3 pl-1 transition active:scale-95">
           <Avatar id={profile.id} className="w-8" />
           <span className="flex min-w-0 flex-col leading-tight">
             <span className="truncate text-sm font-semibold">{profile.nickname}</span>
@@ -37,7 +31,7 @@ export default function HomePage() {
               {profile.isGuest ? 'convidado' : `${profile.points} pts`}
             </span>
           </span>
-        </span>
+        </Link>
       </header>
 
       {profile.isGuest && <UpgradeButton />}

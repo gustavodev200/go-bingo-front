@@ -7,7 +7,7 @@ import { BingoBall } from '@/components/stage/stage';
 import { cn } from '@/lib/utils';
 
 /** Telas com o dock; dentro da sala (/CODIGO) a tela é do jogo e ele some. */
-const DOCK_PATHS = new Set(['/', '/create', '/ranking']);
+const DOCK_PATHS = new Set(['/', '/create', '/ranking', '/perfil']);
 
 /** Toque curtinho no Android (iOS ignora `vibrate`). */
 function tick() {

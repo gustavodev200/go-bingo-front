@@ -6,8 +6,9 @@ import { Avatar } from '@/components/stage/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { isNicknameAllowed, nicknameSchema, profileSchema } from '@/contracts';
+import { profileSchema } from '@/contracts';
 import { ApiError, apiFetch } from '@/lib/api';
+import { validateNickname } from '@/lib/nickname';
 
 const PREVIEW_LOOK = { body: '#3b82f6', accent: '#fde047', hat: 'party', face: 'grin', seed: 0, skin: '#f5c6a0', hair: '#4a2c12', hairStyle: 'spiky', pants: '#1e293b' } as const;
 
@@ -19,12 +20,11 @@ export function NicknameForm({ next, suggestion }: { next: string; suggestion: s
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    const parsed = nicknameSchema.safeParse(value);
-    if (!parsed.success) return setError(parsed.error.issues[0].message);
-    if (!isNicknameAllowed(parsed.data)) return setError('Apelido não permitido');
+    const check = validateNickname(value);
+    if (!check.ok) return setError(check.error);
     setSaving(true);
     try {
-      await apiFetch('/me', profileSchema, { method: 'PATCH', body: JSON.stringify({ nickname: parsed.data }) });
+      await apiFetch('/me', profileSchema, { method: 'PATCH', body: JSON.stringify({ nickname: check.value }) });
       router.replace(next);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Erro ao salvar o apelido');

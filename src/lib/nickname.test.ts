@@ -1,4 +1,4 @@
-import { suggestNickname } from './nickname';
+import { suggestNickname, validateNickname } from './nickname';
 
 describe('suggestNickname', () => {
   it('uses the first name', () => {
@@ -13,5 +13,17 @@ describe('suggestNickname', () => {
     expect(suggestNickname(undefined)).toBe('');
     expect(suggestNickname('李')).toBe('');
     expect(suggestNickname('Jo')).toBe('');
+  });
+});
+
+describe('validateNickname', () => {
+  it('trims and accepts a valid nickname', () => {
+    expect(validateNickname('  Ana Paula ')).toEqual({ ok: true, value: 'Ana Paula' });
+  });
+  it('explains the format', () => {
+    expect(validateNickname('ab')).toEqual({ ok: false, error: 'Use 3 a 16 letras, números, espaço ou _' });
+  });
+  it('blocks bad words', () => {
+    expect(validateNickname('porra123')).toEqual({ ok: false, error: 'Apelido não permitido' });
   });
 });

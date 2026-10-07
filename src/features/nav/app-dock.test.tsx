@@ -21,4 +21,10 @@ describe('AppDock', () => {
     render(<AppDock />);
     expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
   });
+
+  it('also shows on the profile page', () => {
+    pathname = '/perfil';
+    render(<AppDock />);
+    expect(screen.getByRole('navigation', { name: 'Navegação' })).toBeInTheDocument();
+  });
 });
