@@ -67,8 +67,8 @@ export default function HomePage() {
         <PublicRooms />
       </section>
 
-      <nav className="flex justify-between gap-3 text-sm">
-        <Button asChild variant="outline" className="h-11 flex-1 gap-2 rounded-xl">
+      <nav className="flex justify-end gap-3 text-sm md:justify-between">
+        <Button asChild variant="outline" className="hidden h-11 flex-1 gap-2 rounded-xl md:inline-flex">
           <Link href="/ranking">
             <Trophy aria-hidden className="text-amber-300" />
             Ranking
