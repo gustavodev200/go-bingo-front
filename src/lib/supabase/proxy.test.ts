@@ -35,6 +35,14 @@ describe('updateSession', () => {
     }
   });
 
+  it('protects look-alike paths such as /loginfoo and /authx', async () => {
+    for (const path of ['/loginfoo', '/authx']) {
+      const res = await updateSession(new NextRequest(`http://localhost:3000${path}`));
+      expect(res.status).toBe(307);
+      expect(res.headers.get('location')).toContain('/login?next=');
+    }
+  });
+
   it('lets signed-in users through and forwards refreshed cookies', async () => {
     claims = { sub: 'user-1' };
     cookiesFromSupabase = [{ name: 'sb-token', value: 'new', options: { path: '/' } }];
