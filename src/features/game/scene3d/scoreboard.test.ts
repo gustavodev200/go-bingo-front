@@ -38,9 +38,9 @@ describe('drawScoreboard', () => {
     expect(ballColors).toEqual(expect.arrayContaining(Object.values(LETTER_COLORS)));
   });
 
-  it('game without draws yet: waiting message', () => {
+  it('game without draws yet: game started message', () => {
     const f = draw({ kind: 'game', drawn: [] });
-    expect(f.texts()).toContain('Aguardando');
+    expect(f.texts()).toContain('Começou!');
     expect(f.texts()).not.toContain('0/75');
   });
 

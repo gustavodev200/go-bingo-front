@@ -2,9 +2,10 @@ import { render, screen } from '@testing-library/react';
 import { LastNumbers } from './last-numbers';
 
 describe('LastNumbers', () => {
-  it('waits for the first number', () => {
+  it('before the first ball shows no ball, only that the game started', () => {
     render(<LastNumbers drawn={[]} />);
-    expect(screen.getByText(/aguardando o primeiro número/i)).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Começou!');
+    expect(screen.queryByTestId('current-number')).not.toBeInTheDocument();
   });
 
   it('announces the current ball and lists the previous three', () => {

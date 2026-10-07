@@ -15,15 +15,16 @@ export function LastNumbers({ drawn, className }: { drawn: readonly number[]; cl
     <div className={cn('flex flex-col items-center gap-3', className)}>
       <div role="status" aria-live="polite" className="drop-shadow-[0_0_28px_rgb(251_191_36/0.55)]">
         {current === undefined ? (
-          <BingoBall color="#a78bfa" className={BIG} faceClassName="w-[70%] px-2 text-center text-[length:10cqw] font-semibold">
-            Aguardando o primeiro número
-          </BingoBall>
+          // Antes da 1ª bola não há bola para mostrar: só o anúncio de que a partida começou.
+          <p className="font-show text-marquee animate-in zoom-in-50 fade-in text-center text-6xl tracking-wide duration-700 landscape:text-7xl">
+            Começou!
+          </p>
         ) : (
           <span data-testid="current-number">
             <BingoBall key={current} letter={letterFor(current)} className={cn(BIG, 'animate-in zoom-in-50 spin-in-12 duration-500')} faceClassName="flex flex-col">
-              <span className="text-[length:11cqw] font-bold">{letterFor(current)}</span>
+              <span className="text-[11cqw] font-bold">{letterFor(current)}</span>
               <span className="sr-only"> </span>
-              <span className="font-display text-[length:26cqw] leading-none font-bold">{current}</span>
+              <span className="font-display text-[26cqw] leading-none font-bold">{current}</span>
             </BingoBall>
           </span>
         )}
@@ -33,8 +34,8 @@ export function LastNumbers({ drawn, className }: { drawn: readonly number[]; cl
           {previous.map((n) => (
             <li key={n}>
               <BingoBall letter={letterFor(n)} className={cn(SMALL, 'animate-in fade-in duration-500')} faceClassName="flex flex-col">
-                <span className="text-[length:12cqw] font-bold">{letterFor(n)}</span>
-                <span className="font-display text-[length:24cqw] leading-none font-bold">{n}</span>
+                <span className="text-[12cqw] font-bold">{letterFor(n)}</span>
+                <span className="font-display text-[24cqw] leading-none font-bold">{n}</span>
               </BingoBall>
             </li>
           ))}

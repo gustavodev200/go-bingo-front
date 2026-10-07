@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Fredoka, Geist, Geist_Mono } from 'next/font/google';
+import { Fredoka, Geist, Geist_Mono, Luckiest_Guy } from 'next/font/google';
 import { Toaster } from '@/components/ui/sonner';
 import { StageBackdrop } from '@/components/stage/stage';
 import { OfflineBanner } from '@/features/pwa/offline-banner';
@@ -9,6 +9,7 @@ import './globals.css';
 const geistSans = Geist({ variable: '--font-sans', subsets: ['latin'] });
 const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] });
 const fredoka = Fredoka({ variable: '--font-display', subsets: ['latin'], weight: ['500', '600', '700'] });
+const luckiestGuy = Luckiest_Guy({ variable: '--font-show', subsets: ['latin'], weight: '400' });
 
 export const metadata: Metadata = {
   applicationName: 'Go Bingo',
@@ -35,7 +36,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={`dark ${geistSans.variable} ${geistMono.variable} ${fredoka.variable}`}>
+    <html lang="pt-BR" className={`dark ${geistSans.variable} ${geistMono.variable} ${fredoka.variable} ${luckiestGuy.variable}`}>
       {/* suppressHydrationWarning: extensões do navegador (ex.: ColorZilla) injetam atributos no <body> antes da hidratação. */}
       <body className="bg-background text-foreground min-h-dvh font-sans antialiased" suppressHydrationWarning>
         <StageBackdrop />

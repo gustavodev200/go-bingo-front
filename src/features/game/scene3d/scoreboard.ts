@@ -57,7 +57,7 @@ function drawGame(ctx: ScoreboardCtx, drawn: readonly number[]) {
     text(ctx, letter, x, 152, 'bold 46px sans-serif', '#0f0f14');
   });
   if (drawn.length === 0) {
-    text(ctx, 'Aguardando', SCOREBOARD_W / 2, 360, 'bold 96px sans-serif', '#c4b5fd');
+    text(ctx, 'Começou!', SCOREBOARD_W / 2, 360, 'bold 120px sans-serif', LIT);
     return;
   }
   text(ctx, `${drawn.length}/75`, SCOREBOARD_W / 2, 340, 'bold 150px sans-serif', LIT);

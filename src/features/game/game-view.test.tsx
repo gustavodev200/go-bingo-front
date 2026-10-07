@@ -67,4 +67,11 @@ describe('GameView', () => {
     render(<GameView actions={actions} muted={false} onToggleMute={vi.fn()} stage={<div />} />);
     expect(screen.getByTestId('current-number')).toHaveTextContent('I 25');
   });
+
+  it('3D mode hides the balls on a win so the camera shows the winner avatar (still announced)', () => {
+    load([]);
+    useGameStore.setState({ winner: { userId: ME, nickname: 'Eu' } as never });
+    render(<GameView actions={actions} muted={false} onToggleMute={vi.fn()} stage={<div />} />);
+    expect(screen.getByRole('status').parentElement).toHaveClass('sr-only');
+  });
 });

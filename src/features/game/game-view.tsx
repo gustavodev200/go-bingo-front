@@ -31,6 +31,7 @@ export function GameView({
 }) {
   const snapshot = useGameStore((s) => s.snapshot)!;
   const canClaim = useGameStore(selectCanClaim);
+  const winner = useGameStore((s) => s.winner);
   const drawn = snapshot.game?.drawn ?? [];
   const card = snapshot.myCard;
 
@@ -40,9 +41,12 @@ export function GameView({
         {stage ? (
           <>
             <div className="absolute inset-0">{stage}</div>
-            {/* Números em DOM por cima do 3D: nítidos em qualquer DPR (texto em textura 3D fica ilegível no celular). */}
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_50%_at_50%_45%,rgb(18_8_42/0.7),transparent_75%)]" />
-            <LastNumbers drawn={drawn} className="pointer-events-none relative" />
+            {/* Números em DOM por cima do 3D: nítidos em qualquer DPR (texto em textura 3D fica ilegível no celular).
+                Na vitória somem visualmente para a câmera mostrar o boneco do vencedor (o anúncio continua para leitores de tela). */}
+            {drawn.length > 0 && !winner && (
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_50%_at_50%_45%,rgb(18_8_42/0.7),transparent_75%)]" />
+            )}
+            <LastNumbers drawn={drawn} className={cn('pointer-events-none relative', winner && 'sr-only')} />
           </>
         ) : (
           <LastNumbers drawn={drawn} />
