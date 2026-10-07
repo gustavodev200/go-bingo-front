@@ -2,22 +2,22 @@
 
 import { useEffect, useMemo } from 'react';
 import { CanvasTexture, SRGBColorSpace } from 'three';
-import { TELAO_CENTER, TELAO_H, TELAO_SIZE, TELAO_W, drawTelao, type TelaoView } from './telao';
+import { SCOREBOARD_CENTER, SCOREBOARD_H, SCOREBOARD_SIZE, SCOREBOARD_W, drawScoreboard, type ScoreboardView } from './scoreboard';
 
 /** Redesenha a canvas e marca a textura para reenviar à GPU. */
-function paint(canvas: HTMLCanvasElement, texture: CanvasTexture, view: TelaoView) {
+function paint(canvas: HTMLCanvasElement, texture: CanvasTexture, view: ScoreboardView) {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
-  drawTelao(ctx, view);
+  drawScoreboard(ctx, view);
   texture.needsUpdate = true;
 }
 
 /** Telão como uma única textura de canvas 2D: bola atual, 4 anteriores e painel 1–75 (1 draw call). */
-export function TelaoScreen({ view }: { view: TelaoView }) {
+export function ScoreboardScreen({ view }: { view: ScoreboardView }) {
   const canvas = useMemo(() => {
     const c = document.createElement('canvas');
-    c.width = TELAO_W;
-    c.height = TELAO_H;
+    c.width = SCOREBOARD_W;
+    c.height = SCOREBOARD_H;
     return c;
   }, []);
   const texture = useMemo(() => {
@@ -32,8 +32,8 @@ export function TelaoScreen({ view }: { view: TelaoView }) {
   useEffect(() => () => texture.dispose(), [texture]);
 
   return (
-    <mesh position={TELAO_CENTER}>
-      <planeGeometry args={TELAO_SIZE} />
+    <mesh position={SCOREBOARD_CENTER}>
+      <planeGeometry args={SCOREBOARD_SIZE} />
       <meshBasicMaterial map={texture} toneMapped={false} />
     </mesh>
   );

@@ -48,7 +48,7 @@ Cobertura mínima: 80% (statements/branches/functions/lines), conforme a constit
 
 ### Partida 3D (M4)
 
-- Telão desenhado numa textura de canvas 2D (`scene3d/telao.ts`): bola atual, 4 anteriores, painel 1–75.
+- Telão (scoreboard) desenhado numa textura de canvas 2D (`scene3d/scoreboard.ts`): bola atual, 4 anteriores, painel 1–75.
 - Globo gira, acelera e solta a bola a cada sorteio (cosmético; a HUD mostra o número na hora).
 - "Por 1": boneco dourado pulsando; vitória: câmera vai até o vencedor, telão "BINGO!", confete; diálogo de resultado após 2,5 s no 3D.
 - Sons sintetizados (WebAudio, sem arquivos) com botão de mudo persistente; "Painel" mostra o 1–75 na HUD nos dois modos.
@@ -61,6 +61,28 @@ Cobertura mínima: 80% (statements/branches/functions/lines), conforme a constit
 - [ ] Vitória vista de dois aparelhos: câmera no vencedor, telão "BINGO! — Nome" ("Você!" no do vencedor), confete, diálogo depois.
 - [ ] Recarregar no meio da partida: sem som e sem bola voando; telão com o estado certo.
 - [ ] Mudo persiste após recarregar; modo 2D joga a partida inteira com "Painel" e som.
+
+### E2E (Playwright)
+
+- Pré-requisitos: o back rodando (`npm run start:dev` em `go-bingo-back`), um projeto Supabase **dedicado a teste** com *anonymous sign-ins* habilitado e o Turnstile de teste (secret `1x0000000000000000000000000000000AA`), e `E2E_DATABASE_URL` apontando para o Postgres desse projeto (usado para preparar/limpar dados).
+- Comandos: `npm run e2e` (suíte completa) e `npm run e2e:smoke` (só os `@smoke`).
+- `workers=1`: as partidas compartilham o mesmo back e o mesmo banco de teste, então rodar em paralelo cria interferência entre salas e rate limits. `serviceWorkers` fica bloqueado nos contextos do Playwright para o SW do PWA não interceptar requisições nem cachear estado entre testes.
+- No CI, o job de e2e só roda quando a variável de repositório `E2E_ENABLED` é `true` e precisa dos secrets `E2E_SUPABASE_URL`, `E2E_SUPABASE_PUBLISHABLE_KEY` e `BACK_REPO_TOKEN` (para clonar o back).
+- Convidados ganham 0 pontos e não entram no ranking; por isso o e2e da partida completa só confere que a página de ranking carrega.
+- Testes unitários: `npm test` (ou `npm run test:cov` com limiar de 80%). Os e2e **não** rodam em `npm test`.
+
+### Observabilidade
+
+- Sentry é opcional: sem `NEXT_PUBLIC_SENTRY_DSN` ele fica desligado. No build, `SENTRY_AUTH_TOKEN` (opcional) habilita o upload de source maps.
+- Privacidade: `dataCollection` com tudo desligado (sem IP, cookies, headers nem corpo de requisições).
+- Mensagem `session-summary` (uma por sessão de partida) com os campos `mode`, `fallbackReason`, `contextLosses`, `fpsP50`, `drawLatencyP95Ms` e `draws`.
+- Limitação: `drawLatencyP95Ms` usa `Date.now() - drawnAt` (relógio do cliente menos o do servidor), então inclui o desvio de relógio entre os dois; serve para tendência, não como medida absoluta.
+- O `session-summary` é enviado uma vez por sessão, sem amostragem de sessões; cada sessão tem tetos de amostras (5000 frames e 200 latências, veja `src/lib/telemetry.ts`).
+
+### Segurança
+
+- CSP e demais headers de segurança só são aplicados em build de produção (`npm run build && npx next start`); em dev ficam desligados. Detalhes e revisão em `specs/005-m5-launch`.
+- `NEXT_PUBLIC_ENABLE_BOTS` **nunca** deve ser definido em produção.
 
 # workspace-agents
 

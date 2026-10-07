@@ -43,3 +43,8 @@ next-env.d.ts
 
 # superpowers scratch
 /.superpowers/
+
+# playwright
+/test-results/
+/playwright-report/
+/blob-report/

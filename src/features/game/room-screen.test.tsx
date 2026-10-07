@@ -17,11 +17,30 @@ vi.mock('sonner', () => ({ toast: Object.assign((msg: string) => toast(msg), { e
 vi.mock('@/features/profile/profile-context', () => ({
   useProfile: () => ({ profile: { id: ME, nickname: 'Eu', isGuest: false, points: 0 }, refresh: vi.fn() }),
 }));
-vi.mock('./use-game-connection', () => ({ useGameConnection: () => actions }));
+const hooks = vi.hoisted(() => ({ onDrawLatency: undefined as ((ms: number) => void) | undefined, onContextLoss: undefined as (() => void) | undefined }));
+vi.mock('./use-game-connection', () => ({
+  useGameConnection: (_code: string, onDrawLatency?: (ms: number) => void) => {
+    hooks.onDrawLatency = onDrawLatency;
+    return actions;
+  },
+}));
 const SCENE_2D = { mode: '2d' as '2d' | '3d', reason: 'user' as string, setPreferred: vi.fn(), quality: 'auto', setQuality: vi.fn(), reportContextLoss: vi.fn(), reportFailure: vi.fn(), stageKey: 0 };
 const sceneMode = vi.hoisted(() => ({ value: null as unknown as typeof SCENE_2D }));
-vi.mock('./use-scene-mode', () => ({ useSceneMode: () => sceneMode.value }));
-vi.mock('./scene3d/game-stage-lazy', () => ({ GameStageLazy: () => <div data-testid="game-stage" /> }));
+vi.mock('./use-scene-mode', () => ({
+  useSceneMode: (onContextLoss?: () => void) => {
+    hooks.onContextLoss = onContextLoss;
+    return sceneMode.value;
+  },
+}));
+const reportSessionSummary = vi.hoisted(() => vi.fn());
+vi.mock('@/lib/telemetry', async (orig) => ({ ...(await orig<typeof import('@/lib/telemetry')>()), reportSessionSummary }));
+vi.mock('./scene3d/game-stage-lazy', () => ({
+  GameStageLazy: (props: { onFrame: (ms: number) => void }) => (
+    <div data-testid="game-stage">
+      <button onClick={() => props.onFrame(16)}>frame</button>
+    </div>
+  ),
+}));
 vi.mock('./sound/use-game-sounds', () => ({ useGameSounds: vi.fn() }));
 vi.mock('./scene3d/lobby-stage-lazy', () => ({
   LobbyStageLazy: (props: { celebrating: boolean; onContextLost: () => void }) => (
@@ -75,6 +94,35 @@ describe('RoomScreen', () => {
     renderWith(room());
     await userEvent.click(screen.getByRole('button', { name: 'perder contexto' }));
     expect(sceneMode.value.reportContextLoss).toHaveBeenCalled();
+  });
+
+  it('sends one session summary on leaving the room, with mode, fallback and FPS', async () => {
+    sceneMode.value = { ...SCENE_2D, mode: '3d', reason: 'ok' };
+    const inGame = room({ status: 'IN_GAME', game: { id: '00000000-0000-4000-8000-0000000000bb', drawn: [3], drawIntervalMs: 5000, remaining: {} } });
+    const view = renderWith(inGame);
+    await userEvent.click(screen.getByRole('button', { name: 'frame' }));
+    view.unmount();
+    expect(reportSessionSummary).toHaveBeenCalledTimes(1);
+    expect(reportSessionSummary).toHaveBeenCalledWith({ mode: '3d', fallbackReason: null, contextLosses: 0, fpsP50: 63, drawLatencyP95Ms: null, draws: 0 });
+  });
+
+  it('flushes the summary on pagehide (once) with draw latency, context losses and the fallback reason', () => {
+    sceneMode.value = { ...SCENE_2D, mode: '2d', reason: 'context-lost' };
+    const view = renderWith(room());
+    act(() => {
+      hooks.onDrawLatency?.(120);
+      hooks.onDrawLatency?.(200);
+      hooks.onContextLoss?.();
+    });
+    act(() => window.dispatchEvent(new Event('pagehide')));
+    view.unmount();
+    expect(reportSessionSummary).toHaveBeenCalledTimes(1);
+    expect(reportSessionSummary).toHaveBeenCalledWith({ mode: '2d', fallbackReason: 'context-lost', contextLosses: 1, fpsP50: null, drawLatencyP95Ms: 200, draws: 2 });
+  });
+
+  it('does not report a session where nothing was measured', () => {
+    renderWith(room()).unmount();
+    expect(reportSessionSummary).not.toHaveBeenCalled();
   });
 
   it('warns when it falls back to 2D after losing the context', () => {

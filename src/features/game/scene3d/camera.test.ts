@@ -1,7 +1,7 @@
 import { PerspectiveCamera, Vector3 } from 'three';
 import { approach, cameraFor, focusOn, orbitPosition } from './camera';
 import { BALL_REST, GLOBE_CENTER } from './globe';
-import { TELAO_CENTER, TELAO_SIZE } from './telao';
+import { SCOREBOARD_CENTER, SCOREBOARD_SIZE } from './scoreboard';
 import { MAX_SLOTS, slotPosition } from './slots';
 
 function project(aspect: number, yaw = 0) {
@@ -48,8 +48,8 @@ describe('cameraFor(game)', () => {
 
   it.each([0.5, 1.15, 2.2])('frames the whole screen, the globe and the ball at aspect %s', (aspect) => {
     const p = projector(aspect);
-    const [cx, cy, cz] = TELAO_CENTER;
-    const [w, h] = TELAO_SIZE;
+    const [cx, cy, cz] = SCOREBOARD_CENTER;
+    const [w, h] = SCOREBOARD_SIZE;
     const points: [number, number, number][] = [
       [cx - w / 2, cy - h / 2, cz],
       [cx + w / 2, cy + h / 2, cz],

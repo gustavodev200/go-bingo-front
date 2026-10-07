@@ -24,7 +24,7 @@ describe('UpgradeButton', () => {
     linkIdentity.mockResolvedValue({ data: null, error: { code: 'identity_already_exists', message: 'x' } });
     render(<UpgradeButton />);
     await userEvent.click(screen.getByRole('button', { name: /entrar com google para salvar/i }));
-    expect(push).toHaveBeenCalledWith('/auth/erro?code=identity_already_exists');
+    expect(push).toHaveBeenCalledWith('/auth/error?code=identity_already_exists');
   });
 });
 

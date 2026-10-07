@@ -21,7 +21,7 @@ export async function updateSession(request: NextRequest) {
   // Não colocar código entre createServerClient e getClaims (doc do Supabase).
   const { data } = await supabase.auth.getClaims();
   const { pathname, search } = request.nextUrl;
-  if (!data?.claims && !PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))) {
+  if (!data?.claims && !PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.search = `?next=${encodeURIComponent(pathname + search)}`;

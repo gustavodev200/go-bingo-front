@@ -5,6 +5,8 @@ const schema = z.object({
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1),
   NEXT_PUBLIC_API_URL: z.url(),
   NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().min(1),
+  // String vazia (variável declarada sem valor) conta como ausente; um DSN não vazio e inválido falha cedo.
+  NEXT_PUBLIC_SENTRY_DSN: z.preprocess((v) => (v === '' ? undefined : v), z.url().optional()),
 });
 
 export type PublicEnv = z.infer<typeof schema>;
@@ -21,4 +23,5 @@ export const env = parsePublicEnv({
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
   NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
+  NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
 });

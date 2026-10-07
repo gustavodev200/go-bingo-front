@@ -15,7 +15,7 @@ export function UpgradeButton() {
     const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(pathname)}`;
     const { error } = await createClient().auth.linkIdentity({ provider: 'google', options: { redirectTo } });
     if (!error) return;
-    if (error.code === 'identity_already_exists') return router.push('/auth/erro?code=identity_already_exists');
+    if (error.code === 'identity_already_exists') return router.push('/auth/error?code=identity_already_exists');
     toast.error('Não foi possível vincular sua conta Google.');
   }
 

@@ -28,7 +28,7 @@ export function RequireNickname({ children }: { children: ReactNode }) {
   const load = useCallback(async () => {
     try {
       const p = await apiFetch('/me', profileSchema);
-      if (!p.nickname) return router.replace(`/apelido?next=${encodeURIComponent(pathname)}`);
+      if (!p.nickname) return router.replace(`/nickname?next=${encodeURIComponent(pathname)}`);
       setProfile(p);
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) return router.replace(`/login?next=${encodeURIComponent(pathname)}`);

@@ -8,5 +8,7 @@ export function safeNextPath(raw?: string | null): string {
   if (CONTROL_CHARS.test(raw)) return '/';
   const url = new URL(raw, BASE);
   if (url.origin !== BASE) return '/';
+  // "/.//evil.com" normaliza para "//evil.com", que o navegador lê como outro host.
+  if (url.pathname.startsWith('//')) return '/';
   return `${url.pathname}${url.search}${url.hash}`;
 }

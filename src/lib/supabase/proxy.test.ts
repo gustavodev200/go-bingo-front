@@ -29,9 +29,17 @@ describe('updateSession', () => {
   });
 
   it('lets public routes through without a session', async () => {
-    for (const path of ['/login', '/auth/callback', '/auth/erro']) {
+    for (const path of ['/login', '/auth/callback', '/auth/error']) {
       const res = await updateSession(new NextRequest(`http://localhost:3000${path}`));
       expect(res.headers.get('location')).toBeNull();
+    }
+  });
+
+  it('protects look-alike paths such as /loginfoo and /authx', async () => {
+    for (const path of ['/loginfoo', '/authx']) {
+      const res = await updateSession(new NextRequest(`http://localhost:3000${path}`));
+      expect(res.status).toBe(307);
+      expect(res.headers.get('location')).toContain('/login?next=');
     }
   });
 

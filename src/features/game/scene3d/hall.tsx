@@ -5,15 +5,15 @@ import { useLayoutEffect, useMemo, useRef } from 'react';
 import { Color, Object3D, type InstancedMesh } from 'three';
 import { bulbLevel } from './ambience';
 import { DOOR } from './slots';
-import type { TelaoView } from './telao';
-import { TelaoScreen } from './telao-screen';
+import type { ScoreboardView } from './scoreboard';
+import { ScoreboardScreen } from './scoreboard-screen';
 
 const BULBS = 28;
 const BULB_COLOR = new Color('#fde68a');
 const DIM = new Color('#78350f');
 
 /** Salão de game show: chão, plateia em degraus, palco, telão (textura), porta e lâmpadas. O globo é um componente à parte. */
-export function Hall({ screen, animatedBulbs, shadows }: { screen: TelaoView; animatedBulbs: boolean; shadows: boolean }) {
+export function Hall({ screen, animatedBulbs, shadows }: { screen: ScoreboardView; animatedBulbs: boolean; shadows: boolean }) {
   const bulbs = useRef<InstancedMesh>(null);
   const color = useMemo(() => new Color(), []);
   const bulbPositions = useMemo(
@@ -78,7 +78,7 @@ export function Hall({ screen, animatedBulbs, shadows }: { screen: TelaoView; an
         <boxGeometry args={[7.2, 3.8, 0.2]} />
         <meshStandardMaterial color="#111827" />
       </mesh>
-      <TelaoScreen view={screen} />
+      <ScoreboardScreen view={screen} />
       {/* porta */}
       <group position={[DOOR[0], 0, DOOR[2] - 0.8]}>
         <mesh position={[0, 1.2, 0]}>

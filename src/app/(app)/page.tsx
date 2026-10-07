@@ -31,7 +31,7 @@ export default function HomePage() {
       <InstallBanner />
       <JoinByCodeForm />
       <Button asChild size="lg" className="h-11">
-        <Link href="/criar">Criar sala</Link>
+        <Link href="/create">Criar sala</Link>
       </Button>
       <section className="flex flex-col gap-2">
         <h2 className="font-semibold">Salas públicas</h2>

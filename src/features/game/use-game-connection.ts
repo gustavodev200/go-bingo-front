@@ -26,8 +26,13 @@ function report<T>(res: Ack<T>): res is { ok: true; data: T } {
   return res.ok;
 }
 
-export function useGameConnection(code: string): GameActions {
+/** `onDrawLatency` recebe `agora − drawnAt` (inclui o desvio de relógio do aparelho) de cada número sorteado ao vivo. */
+export function useGameConnection(code: string, onDrawLatency?: (ms: number) => void): GameActions {
   const socketRef = useRef<Socket | null>(null);
+  const drawLatencyRef = useRef(onDrawLatency);
+  useEffect(() => {
+    drawLatencyRef.current = onDrawLatency;
+  }, [onDrawLatency]);
 
   useEffect(() => {
     let active = true;
@@ -46,7 +51,13 @@ export function useGameConnection(code: string): GameActions {
         // room:state também chega pelo canal do usuário, inclusive de outra sala da qual ele ainda é membro.
         if (msg.event === 'room:state' && msg.payload.code !== code) return;
         if (joining) pending.push(msg);
-        else dispatch(msg);
+        else {
+          if (msg.event === 'game:number_drawn') {
+            const latency = Date.now() - new Date(msg.payload.drawnAt).getTime();
+            if (Number.isFinite(latency)) drawLatencyRef.current?.(latency);
+          }
+          dispatch(msg);
+        }
       });
     }
 

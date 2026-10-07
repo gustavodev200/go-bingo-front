@@ -17,6 +17,13 @@ describe('safeNextPath', () => {
     ['/\r\n/evil.com', '/'],
     [decodeURIComponent('/%09/evil.com'), '/'],
     ['/ABC234#x', '/ABC234#x'],
+    // Segmentos "."/".." normalizados pelo parser viram "//evil.com" (protocol-relative):
+    // router.replace("//evil.com") no NicknameForm sairia do site.
+    ['/.//evil.com', '/'],
+    ['/..//evil.com', '/'],
+    ['/a/..//evil.com', '/'],
+    ['/./\\evil.com', '/'],
+    ['/%2E//evil.com', '/'],
   ])('%s → %s', (input, expected) => {
     expect(safeNextPath(input)).toBe(expected);
   });

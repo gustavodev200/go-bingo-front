@@ -1,9 +1,9 @@
-// RNF-3D-01: Home, criar e ranking não podem baixar three.js (só a sala carrega o palco 3D).
+// RNF-3D-01: Home, /create e ranking não podem baixar three.js (só a sala carrega o palco 3D).
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 const NEXT = '.next';
-const PAGES = ['index', 'criar', 'ranking'];
+const PAGES = ['index', 'create', 'ranking'];
 const MARKER = 'WebGLRenderer';
 
 function htmlFor(page) {

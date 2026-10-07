@@ -160,6 +160,28 @@ describe('useGameConnection robustness', () => {
     expect(useGameStore.getState().snapshot?.game?.drawn).toEqual([3, 7]);
   });
 
+  it('reports the draw latency of live numbers only (not those replayed after the join)', async () => {
+    const onLatency = vi.fn();
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      vi.setSystemTime(new Date('2026-01-01T00:00:10.000Z'));
+      socket.acks.set('room:join', { ok: true, data: snapshot });
+      renderHook(() => useGameConnection('ABC234', onLatency));
+      act(() => socket.fire('connect'));
+      act(() => socket.fire('game:number_drawn', { seq: 1, number: 7, letter: 'B', drawnAt: '2026-01-01T00:00:09.000Z' }));
+      await act(async () => {
+        await flush();
+      });
+      expect(onLatency).not.toHaveBeenCalled();
+      act(() => socket.fire('game:number_drawn', { seq: 2, number: 8, letter: 'B', drawnAt: '2026-01-01T00:00:09.850Z' }));
+      expect(onLatency).toHaveBeenCalledWith(150);
+      act(() => socket.fire('game:number_drawn', { seq: 3, number: 9, letter: 'B', drawnAt: 'invalid' }));
+      expect(onLatency).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('retries the join when the server does not answer instead of leaving', async () => {
     vi.useFakeTimers();
     try {

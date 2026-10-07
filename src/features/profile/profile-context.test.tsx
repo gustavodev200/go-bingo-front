@@ -25,10 +25,10 @@ describe('RequireNickname', () => {
     expect(await screen.findByText('Ana')).toBeInTheDocument();
   });
 
-  it('sends users without nickname to /apelido keeping the path', async () => {
+  it('sends users without nickname to /nickname keeping the path', async () => {
     apiFetch.mockResolvedValue({ id: 'x', nickname: null, isGuest: true, points: 0 });
     render(<RequireNickname><Name /></RequireNickname>);
-    await vi.waitFor(() => expect(replace).toHaveBeenCalledWith('/apelido?next=%2FABC234'));
+    await vi.waitFor(() => expect(replace).toHaveBeenCalledWith('/nickname?next=%2FABC234'));
   });
 
   it('sends expired sessions to /login', async () => {
