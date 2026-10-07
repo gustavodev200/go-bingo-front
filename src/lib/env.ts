@@ -5,7 +5,8 @@ const schema = z.object({
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1),
   NEXT_PUBLIC_API_URL: z.url(),
   NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().min(1),
-  NEXT_PUBLIC_SENTRY_DSN: z.url().optional(),
+  // String vazia (variável declarada sem valor) conta como ausente; um DSN não vazio e inválido falha cedo.
+  NEXT_PUBLIC_SENTRY_DSN: z.preprocess((v) => (v === '' ? undefined : v), z.url().optional()),
 });
 
 export type PublicEnv = z.infer<typeof schema>;
