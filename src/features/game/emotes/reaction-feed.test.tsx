@@ -8,8 +8,8 @@ const ANA = '00000000-0000-4000-8000-000000000002';
 const snapshot: RoomSnapshot = {
   code: 'ABC234', name: 'Sala', hostId: ME, maxPlayers: 10, isPublic: true, status: 'WAITING', winPattern: 'FULL_CARD',
   members: [
-    { userId: ME, nickname: 'Eu', slot: 0, isGuest: false, connected: true, hasCard: false },
-    { userId: ANA, nickname: 'Ana', slot: 1, isGuest: false, connected: true, hasCard: false },
+    { userId: ME, nickname: 'Eu', character: null, slot: 0, isGuest: false, connected: true, hasCard: false },
+    { userId: ANA, nickname: 'Ana', character: null, slot: 1, isGuest: false, connected: true, hasCard: false },
   ],
   myCard: null, game: null,
 };

@@ -22,7 +22,7 @@ export default function HomePage() {
       <header className="flex items-center justify-between gap-3">
         <MarqueeTitle compact />
         <Link href="/perfil" aria-label={`Abrir seu perfil (${profile.nickname})`} className="glass flex min-h-11 min-w-0 items-center gap-2 rounded-full py-1 pr-3 pl-1 transition active:scale-95">
-          <Avatar id={profile.id} className="w-8" />
+          <Avatar id={profile.id} character={profile.character} className="w-8" />
           <span className="flex min-w-0 flex-col leading-tight">
             <span className="truncate text-sm font-semibold">{profile.nickname}</span>
             <span className="flex items-center gap-1.5 text-xs font-semibold text-amber-300">

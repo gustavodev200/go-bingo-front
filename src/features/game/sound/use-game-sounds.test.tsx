@@ -6,7 +6,7 @@ import { useGameSounds } from './use-game-sounds';
 const ME = '00000000-0000-4000-8000-000000000001';
 const ANA = '00000000-0000-4000-8000-000000000002';
 const GRID = Array.from({ length: 25 }, () => 0);
-const member = (userId: string, slot: number) => ({ userId, nickname: userId === ME ? 'Eu' : 'Ana', slot, isGuest: false, connected: true, hasCard: true });
+const member = (userId: string, slot: number) => ({ userId, nickname: userId === ME ? 'Eu' : 'Ana', character: null, slot, isGuest: false, connected: true, hasCard: true });
 const inGame = (drawn: number[], remaining: Record<string, number> = { [ME]: 10, [ANA]: 10 }): RoomSnapshot => ({
   code: 'ABC234',
   name: 'Sala',

@@ -15,8 +15,8 @@ function snapshot(overrides: Partial<RoomSnapshot> = {}): RoomSnapshot {
     winPattern: 'FULL_CARD',
     status: 'IN_GAME',
     members: [
-      { userId: ME, nickname: 'Eu', slot: 0, isGuest: false, connected: true, hasCard: true },
-      { userId: ANA, nickname: 'Ana', slot: 1, isGuest: false, connected: true, hasCard: false },
+      { userId: ME, nickname: 'Eu', character: null, slot: 0, isGuest: false, connected: true, hasCard: true },
+      { userId: ANA, nickname: 'Ana', character: null, slot: 1, isGuest: false, connected: true, hasCard: false },
     ],
     myCard: { id: '00000000-0000-4000-8000-0000000000aa', grid, marked: [] },
     game: { id: '00000000-0000-4000-8000-0000000000bb', drawn: [1], drawIntervalMs: 5000, remaining: { [ME]: 23, [ANA]: 24 } },
@@ -47,7 +47,7 @@ describe('reduce', () => {
     const left = reduce(withSnapshot(), { event: 'room:member_left', payload: { userId: ANA, reason: 'left' } });
     const back = reduce(left, {
       event: 'room:member_joined',
-      payload: { member: { userId: ANA, nickname: 'Ana', slot: 1, isGuest: false, connected: true, hasCard: false }, reconnected: false },
+      payload: { member: { userId: ANA, nickname: 'Ana', character: null, slot: 1, isGuest: false, connected: true, hasCard: false }, reconnected: false },
     });
     expect(back.snapshot!.members.map((m) => m.slot)).toEqual([0, 1]);
   });

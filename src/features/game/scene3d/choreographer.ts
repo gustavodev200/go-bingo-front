@@ -1,4 +1,4 @@
-import { avatarFromId } from './avatar-look';
+import { lookFor } from './characters';
 import { PHASE_MS, TEMPORARY_PHASES, type AvatarState, type Phase } from './pose';
 
 export interface SceneMember {
@@ -6,6 +6,8 @@ export interface SceneMember {
   slot: number;
   connected: boolean;
   hasCard: boolean;
+  /** Personagem escolhido no perfil; ausente/null = boneco derivado do id. */
+  character?: string | null;
 }
 
 export interface ChoreoInput {
@@ -70,7 +72,8 @@ export function choreograph(prev: ReadonlyMap<string, AvatarState> | null, { mem
     next.set(member.userId, {
       userId: member.userId,
       slot: member.slot,
-      look: old?.look ?? avatarFromId(member.userId),
+      // trocou de personagem com a sala aberta: aparece com o novo no próximo snapshot
+      look: lookFor(member.userId, member.character),
       phase,
       phaseStart,
       isHost: member.userId === hostId,

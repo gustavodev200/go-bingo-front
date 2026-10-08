@@ -22,7 +22,7 @@ export function MembersList({ members, hostId, myUserId, onKick }: MembersListPr
           )}
         >
           <span className="flex min-w-0 items-center gap-2">
-            <Avatar id={m.userId} host={m.userId === hostId} className="w-9" />
+            <Avatar id={m.userId} character={m.character} host={m.userId === hostId} className="w-9" />
             <span className="truncate font-medium">
               {m.userId === hostId && <span aria-label="host">👑 </span>}
               {m.nickname}

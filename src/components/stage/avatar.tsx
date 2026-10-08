@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
-import { avatarFromId, type AvatarLook } from '@/features/game/scene3d/avatar-look';
+import type { AvatarLook } from '@/features/game/scene3d/avatar-look';
+import { lookFor } from '@/features/game/scene3d/characters';
 import { cn } from '@/lib/utils';
 
 const MOUTH: Record<AvatarLook['face'], string> = {
@@ -35,9 +36,21 @@ function Hat({ look, host }: { look: AvatarLook; host: boolean }) {
   }
 }
 
-/** Boneco chibi em CSS: mesma pele, cabelo, roupa, chapéu e rosto do avatar 3D (derivados do id). Decorativo. */
-export function Avatar({ id, look, host = false, className }: { id?: string; look?: AvatarLook; host?: boolean; className?: string }) {
-  const l = look ?? avatarFromId(id ?? '');
+/** Boneco chibi em CSS: mesma pele, cabelo, roupa, chapéu e rosto do avatar 3D (personagem escolhido ou derivado do id). Decorativo. */
+export function Avatar({
+  id,
+  character,
+  look,
+  host = false,
+  className,
+}: {
+  id?: string;
+  character?: string | null;
+  look?: AvatarLook;
+  host?: boolean;
+  className?: string;
+}) {
+  const l = look ?? lookFor(id ?? '', character);
   const skin = { background: shade(l.skin, 25, 20) } as CSSProperties;
   const hair = { background: shade(l.hair, 20, 30) } as CSSProperties;
   return (

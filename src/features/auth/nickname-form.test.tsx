@@ -7,6 +7,7 @@ const apiFetch = vi.fn();
 const replace = vi.fn();
 vi.mock('@/lib/api', async (orig) => ({ ...(await orig<typeof import('@/lib/api')>()), apiFetch: (...a: unknown[]) => apiFetch(...a) }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace }) }));
+vi.mock('next/dynamic', () => ({ default: () => () => null }));
 
 describe('NicknameForm', () => {
   beforeEach(() => vi.clearAllMocks());
@@ -16,8 +17,17 @@ describe('NicknameForm', () => {
     render(<NicknameForm next="/ABC234" suggestion="Gustavo" />);
     expect(screen.getByLabelText(/apelido/i)).toHaveValue('Gustavo');
     await userEvent.click(screen.getByRole('button', { name: /continuar/i }));
-    expect(apiFetch).toHaveBeenCalledWith('/me', expect.anything(), { method: 'PATCH', body: JSON.stringify({ nickname: 'Gustavo' }) });
+    expect(apiFetch).toHaveBeenCalledWith('/me', expect.anything(), { method: 'PATCH', body: JSON.stringify({ nickname: 'Gustavo', character: 'c01' }) });
     expect(replace).toHaveBeenCalledWith('/ABC234');
+  });
+
+  it('saves the character chosen with the arrows together with the nickname', async () => {
+    apiFetch.mockResolvedValue({});
+    render(<NicknameForm next="/" suggestion="Ana" />);
+    await userEvent.click(screen.getByRole('button', { name: /anterior/i }));
+    expect(screen.getByText('Personagem 16 de 16')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /continuar/i }));
+    expect(apiFetch).toHaveBeenCalledWith('/me', expect.anything(), { method: 'PATCH', body: JSON.stringify({ nickname: 'Ana', character: 'c16' }) });
   });
 
   it('validates locally before calling the API', async () => {

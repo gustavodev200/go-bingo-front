@@ -2,12 +2,12 @@
 
 import { ChevronLeft, LogOut } from 'lucide-react';
 import Link from 'next/link';
-import { Avatar } from '@/components/stage/avatar';
 import { Coins } from '@/components/stage/coin';
 import { Button } from '@/components/ui/button';
 import { UpgradeButton } from '@/features/auth/upgrade-button';
 import { useLogout } from '@/features/auth/use-logout';
 import { useProfile } from '@/features/profile/profile-context';
+import { CharacterEditor } from './character-editor';
 import { CoinHistory } from './coin-history';
 import { NicknameEditor } from './nickname-editor';
 import { StatsGrid } from './stats-grid';
@@ -27,7 +27,7 @@ export function ProfileView() {
       </Link>
       <h1 className="sr-only">Seu perfil</h1>
       <section className="glass flex flex-col items-center gap-2 p-5 text-center" aria-label="Identidade">
-        <Avatar id={profile.id} className="w-20" />
+        <CharacterEditor saved={profile.character ?? null} onSaved={refresh} />
         <NicknameEditor nickname={profile.nickname ?? ''} onSaved={refresh} />
         <p className="flex items-center gap-2 text-sm">
           <Coins amount={profile.coins} className="rounded-full bg-amber-300/15 px-2.5 py-1 text-amber-200 ring-1 ring-amber-300/30" />

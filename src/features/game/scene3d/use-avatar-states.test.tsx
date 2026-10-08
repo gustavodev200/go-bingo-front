@@ -6,7 +6,7 @@ import { useAvatarStates } from './use-avatar-states';
 
 const ME = '00000000-0000-4000-8000-000000000001';
 const ANA = '00000000-0000-4000-8000-000000000002';
-const member = (userId: string, slot: number) => ({ userId, nickname: userId === ME ? 'Eu' : 'Ana', slot, isGuest: false, connected: true, hasCard: false });
+const member = (userId: string, slot: number) => ({ userId, nickname: userId === ME ? 'Eu' : 'Ana', character: null, slot, isGuest: false, connected: true, hasCard: false });
 
 function room(members = [member(ME, 0)]): RoomSnapshot {
   return { code: 'ABC234', name: 'Sala', hostId: ME, maxPlayers: 25, isPublic: true, status: 'WAITING', winPattern: 'FULL_CARD', members, myCard: null, game: null };

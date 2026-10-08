@@ -9,7 +9,7 @@ const ANA = '00000000-0000-4000-8000-000000000002';
 const grid = Array.from({ length: 25 }, (_, i) => (i === 12 ? 0 : i + 1));
 const snapshot: RoomSnapshot = {
   code: 'ABC234', name: 'Sala', hostId: ME, maxPlayers: 10, isPublic: true, status: 'WAITING', winPattern: 'FULL_CARD',
-  members: [{ userId: ME, nickname: 'Eu', slot: 0, isGuest: false, connected: true, hasCard: false }],
+  members: [{ userId: ME, nickname: 'Eu', character: null, slot: 0, isGuest: false, connected: true, hasCard: false }],
   myCard: null, game: null,
 };
 
@@ -56,7 +56,7 @@ describe('useGameConnection', () => {
   it('feeds server events into the store', async () => {
     await connect();
     act(() =>
-      socket.fire('room:member_joined', { member: { userId: ANA, nickname: 'Ana', slot: 1, isGuest: true, connected: true, hasCard: false }, reconnected: false }),
+      socket.fire('room:member_joined', { member: { userId: ANA, nickname: 'Ana', character: null, slot: 1, isGuest: true, connected: true, hasCard: false }, reconnected: false }),
     );
     expect(useGameStore.getState().snapshot?.members.map((m) => m.nickname)).toEqual(['Eu', 'Ana']);
   });

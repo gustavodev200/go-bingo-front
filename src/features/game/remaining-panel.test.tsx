@@ -6,8 +6,8 @@ import { RemainingPanel } from './remaining-panel';
 const ME = '00000000-0000-4000-8000-000000000001';
 const ANA = '00000000-0000-4000-8000-000000000002';
 const members: Member[] = [
-  { userId: ME, nickname: 'Eu', slot: 0, isGuest: false, connected: true, hasCard: true },
-  { userId: ANA, nickname: 'Ana', slot: 1, isGuest: false, connected: true, hasCard: true },
+  { userId: ME, nickname: 'Eu', character: null, slot: 0, isGuest: false, connected: true, hasCard: true },
+  { userId: ANA, nickname: 'Ana', character: null, slot: 1, isGuest: false, connected: true, hasCard: true },
 ];
 
 describe('RemainingPanel', () => {

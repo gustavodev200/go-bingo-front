@@ -1,3 +1,4 @@
+import { CHARACTERS } from './characters';
 import { PHASE_MS } from './pose';
 import { choreograph, labelIds, statesChanged, triggerDance, type SceneMember } from './choreographer';
 
@@ -12,6 +13,15 @@ describe('choreograph', () => {
     const s = choreograph(null, { members: [m(A, 0), m(B, 1, { connected: false })], hostId: A, now: 0 });
     expect(s.get(A)?.phase).toBe('idle');
     expect(s.get(B)?.phase).toBe('ghost');
+  });
+
+  it('dresses each player as the chosen character, and switches when it changes mid-room', () => {
+    const s0 = choreograph(null, { members: [m(A, 0, { character: 'c07' }), m(B, 1)], hostId: A, now: 0 });
+    expect(s0.get(A)?.look).toMatchObject(CHARACTERS.c07);
+    expect(s0.get(B)?.look.body).toBeDefined();
+    const s1 = choreograph(s0, { members: [m(A, 0, { character: 'c02' }), m(B, 1)], hostId: A, now: 100 });
+    expect(s1.get(A)?.look).toMatchObject(CHARACTERS.c02);
+    expect(s1.get(B)?.look).toBe(s0.get(B)?.look);
   });
 
   it('a newcomer enters, and the others look at the door', () => {
