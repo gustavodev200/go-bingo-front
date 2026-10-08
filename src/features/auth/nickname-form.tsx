@@ -1,5 +1,6 @@
 'use client';
 
+import { ChevronLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import { Button } from '@/components/ui/button';
@@ -9,9 +10,11 @@ import { profileSchema, type CharacterId } from '@/contracts';
 import { CharacterPicker } from '@/features/profile/character-picker';
 import { ApiError, apiFetch } from '@/lib/api';
 import { validateNickname } from '@/lib/nickname';
+import { useLogout } from './use-logout';
 
 export function NicknameForm({ next, suggestion }: { next: string; suggestion: string }) {
   const router = useRouter();
+  const logout = useLogout();
   const [value, setValue] = useState(suggestion);
   const [character, setCharacter] = useState<CharacterId>('c01');
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +35,17 @@ export function NicknameForm({ next, suggestion }: { next: string; suggestion: s
   }
 
   return (
-    <form onSubmit={(e) => void submit(e)} className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center gap-6 px-4 py-10">
+    <form onSubmit={(e) => void submit(e)} className="relative mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center gap-6 px-4 pt-16 pb-10">
+      {/* Já há sessão (convidado ou Google): voltar ao login = sair dela, senão o login mandaria de volta para cá. */}
+      <button
+        type="button"
+        onClick={() => void logout()}
+        aria-label="Voltar ao login"
+        className="absolute top-[calc(0.75rem+env(safe-area-inset-top))] left-2 flex min-h-11 items-center gap-1 px-2 text-sm text-violet-200 hover:text-white"
+      >
+        <ChevronLeft aria-hidden className="size-4" />
+        Voltar
+      </button>
       <header className="flex flex-col items-center gap-2 text-center">
         <p className="text-xs font-semibold tracking-[0.3em] text-pink-300 uppercase">Bem-vindo ao salão</p>
         <h1 className="font-display text-marquee text-3xl font-bold">Escolha seu boneco</h1>

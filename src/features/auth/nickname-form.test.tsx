@@ -8,6 +8,8 @@ const replace = vi.fn();
 vi.mock('@/lib/api', async (orig) => ({ ...(await orig<typeof import('@/lib/api')>()), apiFetch: (...a: unknown[]) => apiFetch(...a) }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace }) }));
 vi.mock('next/dynamic', () => ({ default: () => () => null }));
+const logout = vi.fn();
+vi.mock('./use-logout', () => ({ useLogout: () => logout }));
 
 describe('NicknameForm', () => {
   beforeEach(() => vi.clearAllMocks());
@@ -28,6 +30,13 @@ describe('NicknameForm', () => {
     expect(screen.getByText('Personagem 16 de 16')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /continuar/i }));
     expect(apiFetch).toHaveBeenCalledWith('/me', expect.anything(), { method: 'PATCH', body: JSON.stringify({ nickname: 'Ana', character: 'c16' }) });
+  });
+
+  it('goes back to the login by signing out (otherwise the login would bounce back here)', async () => {
+    render(<NicknameForm next="/" suggestion="Ana" />);
+    await userEvent.click(screen.getByRole('button', { name: 'Voltar ao login' }));
+    expect(logout).toHaveBeenCalled();
+    expect(apiFetch).not.toHaveBeenCalled();
   });
 
   it('validates locally before calling the API', async () => {
