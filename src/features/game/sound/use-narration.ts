@@ -5,9 +5,9 @@ import { useGameStore } from '../store';
 import { ballPhrase, sharedNarrator, type Narrator } from './narration';
 import { usePersistedFlag } from './use-persisted-flag';
 
-/** Preferência da narração (desligada por padrão; lembrada no aparelho). */
+/** Preferência da narração (ligada por padrão; quem desliga fica com ela desligada no aparelho). */
 export function useNarrationEnabled(): [boolean, (enabled: boolean) => void] {
-  return usePersistedFlag('go-bingo:narration');
+  return usePersistedFlag('go-bingo:narration', true);
 }
 
 /**

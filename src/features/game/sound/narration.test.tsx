@@ -8,7 +8,7 @@ import { useNarration, useNarrationEnabled } from './use-narration';
 const ME = '00000000-0000-4000-8000-000000000001';
 const inGame = (drawn: number[]): RoomSnapshot => ({
   code: 'ABC234', name: 'Sala', hostId: ME, maxPlayers: 10, isPublic: true, winPattern: 'FULL_CARD', status: 'IN_GAME',
-  members: [{ userId: ME, nickname: 'Eu', slot: 0, isGuest: false, connected: true, hasCard: true }],
+  members: [{ userId: ME, nickname: 'Eu', character: null, slot: 0, isGuest: false, connected: true, hasCard: true }],
   myCard: null,
   game: { id: '00000000-0000-4000-8000-0000000000bb', drawn, drawIntervalMs: 5000, remaining: {} },
 });
@@ -88,12 +88,12 @@ describe('useNarration', () => {
     expect(narrator.speak).toHaveBeenCalledWith('O, 70');
   });
 
-  it('the preference persists and defaults to off', () => {
+  it('defaults to on and remembers when the user turns it off', () => {
     localStorage.clear();
     const { result } = renderHook(() => useNarrationEnabled());
-    expect(result.current[0]).toBe(false);
-    act(() => result.current[1](true));
-    expect(renderHook(() => useNarrationEnabled()).result.current[0]).toBe(true);
+    expect(result.current[0]).toBe(true);
+    act(() => result.current[1](false));
+    expect(renderHook(() => useNarrationEnabled()).result.current[0]).toBe(false);
   });
 });
 

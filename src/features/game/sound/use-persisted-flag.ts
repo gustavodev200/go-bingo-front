@@ -2,17 +2,18 @@
 
 import { useCallback, useState } from 'react';
 
-function read(key: string): boolean {
+function read(key: string, initial: boolean): boolean {
   try {
-    return localStorage.getItem(key) === '1';
+    const stored = localStorage.getItem(key);
+    return stored === null ? initial : stored === '1';
   } catch {
-    return false;
+    return initial;
   }
 }
 
-/** Liga/desliga lembrado no aparelho (padrão: desligado). Armazenamento bloqueado = vale só nesta sessão. */
-export function usePersistedFlag(key: string): [boolean, (value: boolean) => void] {
-  const [value, setState] = useState(() => read(key));
+/** Liga/desliga lembrado no aparelho (padrão: `initial`, desligado se omitido). Armazenamento bloqueado = vale só nesta sessão. */
+export function usePersistedFlag(key: string, initial = false): [boolean, (value: boolean) => void] {
+  const [value, setState] = useState(() => read(key, initial));
   const setValue = useCallback(
     (next: boolean) => {
       try {
