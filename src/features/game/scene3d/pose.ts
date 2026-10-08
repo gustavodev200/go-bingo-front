@@ -21,7 +21,7 @@ export interface AvatarState {
 
 export const PHASE_MS = { entering: 1800, 'ready-jump': 600, leaving: 2200, dance: 1500 } as const;
 export const TEMPORARY_PHASES: readonly Phase[] = ['entering', 'ready-jump', 'dance'];
-const WAVE_MS = 800;
+export const WAVE_MS = 800;
 
 export interface Pose {
   position: Vec3;

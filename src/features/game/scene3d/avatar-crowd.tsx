@@ -1,78 +1,61 @@
 'use client';
 
 import { useFrame, type ThreeEvent } from '@react-three/fiber';
-import { useLayoutEffect, useMemo, useRef, type RefObject } from 'react';
-import { Color, DoubleSide, Euler, Matrix4, Object3D, Quaternion, Vector3, type InstancedMesh } from 'three';
-import type { Hat, HairStyle } from './avatar-look';
-import { pose, type AvatarState } from './pose';
+import { useEffect, useLayoutEffect, useMemo, useRef, type ReactNode, type Ref, type RefObject } from 'react';
+import { Color, DoubleSide, Euler, Matrix4, Object3D, Quaternion, Vector3, type BufferGeometry, type InstancedMesh, type Side } from 'three';
+import { HAIR_STYLES, type Face, type HairStyle } from './avatar-look';
+import { FACE, HAT_TYPES, HEAD_Y, characterShader, createAvatarGeometries, disposeAvatarGeometries, type HatType, type V3 } from './avatar-geometry';
+import { PHASE_MS, WAVE_MS, pose, type AvatarState } from './pose';
 
 export const MAX_AVATARS = 32; // 25 na sala + quem está saindo
-type HatType = Exclude<Hat, 'none'>;
-type V3 = [number, number, number];
-const HAT_TYPES: HatType[] = ['tophat', 'cap', 'beanie', 'party'];
 const GHOST = new Color('#c4b5fd');
 const GOLD = new Color('#facc15');
 const WHITE = new Color('#ffffff');
 const ZERO = new Matrix4().makeScale(0, 0, 0);
+const NONE: V3 = [0, 0, 0];
+const SIDES = [-1, 1] as const;
 
-/** Proporção "chibi": cabeça grande em cima de um corpo pequeno. */
-const HEAD_Y = 1.06;
-const HEAD_R = 0.34;
-const HAT: Record<HatType, { offset: V3; rot: V3; scale: number }> = {
-  tophat: { offset: [0, 0.52, -0.02], rot: [-0.08, 0, 0], scale: 1.2 },
-  cap: { offset: [0, 0.31, 0], rot: [-0.18, 0, 0], scale: 1.32 },
-  beanie: { offset: [0, 0.09, -0.01], rot: [-0.1, 0, 0], scale: 1.4 },
-  party: { offset: [0, 0.56, 0], rot: [-0.12, 0, 0.12], scale: 1.15 },
-};
-/** Espetos do cabelo "spiky": posição e inclinação (para fora) no espaço da cabeça. */
-const SPIKES: { offset: V3; rot: V3 }[] = [
-  { offset: [0, 0.38, 0.02], rot: [0.1, 0, 0] },
-  { offset: [-0.17, 0.33, 0.04], rot: [0.15, 0, 0.6] },
-  { offset: [0.17, 0.33, 0.04], rot: [0.15, 0, -0.6] },
-  { offset: [-0.1, 0.32, -0.16], rot: [-0.5, 0, 0.35] },
-  { offset: [0.1, 0.32, -0.16], rot: [-0.5, 0, -0.35] },
-];
+/** Cintura: o tronco inclina/balança a partir daqui; quadril e pernas ficam no chão. */
+const WAIST_Y = 0.32;
+const FROM_WAIST = new Matrix4().makeTranslation(0, -WAIST_Y, 0);
+const SHOULDER: V3 = [0.235, 0.665, 0];
+const ELBOW_Y = -0.09;
+const HIP: V3 = [0.105, 0.3, 0];
 /** Piscar: a cada ~4 s, 120 ms de olho fechado; fase diferente por boneco. */
 const BLINK_PERIOD_S = 4.2;
 const BLINK_S = 0.12;
 
-type Single =
-  | 'torso'
-  | 'head'
-  | 'nose'
-  | 'hairCap'
-  | 'hairBun'
-  | 'hairLong'
-  | 'hairAfro'
-  | 'smile'
-  | 'wow'
-  | 'crown'
-  | 'shadow';
-type Paired = 'legs' | 'shoes' | 'arms' | 'hands' | 'sclera' | 'pupils' | 'shine' | 'brows' | 'cheeks';
-type Parts = Record<Single | Paired | 'spikes', InstancedMesh | null> & { hats: Record<HatType, InstancedMesh | null> };
-
-const SINGLE: Single[] = ['torso', 'head', 'nose', 'hairCap', 'hairBun', 'hairLong', 'hairAfro', 'smile', 'wow', 'crown', 'shadow'];
-const PAIRED: Paired[] = ['legs', 'shoes', 'arms', 'hands', 'sclera', 'pupils', 'shine', 'brows', 'cheeks'];
-const HAIR_PARTS: Record<HairStyle, (Single | 'spikes')[]> = {
-  short: ['hairCap'],
-  spiky: ['hairCap', 'spikes'],
-  bun: ['hairCap', 'hairBun'],
-  long: ['hairCap', 'hairLong'],
-  afro: ['hairAfro'],
+/** Expressão do momento: a escolhida pelo id, trocada pela fase (vitória, "por 1", fantasma). */
+type Mood = Face | 'happy' | 'sleepy';
+/** Sobrancelha: `tilt` > 0 sobe a ponta de dentro (simpatia/surpresa/tristeza). */
+const BROW: Record<Mood, { lift: number; tilt: number }> = {
+  smile: { lift: 0, tilt: 0.06 },
+  grin: { lift: 0.012, tilt: 0.1 },
+  wow: { lift: 0.03, tilt: 0.16 },
+  happy: { lift: 0.02, tilt: 0.12 },
+  sleepy: { lift: -0.006, tilt: 0.3 },
 };
 
+type Single = 'torso' | 'hips' | 'collar' | 'head' | 'mouthSmile' | 'mouthOpen' | 'mouthWow' | 'crown' | 'shadow';
+type Paired = 'legs' | 'shoes' | 'arms' | 'hands' | 'eyes' | 'lids' | 'brows' | 'cheeks';
+type Parts = Record<Single | Paired, InstancedMesh | null> & { hair: Record<HairStyle, InstancedMesh | null>; hats: Record<HatType, InstancedMesh | null> };
+
 function allMeshes(p: Parts): InstancedMesh[] {
-  const { hats, ...rest } = p;
-  return [...Object.values(rest), ...Object.values(hats)].filter((m): m is InstancedMesh => m !== null);
+  const { hair, hats, ...rest } = p;
+  return [...Object.values(rest), ...Object.values(hair), ...Object.values(hats)].filter((m): m is InstancedMesh => m !== null);
 }
 
-/** Instâncias por boneco em cada peça (pares = 2, espetos = 5, o resto = 1). */
-function perAvatar(p: Parts, mesh: InstancedMesh): number {
-  if (mesh === p.spikes) return SPIKES.length;
-  return PAIRED.some((k) => p[k] === mesh) ? 2 : 1;
-}
+const colors = new Map<string, Color>();
+const cached = (hex: string) => {
+  let color = colors.get(hex);
+  if (!color) colors.set(hex, (color = new Color(hex)));
+  return color;
+};
 
-/** Bonecos chibi (pele, cabelo, roupa e rosto derivados do id): 1 InstancedMesh por peça para toda a plateia. */
+/**
+ * Bonecos chibi (pele, cabelo, roupa e rosto derivados do id): 1 InstancedMesh por peça para toda a plateia.
+ * Cada peça só desenha as instâncias em uso — cabelos, chapéus e bocas que ninguém está usando nem vão para a GPU.
+ */
 export function AvatarCrowd({
   statesRef,
   onTap,
@@ -85,16 +68,24 @@ export function AvatarCrowd({
   fakeShadow: boolean;
 }) {
   const parts = useRef<Parts>({
-    ...(Object.fromEntries([...SINGLE, ...PAIRED, 'spikes'].map((k) => [k, null])) as Record<Single | Paired | 'spikes', null>),
+    ...(Object.fromEntries(
+      (['torso', 'hips', 'collar', 'head', 'mouthSmile', 'mouthOpen', 'mouthWow', 'crown', 'shadow', 'legs', 'shoes', 'arms', 'hands', 'eyes', 'lids', 'brows', 'cheeks'] as const).map((k) => [k, null]),
+    ) as Record<Single | Paired, null>),
+    hair: { short: null, spiky: null, bun: null, long: null, afro: null },
     hats: { tophat: null, cap: null, beanie: null, party: null },
   });
   const ids = useRef<string[]>([]);
+  const geo = useMemo(() => createAvatarGeometries(), []);
+  useEffect(() => () => disposeAvatarGeometries(geo), [geo]);
   const tmp = useMemo(
     () => ({
       o: new Object3D(),
       base: new Matrix4(),
+      upper: new Matrix4(),
       head: new Matrix4(),
+      face: new Matrix4(),
       limb: new Matrix4(),
+      elbow: new Matrix4(),
       local: new Matrix4(),
       out: new Matrix4(),
       q: new Quaternion(),
@@ -102,6 +93,7 @@ export function AvatarCrowd({
       v: new Vector3(),
       s: new Vector3(),
       color: new Color(),
+      used: new Map<InstancedMesh, number>(),
     }),
     [],
   );
@@ -120,136 +112,113 @@ export function AvatarCrowd({
   useFrame(() => {
     const p = parts.current;
     const now = performance.now();
+    const t = now / 1000;
     const states = [...(statesRef.current?.values() ?? [])].slice(0, MAX_AVATARS);
     ids.current = states.map((s) => s.userId);
+    const used = tmp.used;
+    used.clear();
 
-    const compose = (out: Matrix4, parent: Matrix4, offset: V3, rot: V3, scale: V3) => {
-      tmp.local.compose(tmp.v.set(...offset), tmp.q.setFromEuler(tmp.e.set(...rot)), tmp.s.set(...scale));
-      out.multiplyMatrices(parent, tmp.local);
+    /** Próxima instância livre da peça. Torso e cabeça recebem 1 por boneco, na ordem: o índice é o do boneco (toque). */
+    const put = (mesh: InstancedMesh | null, matrix: Matrix4, color?: Color) => {
+      if (!mesh) return;
+      const index = used.get(mesh) ?? 0;
+      mesh.setMatrixAt(index, matrix);
+      if (color) mesh.setColorAt(index, color);
+      used.set(mesh, index + 1);
     };
     /** out = parent × T(offset) × R(rot) × S(scale) */
-    const place = (mesh: InstancedMesh | null, index: number, parent: Matrix4, offset: V3, rot: V3 = [0, 0, 0], scale: V3 = [1, 1, 1]) => {
-      if (!mesh) return;
-      compose(tmp.out, parent, offset, rot, scale);
-      mesh.setMatrixAt(index, tmp.out);
+    const at = (out: Matrix4, parent: Matrix4, offset: V3, rot: V3 = NONE, scale?: V3) => {
+      tmp.local.compose(tmp.v.set(...offset), tmp.q.setFromEuler(tmp.e.set(...rot)), scale ? tmp.s.set(...scale) : tmp.s.setScalar(1));
+      return out.multiplyMatrices(parent, tmp.local);
     };
-    const hide = (mesh: InstancedMesh | null, index: number) => mesh?.setMatrixAt(index, ZERO);
+    /** Lilás ao virar fantasma (desconectado), dourado no brilho de "por 1"/vitória. */
+    const tint = (hex: string, ghost: number, glow = 0) => tmp.color.copy(cached(hex)).lerp(GHOST, ghost).lerp(GOLD, glow);
 
-    // Só os bonecos presentes passam por aqui; o `count` (abaixo) faz a GPU desenhar só eles.
-    for (let i = 0; i < states.length; i++) {
-      const s = states[i];
+    for (const s of states) {
       const ps = pose(s, now);
       const look = s.look;
-      tmp.base.compose(tmp.v.set(...ps.position), tmp.q.setFromEuler(tmp.e.set(0, ps.rotationY, 0)), tmp.s.setScalar(Math.max(ps.scale, 0.0001)));
+      const ghost = ps.ghost;
+      const glow = ps.glow * 0.6;
+      const phase = look.seed * Math.PI * 2;
+      const elapsed = now - s.phaseStart;
+      const walking = (s.phase === 'entering' && elapsed < PHASE_MS.entering) || (s.phase === 'leaving' && elapsed >= WAVE_MS);
+      const celebrating = s.phase === 'winner' || s.phase === 'dance';
+      const mood: Mood = celebrating ? 'happy' : ghost > 0.5 ? 'sleepy' : s.oneAway ? 'wow' : s.phase === 'ready-jump' ? 'grin' : look.face;
 
-      // corpo
-      place(p.torso, i, tmp.base, [0, 0.5, 0], [0, 0, 0], [1, 1, 0.9]);
-      for (const side of [-1, 1] as const) {
-        const k = i * 2 + (side < 0 ? 0 : 1);
-        // pernas balançam opostas aos braços; sapato acompanha a perna
-        compose(tmp.limb, tmp.base, [side * 0.11, 0.3, 0], [side * ps.armSwing * 0.35, 0, 0], [1, 1, 1]);
-        place(p.legs, k, tmp.limb, [0, -0.12, 0]);
-        place(p.shoes, k, tmp.limb, [0, -0.25, 0.04], [0, 0, 0], [1, 0.6, 1.35]);
-        // braço gira no ombro; mão na ponta
-        const raise = side > 0 ? ps.armRaise * (2.6 + ps.armSwing) : 0;
-        compose(tmp.limb, tmp.base, [side * 0.27, 0.66, 0], [-side * ps.armSwing * 0.5, 0, side * (0.25 + raise)], [1, 1, 1]);
-        place(p.arms, k, tmp.limb, [0, -0.13, 0]);
-        place(p.hands, k, tmp.limb, [0, -0.28, 0]);
+      // estica na velocidade vertical (pulos) e encolhe a largura junto: volume constante, pulo menos "duro"
+      const vy = (ps.position[1] - pose(s, now - 32).position[1]) / 0.032;
+      const stretch = Math.min(Math.abs(vy) * 0.03, 0.14);
+      const scale = Math.max(ps.scale, 0.0001);
+      const wide = scale / Math.sqrt(1 + stretch);
+      tmp.base.compose(tmp.v.set(...ps.position), tmp.q.setFromEuler(tmp.e.set(0, ps.rotationY, 0)), tmp.s.set(wide, scale * (1 + stretch), wide));
+
+      // tronco: inclina para frente ao andar e balança de leve (mais solto no fantasma e na comemoração)
+      const lean = walking ? 0.14 : 0;
+      const sway = ghost > 0 ? 0.08 * Math.sin(t * 1.4 + phase) : celebrating ? 0.12 * Math.sin(t * 9) : 0.035 * Math.sin(t * 0.9 + phase);
+      at(tmp.upper, tmp.base, [0, WAIST_Y, 0], [lean, 0, sway]).multiply(FROM_WAIST);
+
+      put(p.torso, tmp.upper, tint(look.body, ghost, glow));
+      put(p.collar, tmp.upper, tint(look.accent, ghost));
+      put(p.hips, tmp.base, tint(look.pants, ghost));
+
+      for (const side of SIDES) {
+        // pernas balançam opostas aos braços; o tênis já vem pendurado na perna
+        at(tmp.limb, tmp.base, [side * HIP[0], HIP[1], 0], [walking ? side * ps.armSwing * 0.9 : 0, 0, 0]);
+        put(p.legs, tmp.limb, tint(look.pants, ghost));
+        put(p.shoes, tmp.limb);
+
+        // braço gira no ombro (o direito acena; na comemoração os dois sobem); antebraço dobra no cotovelo
+        const raised = side > 0 || celebrating ? ps.armRaise : 0;
+        const hang = 0.2 + 0.03 * Math.sin(t * 1.1 + phase) + ghost * 0.55;
+        at(tmp.limb, tmp.upper, [side * SHOULDER[0], SHOULDER[1], 0], [-side * ps.armSwing * (walking ? 0.9 : 0.5), 0, side * (hang + raised * (2.6 + side * ps.armSwing))]);
+        put(p.arms, tmp.limb, tint(look.body, ghost, glow));
+        at(tmp.elbow, tmp.limb, [0, ELBOW_Y, 0], [walking ? -0.45 : raised ? -0.2 : -0.15, 0, raised ? -side * 0.3 : 0]);
+        put(p.hands, tmp.elbow, tint(look.skin, ghost));
       }
 
-      // cabeça e tudo que vai nela gira junto (headYaw)
-      tmp.local.compose(tmp.v.set(0, HEAD_Y, 0), tmp.q.setFromEuler(tmp.e.set(0, ps.headYaw, 0)), tmp.s.set(1, 1, 1));
-      tmp.head.multiplyMatrices(tmp.base, tmp.local);
-      place(p.head, i, tmp.head, [0, 0, 0]);
-      place(p.nose, i, tmp.head, [0, -0.03, 0.335], [0, 0, 0], [1, 0.8, 0.8]);
+      // cabeça: inclina e acena junto com o humor; tudo do rosto/cabelo vai com ela
+      const nod = ghost > 0 ? 0.2 : walking ? 0.05 * Math.abs(Math.sin(t * 8)) : s.oneAway ? -0.1 : 0;
+      const tilt = celebrating ? 0.16 * Math.sin(t * 7) : ghost > 0 ? 0.18 : 0.06 * Math.sin(t * 0.55 + phase * 3);
+      at(tmp.head, tmp.upper, [0, HEAD_Y, 0], [nod, ps.headYaw, tilt]);
+      put(p.head, tmp.head, tint(look.skin, ghost));
 
-      // cabelo: só as peças do estilo do boneco
-      const hair = HAIR_PARTS[look.hairStyle];
-      if (hair.includes('hairCap')) place(p.hairCap, i, tmp.head, [0, 0.04, -0.03], [-0.35, 0, 0]);
-      else hide(p.hairCap, i);
-      if (hair.includes('hairBun')) place(p.hairBun, i, tmp.head, [0, 0.34, -0.14]);
-      else hide(p.hairBun, i);
-      if (hair.includes('hairLong')) place(p.hairLong, i, tmp.head, [0, -0.17, -0.02]);
-      else hide(p.hairLong, i);
-      if (hair.includes('hairAfro')) place(p.hairAfro, i, tmp.head, [0, 0.14, -0.18], [0, 0, 0], [1.05, 0.95, 0.9]);
-      else hide(p.hairAfro, i);
-      SPIKES.forEach((spike, k) => {
-        if (hair.includes('spikes')) place(p.spikes, i * SPIKES.length + k, tmp.head, spike.offset, spike.rot);
-        else hide(p.spikes, i * SPIKES.length + k);
+      // chapéu (black power não usa) por cima do cabelo; sob chapéu os espetos atravessariam a aba → cabelo curto
+      const hat = !s.isHost && look.hat !== 'none' && look.hairStyle !== 'afro' ? look.hat : null;
+      put(p.hair[hat && look.hairStyle === 'spiky' ? 'short' : look.hairStyle], tmp.head, tint(look.hair, ghost));
+      if (hat) put(p.hats[hat], tmp.head, tint(look.accent, ghost));
+      if (s.isHost) put(p.crown, at(tmp.out, tmp.head, [0, look.hairStyle === 'afro' ? 0.64 : 0.44, 0], [-0.12, 0, 0], [1.3, 1.3, 1.3]));
+
+      // rosto: olhos piscam (ou fecham felizes/sonolentos), sobrancelhas e boca seguem o humor
+      const blink = (t + look.seed * 11) % BLINK_PERIOD_S < BLINK_S;
+      const shut = blink || mood === 'happy' || mood === 'sleepy';
+      const eye = mood === 'wow' ? 1.12 : 1;
+      const brow = BROW[mood];
+      SIDES.forEach((side, k) => {
+        tmp.face.multiplyMatrices(tmp.head, FACE.eye[k]);
+        if (shut) put(p.lids, at(tmp.out, tmp.face, NONE, [0, 0, mood === 'happy' ? 0 : Math.PI]));
+        else put(p.eyes, at(tmp.out, tmp.face, NONE, NONE, [eye, eye, 1]));
+        tmp.face.multiplyMatrices(tmp.head, FACE.brow[k]);
+        put(p.brows, at(tmp.out, tmp.face, [0, brow.lift, 0], [0, 0, -side * brow.tilt]), tint(look.hair, ghost));
+        put(p.cheeks, tmp.face.multiplyMatrices(tmp.head, FACE.cheek[k]));
       });
-
-      // rosto: olhos piscam, sobrancelhas sobem no "uau"
-      const t = (now / 1000 + look.seed * 11) % BLINK_PERIOD_S;
-      const eyeOpen = t < BLINK_S ? 0.12 : 1;
-      const browLift = look.face === 'wow' ? 0.035 : 0;
-      for (const side of [-1, 1] as const) {
-        const k = i * 2 + (side < 0 ? 0 : 1);
-        place(p.sclera, k, tmp.head, [side * 0.12, 0.03, 0.29], [0, 0, 0], [1, 1.2 * eyeOpen, 0.55]);
-        place(p.pupils, k, tmp.head, [side * 0.115, 0.02, 0.325], [0, 0, 0], [1, 1.15 * eyeOpen, 0.6]);
-        if (eyeOpen < 1) hide(p.shine, k);
-        else place(p.shine, k, tmp.head, [side * 0.115 + 0.018, 0.05, 0.345]);
-        place(p.brows, k, tmp.head, [side * 0.12, 0.15 + browLift, 0.3], [0, 0, Math.PI / 2 + side * (look.face === 'wow' ? 0.25 : 0.12)]);
-        place(p.cheeks, k, tmp.head, [side * 0.2, -0.08, 0.26], [0, side * 0.5, 0], [1, 0.6, 0.4]);
-      }
-      if (look.face === 'wow') {
-        place(p.wow, i, tmp.head, [0, -0.15, 0.31], [0, 0, 0], [1, 1.2, 0.6]);
-        hide(p.smile, i);
-      } else {
-        const w = look.face === 'grin' ? 1.35 : 1;
-        place(p.smile, i, tmp.head, [0, -0.1, 0.31], [0, 0, Math.PI], [w, w, 1]);
-        hide(p.wow, i);
-      }
-
-      // chapéus (black power não usa chapéu) e coroa do host acima do cabelo
-      for (const type of HAT_TYPES) {
-        const h = HAT[type];
-        if (!s.isHost && look.hat === type && look.hairStyle !== 'afro') place(p.hats[type], i, tmp.head, h.offset, h.rot, [h.scale, h.scale, h.scale]);
-        else hide(p.hats[type], i);
-      }
-      if (s.isHost) place(p.crown, i, tmp.head, [0, look.hairStyle === 'afro' ? 0.62 : HEAD_R + 0.1, 0], [-0.12, 0, 0], [1.3, 1.3, 1.3]);
-      else hide(p.crown, i);
+      tmp.face.multiplyMatrices(tmp.head, FACE.mouth);
+      if (mood === 'wow') put(p.mouthWow, at(tmp.out, tmp.face, NONE, NONE, [1, 1 + 0.1 * Math.sin(t * 7), 1]));
+      else if (mood === 'grin' || mood === 'happy') put(p.mouthOpen, mood === 'happy' ? at(tmp.out, tmp.face, NONE, NONE, [1.15, 1.15, 1]) : tmp.face);
+      else put(p.mouthSmile, mood === 'sleepy' ? at(tmp.out, tmp.face, NONE, NONE, [0.7, 0.6, 1]) : tmp.face);
 
       if (p.shadow) {
         tmp.o.position.set(ps.position[0], ps.position[1] + 0.02, ps.position[2]);
         tmp.o.rotation.set(-Math.PI / 2, 0, 0);
-        tmp.o.scale.setScalar(Math.max(ps.scale, 0.0001));
+        tmp.o.scale.setScalar(scale);
         tmp.o.updateMatrix();
-        p.shadow.setMatrixAt(i, tmp.o.matrix);
+        put(p.shadow, tmp.o.matrix);
       }
-
-      // cores: roupa brilha dourada na vitória; tudo fica lilás translúcido ao "virar fantasma" (desconectado)
-      const paint = (meshes: (InstancedMesh | null)[], color: string, glow = 0) => {
-        tmp.color.set(color).lerp(GHOST, ps.ghost).lerp(GOLD, glow);
-        for (const m of meshes) m?.setColorAt(i, tmp.color);
-      };
-      const paintPair = (meshes: (InstancedMesh | null)[], color: string) => {
-        tmp.color.set(color).lerp(GHOST, ps.ghost);
-        for (const m of meshes) {
-          m?.setColorAt(i * 2, tmp.color);
-          m?.setColorAt(i * 2 + 1, tmp.color);
-        }
-      };
-      paint([p.torso], look.body, ps.glow * 0.6);
-      tmp.color.set(look.body).lerp(GHOST, ps.ghost).lerp(GOLD, ps.glow * 0.6);
-      p.arms?.setColorAt(i * 2, tmp.color);
-      p.arms?.setColorAt(i * 2 + 1, tmp.color);
-      paint([p.head, p.nose], look.skin);
-      paintPair([p.hands], look.skin);
-      paint([p.hairCap, p.hairBun, p.hairLong, p.hairAfro], look.hair);
-      paintPair([p.brows], look.hair);
-      tmp.color.set(look.hair).lerp(GHOST, ps.ghost);
-      for (let k = 0; k < SPIKES.length; k++) p.spikes?.setColorAt(i * SPIKES.length + k, tmp.color);
-      paintPair([p.legs], look.pants);
-      paint(
-        HAT_TYPES.map((type) => p.hats[type]),
-        look.accent,
-      );
-      p.crown?.setColorAt(i, GOLD);
     }
 
     for (const mesh of allMeshes(p)) {
-      // Sala com 2 pessoas desenha 2 bonecos, não 32 escondidos em escala zero (que ainda custam vértices na GPU).
-      mesh.count = states.length * perAvatar(p, mesh);
+      // Desenha só as instâncias em uso: sala com 2 pessoas = 2 bonecos; peça sem uso nem entra no draw.
+      mesh.count = used.get(mesh) ?? 0;
+      mesh.visible = mesh.count > 0;
       mesh.instanceMatrix.needsUpdate = true;
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
       // A bounding sphere do InstancedMesh é calculada uma vez e não acompanha setMatrixAt:
@@ -268,117 +237,100 @@ export function AvatarCrowd({
 
   return (
     <group>
-      {/* corpo */}
-      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.torso = m)} args={[undefined, undefined, MAX_AVATARS]} castShadow={castShadow} onPointerDown={tap}>
-        <capsuleGeometry args={[0.23, 0.2, 6, 16]} />
-        <meshStandardMaterial roughness={0.6} />
-      </instancedMesh>
-      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.legs = m)} args={[undefined, undefined, pair]} castShadow={castShadow}>
-        <capsuleGeometry args={[0.085, 0.14, 4, 10]} />
-        <meshStandardMaterial roughness={0.7} />
-      </instancedMesh>
-      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.shoes = m)} args={[undefined, undefined, pair]}>
-        <sphereGeometry args={[0.1, 12, 8]} />
-        <meshStandardMaterial color="#111827" roughness={0.35} />
-      </instancedMesh>
-      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.arms = m)} args={[undefined, undefined, pair]} castShadow={castShadow}>
-        <capsuleGeometry args={[0.065, 0.2, 4, 10]} />
-        <meshStandardMaterial roughness={0.6} />
-      </instancedMesh>
-      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.hands = m)} args={[undefined, undefined, pair]}>
-        <sphereGeometry args={[0.075, 12, 10]} />
-        <meshStandardMaterial roughness={0.5} />
-      </instancedMesh>
+      {/* corpo: camisa, gola, calça, braços e pernas */}
+      <Part ref={(m) => void (parts.current.torso = m)} geometry={geo.torso} count={MAX_AVATARS} castShadow={castShadow} onPointerDown={tap}>
+        <Lit roughness={0.75} />
+      </Part>
+      <Part ref={(m) => void (parts.current.collar = m)} geometry={geo.collar} count={MAX_AVATARS}>
+        <Lit roughness={0.6} />
+      </Part>
+      <Part ref={(m) => void (parts.current.hips = m)} geometry={geo.hips} count={MAX_AVATARS}>
+        <Lit roughness={0.8} />
+      </Part>
+      <Part ref={(m) => void (parts.current.legs = m)} geometry={geo.legs} count={pair} castShadow={castShadow}>
+        <Lit roughness={0.8} />
+      </Part>
+      <Part ref={(m) => void (parts.current.shoes = m)} geometry={geo.shoes} count={pair}>
+        <Lit roughness={0.4} />
+      </Part>
+      <Part ref={(m) => void (parts.current.arms = m)} geometry={geo.arms} count={pair} castShadow={castShadow}>
+        <Lit roughness={0.75} />
+      </Part>
+      <Part ref={(m) => void (parts.current.hands = m)} geometry={geo.hands} count={pair}>
+        <Lit roughness={0.55} />
+      </Part>
 
-      {/* cabeça e rosto */}
-      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.head = m)} args={[undefined, undefined, MAX_AVATARS]} castShadow={castShadow} onPointerDown={tap}>
-        <sphereGeometry args={[HEAD_R, 28, 22]} />
-        <meshStandardMaterial roughness={0.5} />
-      </instancedMesh>
-      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.nose = m)} args={[undefined, undefined, MAX_AVATARS]}>
-        <sphereGeometry args={[0.04, 10, 8]} />
-        <meshStandardMaterial roughness={0.5} />
-      </instancedMesh>
-      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.sclera = m)} args={[undefined, undefined, pair]}>
-        <sphereGeometry args={[0.072, 14, 12]} />
-        <meshStandardMaterial color="#ffffff" roughness={0.25} />
-      </instancedMesh>
-      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.pupils = m)} args={[undefined, undefined, pair]}>
-        <sphereGeometry args={[0.045, 12, 10]} />
-        <meshStandardMaterial color="#1e1b4b" roughness={0.15} />
-      </instancedMesh>
-      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.shine = m)} args={[undefined, undefined, pair]}>
-        <sphereGeometry args={[0.016, 8, 6]} />
-        <meshBasicMaterial color="#ffffff" />
-      </instancedMesh>
-      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.brows = m)} args={[undefined, undefined, pair]}>
-        <capsuleGeometry args={[0.016, 0.07, 2, 6]} />
-        <meshStandardMaterial roughness={0.6} />
-      </instancedMesh>
-      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.cheeks = m)} args={[undefined, undefined, pair]}>
-        <sphereGeometry args={[0.06, 12, 8]} />
-        <meshBasicMaterial color="#fb7185" transparent opacity={0.55} depthWrite={false} />
-      </instancedMesh>
-      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.smile = m)} args={[undefined, undefined, MAX_AVATARS]}>
-        <torusGeometry args={[0.07, 0.016, 6, 16, Math.PI]} />
-        <meshBasicMaterial color="#7f1d1d" />
-      </instancedMesh>
-      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.wow = m)} args={[undefined, undefined, MAX_AVATARS]}>
-        <sphereGeometry args={[0.045, 10, 8]} />
-        <meshBasicMaterial color="#7f1d1d" />
-      </instancedMesh>
+      {/* cabeça (orelhas e nariz inclusos) e rosto */}
+      <Part ref={(m) => void (parts.current.head = m)} geometry={geo.head} count={MAX_AVATARS} castShadow={castShadow} onPointerDown={tap}>
+        <Lit roughness={0.55} />
+      </Part>
+      <Part ref={(m) => void (parts.current.eyes = m)} geometry={geo.eyes} count={pair}>
+        <Lit roughness={0.2} />
+      </Part>
+      <Part ref={(m) => void (parts.current.lids = m)} geometry={geo.lids} count={pair}>
+        <meshBasicMaterial vertexColors />
+      </Part>
+      <Part ref={(m) => void (parts.current.brows = m)} geometry={geo.brows} count={pair}>
+        <Lit roughness={0.7} />
+      </Part>
+      <Part ref={(m) => void (parts.current.cheeks = m)} geometry={geo.cheeks} count={pair}>
+        <meshBasicMaterial color="#fb7185" transparent opacity={0.45} depthWrite={false} />
+      </Part>
+      <Part ref={(m) => void (parts.current.mouthSmile = m)} geometry={geo.mouths.smile} count={MAX_AVATARS}>
+        <meshBasicMaterial vertexColors />
+      </Part>
+      <Part ref={(m) => void (parts.current.mouthOpen = m)} geometry={geo.mouths.open} count={MAX_AVATARS}>
+        <meshBasicMaterial vertexColors />
+      </Part>
+      <Part ref={(m) => void (parts.current.mouthWow = m)} geometry={geo.mouths.wow} count={MAX_AVATARS}>
+        <meshBasicMaterial vertexColors />
+      </Part>
 
-      {/* cabelos (um InstancedMesh por peça; cada boneco usa as do seu estilo) */}
-      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.hairCap = m)} args={[undefined, undefined, MAX_AVATARS]}>
-        {/* calota cobrindo o topo e a nuca, inclinada para trás deixando a testa livre */}
-        <sphereGeometry args={[HEAD_R + 0.035, 28, 16, 0, Math.PI * 2, 0, Math.PI * 0.58]} />
-        <meshStandardMaterial roughness={0.55} side={DoubleSide} />
-      </instancedMesh>
-      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.spikes = m)} args={[undefined, undefined, MAX_AVATARS * SPIKES.length]}>
-        <coneGeometry args={[0.075, 0.22, 8]} />
-        <meshStandardMaterial roughness={0.55} />
-      </instancedMesh>
-      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.hairBun = m)} args={[undefined, undefined, MAX_AVATARS]}>
-        <sphereGeometry args={[0.14, 16, 12]} />
-        <meshStandardMaterial roughness={0.55} />
-      </instancedMesh>
-      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.hairLong = m)} args={[undefined, undefined, MAX_AVATARS]}>
-        {/* "cortina" atrás da cabeça descendo até os ombros */}
-        <cylinderGeometry args={[HEAD_R + 0.03, HEAD_R + 0.08, 0.5, 20, 1, true, Math.PI / 2 - 0.3, Math.PI + 0.6]} />
-        <meshStandardMaterial roughness={0.55} side={DoubleSide} />
-      </instancedMesh>
-      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.hairAfro = m)} args={[undefined, undefined, MAX_AVATARS]}>
-        <icosahedronGeometry args={[HEAD_R + 0.1, 2]} />
-        <meshStandardMaterial roughness={0.9} flatShading />
-      </instancedMesh>
-
-      {/* chapéus e coroa do host */}
-      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.hats.tophat = m)} args={[undefined, undefined, MAX_AVATARS]}>
-        <cylinderGeometry args={[0.17, 0.17, 0.3, 16]} />
-        <meshStandardMaterial roughness={0.45} />
-      </instancedMesh>
-      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.hats.cap = m)} args={[undefined, undefined, MAX_AVATARS]}>
-        <cylinderGeometry args={[0.27, 0.28, 0.1, 16]} />
-        <meshStandardMaterial roughness={0.5} />
-      </instancedMesh>
-      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.hats.beanie = m)} args={[undefined, undefined, MAX_AVATARS]}>
-        <sphereGeometry args={[0.27, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2]} />
-        <meshStandardMaterial roughness={0.8} />
-      </instancedMesh>
-      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.hats.party = m)} args={[undefined, undefined, MAX_AVATARS]}>
-        <coneGeometry args={[0.14, 0.38, 16]} />
-        <meshStandardMaterial roughness={0.45} />
-      </instancedMesh>
-      <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.crown = m)} args={[undefined, undefined, MAX_AVATARS]}>
-        <cylinderGeometry args={[0.2, 0.17, 0.18, 8, 1, true]} />
-        <meshStandardMaterial metalness={0.8} roughness={0.25} side={DoubleSide} />
-      </instancedMesh>
+      {/* cabelos e chapéus: uma peça por estilo; cada boneco usa só a sua */}
+      {HAIR_STYLES.map((style) => (
+        <Part key={style} ref={(m) => void (parts.current.hair[style] = m)} geometry={geo.hair[style]} count={MAX_AVATARS}>
+          <Lit roughness={0.5} side={DoubleSide} />
+        </Part>
+      ))}
+      {HAT_TYPES.map((type) => (
+        <Part key={type} ref={(m) => void (parts.current.hats[type] = m)} geometry={geo.hats[type]} count={MAX_AVATARS}>
+          <Lit roughness={0.55} side={DoubleSide} />
+        </Part>
+      ))}
+      <Part ref={(m) => void (parts.current.crown = m)} geometry={geo.crown} count={MAX_AVATARS}>
+        <Lit roughness={0.25} metalness={0.8} side={DoubleSide} />
+      </Part>
       {fakeShadow && (
-        <instancedMesh frustumCulled={false} ref={(m) => void (parts.current.shadow = m)} args={[undefined, undefined, MAX_AVATARS]}>
-          <circleGeometry args={[0.35, 16]} />
+        <Part ref={(m) => void (parts.current.shadow = m)} geometry={geo.shadow} count={MAX_AVATARS}>
           <meshBasicMaterial color="#000000" transparent opacity={0.28} depthWrite={false} />
-        </instancedMesh>
+        </Part>
       )}
     </group>
   );
+}
+
+function Part({
+  ref,
+  geometry,
+  count,
+  children,
+  ...props
+}: {
+  ref: Ref<InstancedMesh>;
+  geometry: BufferGeometry;
+  count: number;
+  children: ReactNode;
+  castShadow?: boolean;
+  onPointerDown?: (event: ThreeEvent<PointerEvent>) => void;
+}) {
+  return (
+    <instancedMesh ref={ref} frustumCulled={false} args={[geometry, undefined, count]} {...props}>
+      {children}
+    </instancedMesh>
+  );
+}
+
+/** Material dos bonecos: cor por vértice × cor da instância + o mesmo realce (um programa de shader para todos). */
+function Lit({ roughness, metalness, side }: { roughness: number; metalness?: number; side?: Side }) {
+  return <meshStandardMaterial vertexColors roughness={roughness} metalness={metalness} side={side} onBeforeCompile={characterShader} />;
 }
