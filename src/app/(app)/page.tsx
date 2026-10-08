@@ -20,15 +20,21 @@ export default function HomePage() {
   return (
     <main className="mx-auto flex w-full max-w-md flex-col gap-5 px-4 pt-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
       <header className="flex items-center justify-between gap-3">
-        <MarqueeTitle compact />
-        <Link href="/perfil" aria-label={`Abrir seu perfil (${profile.nickname})`} className="glass flex min-h-11 min-w-0 items-center gap-2 rounded-full py-1 pr-3 pl-1 transition active:scale-95">
-          <Avatar id={profile.id} character={profile.character} className="w-8" />
+        <div className="shrink-0">
+          <MarqueeTitle compact />
+        </div>
+        <Link href="/perfil" aria-label={`Abrir seu perfil (${profile.nickname})${profile.isGuest ? ', convidado' : ''}`} className="glass flex min-h-11 min-w-0 items-center gap-2 rounded-full py-1 pr-3 pl-1 transition active:scale-95">
+          <Avatar id={profile.id} character={profile.character} className="w-8 shrink-0" />
           <span className="flex min-w-0 flex-col leading-tight">
             <span className="truncate text-sm font-semibold">{profile.nickname}</span>
-            <span className="flex items-center gap-1.5 text-xs font-semibold text-amber-300">
-              <Coins amount={profile.coins} />
-              <span className="text-violet-200/70">·</span>
-              {profile.isGuest ? 'convidado' : `${profile.points} pts`}
+            <span className="flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap text-amber-300">
+              <Coins amount={profile.coins} className="shrink-0" />
+              {!profile.isGuest && (
+                <>
+                  <span className="text-violet-200/70">·</span>
+                  <span>{profile.points} pts</span>
+                </>
+              )}
             </span>
           </span>
         </Link>
