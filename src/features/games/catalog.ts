@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react';
+import { TrucoArt } from '@/features/truco/truco-art';
 import { BingoArt } from './bingo-art';
 
 export type GameStatus = 'available' | 'coming-soon';
@@ -28,5 +29,15 @@ export const GAMES: readonly Game[] = [
     tags: ['Multijogador', 'Salas públicas'],
     glow: '#f59e0b',
     Art: BingoArt,
+  },
+  {
+    id: 'truco',
+    name: 'Truco do Gu',
+    description: 'Truco Mineiro 2 contra 2 ao vivo: zap na mão, sinal pro parceiro e grite TRUCO na hora certa.',
+    href: '/truco',
+    status: 'available',
+    tags: ['4 jogadores', 'Duplas', 'Tempo real'],
+    glow: '#22c55e',
+    Art: TrucoArt,
   },
 ];

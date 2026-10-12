@@ -22,6 +22,13 @@ describe('GamesHub', () => {
     expect(card).toHaveAttribute('href', '/bingo');
     expect(within(card).getByText('Disponível')).toBeInTheDocument();
   });
+
+  it('lists the Truco do Gu leading to its lobby', () => {
+    render(<GamesHub />);
+    const card = screen.getByRole('link', { name: 'Jogar Truco do Gu' });
+    expect(card).toHaveAttribute('href', '/truco');
+    expect(within(card).getByText('4 jogadores')).toBeInTheDocument();
+  });
 });
 
 describe('GameCard', () => {

@@ -5,8 +5,9 @@ import { getAccessToken } from '@/lib/session';
 
 const ACK_TIMEOUT_MS = 5_000;
 
-export function createGameSocket(): Socket {
-  return io(`${env.NEXT_PUBLIC_API_URL}/game`, {
+/** Socket.IO client for one namespace of the API, authenticated with the Supabase access token. */
+export function createSocket(namespace: string): Socket {
+  return io(`${env.NEXT_PUBLIC_API_URL}${namespace}`, {
     autoConnect: false,
     transports: ['websocket'],
     // Função: o token é relido a cada reconexão (o Supabase renova o access token).
@@ -14,6 +15,10 @@ export function createGameSocket(): Socket {
       void getAccessToken().then((token) => cb({ token }));
     },
   });
+}
+
+export function createGameSocket(): Socket {
+  return createSocket('/game');
 }
 
 export async function emitAck<E extends keyof ClientAckData>(socket: Socket, event: E, payload: object = {}): Promise<Ack<ClientAckData[E]>> {

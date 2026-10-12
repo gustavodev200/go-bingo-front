@@ -1,0 +1,223 @@
+/* Green felt with a wooden rim, as in a bar table seen from above. */
+.felt {
+  background:
+    radial-gradient(ellipse at 50% 40%, rgb(255 255 255 / 0.09), transparent 60%),
+    repeating-linear-gradient(45deg, rgb(0 0 0 / 0.035) 0 2px, transparent 2px 6px),
+    radial-gradient(ellipse at center, #1f8a52 0%, #146b3e 55%, #0c4a2b 100%);
+  box-shadow:
+    inset 0 0 0 clamp(6px, 1.6vw, 12px) #7a4a22,
+    inset 0 0 0 calc(clamp(6px, 1.6vw, 12px) + 2px) #c08a4a,
+    inset 0 0 50px 10px rgb(0 0 0 / 0.45),
+    0 20px 60px -20px rgb(0 0 0 / 0.8);
+}
+
+.cardBack {
+  background:
+    repeating-linear-gradient(45deg, rgb(255 255 255 / 0.12) 0 3px, transparent 3px 8px),
+    repeating-linear-gradient(-45deg, rgb(255 255 255 / 0.08) 0 3px, transparent 3px 8px),
+    linear-gradient(160deg, #6d28d9, #4c1d95 60%, #2e1065);
+}
+
+@keyframes shout {
+  0% {
+    transform: scale(0.2) rotate(-12deg);
+    opacity: 0;
+  }
+  18% {
+    transform: scale(1.18) rotate(-4deg);
+    opacity: 1;
+  }
+  28% {
+    transform: scale(0.96) rotate(-6deg);
+  }
+  36%,
+  80% {
+    transform: scale(1) rotate(-5deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.3) rotate(-5deg);
+    opacity: 0;
+  }
+}
+.shout {
+  animation: shout 1.7s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-6px);
+  }
+  40%,
+  80% {
+    transform: translateX(6px);
+  }
+}
+.shake {
+  animation: shake 0.45s ease-in-out;
+}
+
+@keyframes rays {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.rays {
+  background: repeating-conic-gradient(from 0deg, rgb(253 224 71 / 0.35) 0 10deg, transparent 10deg 20deg);
+  animation: rays 6s linear infinite;
+  mask-image: radial-gradient(circle, black 20%, transparent 70%);
+}
+
+@keyframes deal {
+  from {
+    transform: translateY(-40vh) rotate(-20deg) scale(0.6);
+    opacity: 0;
+  }
+}
+.deal {
+  animation: deal 0.45s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+@keyframes fromBottom {
+  from {
+    transform: translateY(45vh) scale(1.3);
+    opacity: 0;
+  }
+}
+@keyframes fromTop {
+  from {
+    transform: translateY(-35vh) scale(0.7);
+    opacity: 0;
+  }
+}
+@keyframes fromLeft {
+  from {
+    transform: translateX(-40vw) rotate(-30deg);
+    opacity: 0;
+  }
+}
+@keyframes fromRight {
+  from {
+    transform: translateX(40vw) rotate(30deg);
+    opacity: 0;
+  }
+}
+.fromBottom {
+  animation: fromBottom 0.35s ease-out both;
+}
+.fromTop {
+  animation: fromTop 0.35s ease-out both;
+}
+.fromLeft {
+  animation: fromLeft 0.35s ease-out both;
+}
+.fromRight {
+  animation: fromRight 0.35s ease-out both;
+}
+
+@keyframes wiggle {
+  0%,
+  100% {
+    transform: rotate(0) scale(1);
+  }
+  15% {
+    transform: rotate(-10deg) scale(1.08);
+  }
+  30% {
+    transform: rotate(9deg) scale(1.08);
+  }
+  45% {
+    transform: rotate(-6deg) scale(1.04);
+  }
+  60% {
+    transform: rotate(4deg);
+  }
+}
+.wiggle {
+  animation: wiggle 0.9s ease-in-out 2;
+}
+
+@keyframes bubble {
+  0% {
+    transform: translateY(8px) scale(0.4);
+    opacity: 0;
+  }
+  15%,
+  85% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-10px) scale(0.9);
+    opacity: 0;
+  }
+}
+.bubble {
+  animation: bubble 2.6s ease-out both;
+}
+
+@keyframes turn {
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px rgb(253 224 71 / 0.9), 0 0 18px 4px rgb(253 224 71 / 0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 3px rgb(253 224 71 / 0.6), 0 0 30px 10px rgb(253 224 71 / 0.25);
+  }
+}
+.turn {
+  animation: turn 1.2s ease-in-out infinite;
+}
+
+@keyframes fall {
+  from {
+    transform: translateY(-10vh) rotate(0);
+  }
+  to {
+    transform: translateY(110vh) rotate(720deg);
+  }
+}
+.confetti {
+  animation: fall linear infinite;
+}
+
+@keyframes iron {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 0 transparent);
+  }
+  50% {
+    filter: drop-shadow(0 0 14px rgb(148 163 184 / 0.9));
+  }
+}
+.iron {
+  animation: iron 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shout,
+  .shake,
+  .rays,
+  .deal,
+  .fromBottom,
+  .fromTop,
+  .fromLeft,
+  .fromRight,
+  .wiggle,
+  .bubble,
+  .turn,
+  .confetti,
+  .iron {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+  .shout,
+  .bubble {
+    animation: none;
+  }
+}

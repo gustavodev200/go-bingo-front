@@ -1,4 +1,6 @@
-export type Sfx = 'draw' | 'one-away' | 'bingo-me' | 'bingo-other' | 'ended';
+export type Sfx = 'draw' | 'one-away' | 'bingo-me' | 'bingo-other' | 'ended' | TrucoSfx;
+/** Truco do Gu effects share the same synthesizer. */
+export type TrucoSfx = 'card' | 'truco' | 'accept' | 'run' | 'hand-won' | 'hand-lost' | 'signal' | 'match-won' | 'match-lost' | 'error';
 
 export interface Note {
   freq: number;
@@ -20,6 +22,19 @@ export const SFX_NOTES: Record<Sfx, Note[]> = {
   'bingo-me': [...arpeggio([523, 659, 784, 1047], 0.12, 0.22, 'square', 0.1), { freq: 1047, at: 0.5, dur: 0.7, wave: 'triangle', gain: 0.18 }],
   'bingo-other': arpeggio([784, 988, 1175], 0.14, 0.3, 'sine', 0.14),
   ended: arpeggio([392, 330, 262], 0.25, 0.35, 'sine', 0.14),
+  card: [
+    { freq: 320, at: 0, dur: 0.05, wave: 'triangle', gain: 0.2 },
+    { freq: 220, at: 0.04, dur: 0.06, wave: 'triangle', gain: 0.12 },
+  ],
+  truco: [...arpeggio([196, 262, 392], 0.07, 0.18, 'sawtooth', 0.12), { freq: 523, at: 0.22, dur: 0.5, wave: 'square', gain: 0.12 }],
+  accept: arpeggio([523, 784], 0.1, 0.2, 'triangle', 0.16),
+  run: arpeggio([440, 330, 220], 0.09, 0.16, 'sawtooth', 0.08),
+  'hand-won': arpeggio([523, 659, 784], 0.1, 0.22, 'triangle', 0.16),
+  'hand-lost': arpeggio([330, 262], 0.15, 0.3, 'sine', 0.14),
+  signal: [{ freq: 1320, at: 0, dur: 0.12, wave: 'sine', gain: 0.1 }],
+  'match-won': [...arpeggio([523, 659, 784, 1047, 1319], 0.12, 0.24, 'square', 0.09), { freq: 1047, at: 0.62, dur: 0.8, wave: 'triangle', gain: 0.18 }],
+  'match-lost': arpeggio([392, 349, 311, 262], 0.28, 0.4, 'sine', 0.14),
+  error: [{ freq: 160, at: 0, dur: 0.18, wave: 'square', gain: 0.08 }],
 };
 
 export interface SoundState {
