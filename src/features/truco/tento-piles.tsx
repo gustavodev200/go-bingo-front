@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, type CSSProperties } from 'react';
-import { TRUCO_TARGET_SCORE, type Team } from '@/contracts';
+import { TRUCO_TARGET_SCORE, type Seat, type Team } from '@/contracts';
 import { cn } from '@/lib/utils';
+import { positionOf, type TablePosition } from './rules-view';
 import styles from './truco.module.css';
 
 /** Seeds in the middle at the start: enough for both teams to pull. */
@@ -14,11 +15,21 @@ const SEED_COLORS = {
   them: { body: '#fb7185', cap: '#3b0a14' },
 } as const;
 
-/** Where each pile sits on the felt, and where a pulled seed starts from (the middle of the felt). */
-const PILE = {
-  us: { className: 'bottom-[9%] left-[7%]', from: { x: '36cqw', y: '-36cqh' }, glow: 'rgb(16 185 129 / 0.7)', label: 'Nós', text: 'text-emerald-200' },
-  them: { className: 'top-[11%] right-[7%]', from: { x: '-36cqw', y: '32cqh' }, glow: 'rgb(251 113 133 / 0.7)', label: 'Eles', text: 'text-rose-200' },
+const SIDE = {
+  us: { glow: 'rgb(16 185 129 / 0.7)', label: 'Nós', text: 'text-emerald-200' },
+  them: { glow: 'rgb(251 113 133 / 0.7)', label: 'Eles', text: 'text-rose-200' },
 } as const;
+
+/** Pile next to the puller's seat on screen, and where a pulled seed starts from (the middle of the felt). */
+const SPOT: Record<TablePosition, { className: string; from: { x: string; y: string } }> = {
+  bottom: { className: 'bottom-[5%] left-[26%]', from: { x: '21cqw', y: '-36cqh' } },
+  top: { className: 'top-[4%] left-[22%]', from: { x: '25cqw', y: '38cqh' } },
+  left: { className: 'left-[12%] top-[56%]', from: { x: '33cqw', y: '-12cqh' } },
+  right: { className: 'right-[12%] top-[56%]', from: { x: '-33cqw', y: '-12cqh' } },
+};
+
+/** One player per team keeps the tentos: the first seat of each team (seat 0 and seat 1), the same for everybody. */
+export const pullerOf = (team: Team): Seat => team as Seat;
 
 /** Golden-angle spiral: a natural-looking heap that stays compact as it grows. */
 function spot(i: number): CSSProperties {
@@ -53,11 +64,11 @@ function useScoreHistory(scores: [number, number]): Seen {
   return seen;
 }
 
-function Pile({ side, count, base, from }: { side: 'us' | 'them'; count: number; base: number; from: number }) {
-  const pile = PILE[side];
+function Pile({ side, position, count, base, from }: { side: 'us' | 'them'; position: TablePosition; count: number; base: number; from: number }) {
+  const pile = { ...SIDE[side], ...SPOT[position] };
   const colors = SEED_COLORS[side];
   return (
-    <div className={cn('pointer-events-none absolute flex flex-col items-center gap-1', pile.className)} data-testid={`tentos-${side}`} data-count={count}>
+    <div className={cn('pointer-events-none absolute flex flex-col items-center gap-1', pile.className)} data-testid={`tentos-${side}`} data-position={position} data-count={count}>
       <div className="relative size-[5.2em] text-[clamp(10px,min(3.2vw,3.2dvh),18px)]">
         {Array.from({ length: count }, (_, i) => {
           const pulled = i >= base;
@@ -86,12 +97,13 @@ function Pile({ side, count, base, from }: { side: 'us' | 'them'; count: number;
 }
 
 /**
- * Score as seeds on the felt, as at a real table: a heap in the middle and each team
- * pulling its tentos to its own side (ours bottom-left, theirs top-right), in its own color.
+ * Score as seeds on the felt, as at a real table: a heap in the middle and one player of
+ * each team pulling the team's tentos next to them, in the team's color.
  * Decorative: the scoreboard on top keeps the numbers.
  */
-export function TentoPiles({ scores, myTeam }: { scores: [number, number]; myTeam: Team }) {
+export function TentoPiles({ scores, mySeat }: { scores: [number, number]; mySeat: Seat }) {
   const seen = useScoreHistory(scores);
+  const myTeam = (mySeat % 2) as Team;
   const them = (1 - myTeam) as Team;
   const monte = Math.max(0, MONTE - scores[0] - scores[1]);
   return (
@@ -101,8 +113,8 @@ export function TentoPiles({ scores, myTeam }: { scores: [number, number]; myTea
           <span key={i} className={styles.seed} style={{ ...spot(i), '--seed-body': SEED_COLORS.monte.body, '--seed-cap': SEED_COLORS.monte.cap } as CSSProperties} />
         ))}
       </div>
-      <Pile side="us" count={scores[myTeam]} base={seen.base[myTeam]} from={seen.from[myTeam]} />
-      <Pile side="them" count={scores[them]} base={seen.base[them]} from={seen.from[them]} />
+      <Pile side="us" position={positionOf(pullerOf(myTeam), mySeat)} count={scores[myTeam]} base={seen.base[myTeam]} from={seen.from[myTeam]} />
+      <Pile side="them" position={positionOf(pullerOf(them), mySeat)} count={scores[them]} base={seen.base[them]} from={seen.from[them]} />
     </div>
   );
 }

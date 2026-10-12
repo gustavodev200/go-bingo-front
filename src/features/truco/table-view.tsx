@@ -108,7 +108,7 @@ export function TableView({
 
       <div className="relative min-h-0 flex-1 px-2 py-1 sm:px-6">
         <div className={cn(styles.felt, 'relative mx-auto h-full w-full max-w-4xl rounded-[clamp(20px,min(8vw,10dvh),72px)] [container-type:size]')}>
-          {match && <TentoPiles scores={state.scores} myTeam={myTeam} />}
+          {match && <TentoPiles scores={state.scores} mySeat={mySeat} />}
           {([1, 2, 3] as const).map((offset) => {
             const seat = ((mySeat + offset) % 4) as Seat;
             const player = state.seats[seat];
