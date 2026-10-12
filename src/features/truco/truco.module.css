@@ -221,3 +221,56 @@
     animation: none;
   }
 }
+
+/* Tento seeds (like the red/black beans used to keep score at the table). */
+.seed {
+  position: absolute;
+  width: 1em;
+  height: 0.86em;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 70% 30%, rgb(255 255 255 / 0.55) 0 8%, transparent 14%),
+    linear-gradient(115deg, var(--seed-cap, #111) 0 34%, var(--seed-body, #d62a1e) 36% 100%);
+  box-shadow: 0 0.12em 0.15em rgb(0 0 0 / 0.55), inset -0.08em -0.1em 0.15em rgb(0 0 0 / 0.35);
+  rotate: var(--seed-rot, 0deg);
+}
+
+/* A seed pulled from the pile in the middle flies to its team (dx/dy in felt units). */
+@keyframes pull {
+  0% {
+    transform: translate(var(--from-x), var(--from-y)) scale(1.4);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  70% {
+    transform: translate(0, 0) scale(1.25);
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+}
+.pull {
+  animation: pull 0.9s cubic-bezier(0.3, 0.7, 0.3, 1) both;
+}
+
+@keyframes pileGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+  40% {
+    box-shadow: 0 0 22px 6px var(--pile-glow);
+  }
+}
+.pileGlow {
+  animation: pileGlow 1.2s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pull,
+  .pileGlow {
+    animation: none;
+  }
+}

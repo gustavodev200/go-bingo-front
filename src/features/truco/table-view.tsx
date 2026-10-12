@@ -20,6 +20,7 @@ import { SignalPicker } from './signal-picker';
 import type { Conventions } from './signals';
 import { useTrucoStore } from './store';
 import { TableCenter } from './table-center';
+import { TentoPiles } from './tento-piles';
 import styles from './truco.module.css';
 
 const PLACE: Record<Exclude<TablePosition, 'bottom'>, string> = {
@@ -106,7 +107,8 @@ export function TableView({
       </header>
 
       <div className="relative min-h-0 flex-1 px-2 py-1 sm:px-6">
-        <div className={cn(styles.felt, 'relative mx-auto h-full w-full max-w-4xl rounded-[clamp(20px,min(8vw,10dvh),72px)]')}>
+        <div className={cn(styles.felt, 'relative mx-auto h-full w-full max-w-4xl rounded-[clamp(20px,min(8vw,10dvh),72px)] [container-type:size]')}>
+          {match && <TentoPiles scores={state.scores} myTeam={myTeam} />}
           {([1, 2, 3] as const).map((offset) => {
             const seat = ((mySeat + offset) % 4) as Seat;
             const player = state.seats[seat];
