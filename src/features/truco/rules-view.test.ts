@@ -14,15 +14,15 @@ describe('positionOf', () => {
 });
 
 describe('nextBet', () => {
-  it('follows 2 → 4 → 6 → 10 → 12', () => {
-    expect([2, 4, 6, 10, 12, 3].map(nextBet)).toEqual([4, 6, 10, 12, null, null]);
+  it('follows 1 → 3 → 6 → 9 → 12', () => {
+    expect([1, 3, 6, 9, 12, 4].map(nextBet)).toEqual([3, 6, 9, 12, null, null]);
   });
 });
 
 describe('availableActions', () => {
   it('offers play and truco on my turn', () => {
     const a = availableActions(roomState(), 0);
-    expect(a).toMatchObject({ myTurn: true, canPlay: true, requestValue: 4, mustRespond: false });
+    expect(a).toMatchObject({ myTurn: true, canPlay: true, requestValue: 3, mustRespond: false });
   });
 
   it('offers nothing outside the match or when it is not my turn', () => {
@@ -32,14 +32,14 @@ describe('availableActions', () => {
   });
 
   it('blocks a second raise by the same team and truco in special hands', () => {
-    expect(availableActions(roomState({ match: matchView({ lastRaiseTeam: 0, value: 4 }) }), 0).requestValue).toBeNull();
-    expect(availableActions(roomState({ match: matchView({ lastRaiseTeam: 1, value: 4 }) }), 0).requestValue).toBe(6);
+    expect(availableActions(roomState({ match: matchView({ lastRaiseTeam: 0, value: 3 }) }), 0).requestValue).toBeNull();
+    expect(availableActions(roomState({ match: matchView({ lastRaiseTeam: 1, value: 3 }) }), 0).requestValue).toBe(6);
     expect(availableActions(roomState({ match: matchView({ kind: 'iron' }) }), 0).requestValue).toBeNull();
     expect(availableActions(roomState({ match: matchView({ value: 12, lastRaiseTeam: 1 }) }), 0).requestValue).toBeNull();
   });
 
   it('asks the opponents to respond and the requesters to wait', () => {
-    const state = roomState({ match: matchView({ phase: 'AWAITING_BET_RESPONSE', pendingBet: { value: 4, requestedBy: 0, team: 0 } }) });
+    const state = roomState({ match: matchView({ phase: 'AWAITING_BET_RESPONSE', pendingBet: { value: 3, requestedBy: 0, team: 0 } }) });
     expect(availableActions(state, 1)).toMatchObject({ mustRespond: true, raiseValue: 6, waitingResponse: false });
     expect(availableActions(state, 2)).toMatchObject({ mustRespond: false, waitingResponse: true });
     const top = roomState({ match: matchView({ phase: 'AWAITING_BET_RESPONSE', pendingBet: { value: 12, requestedBy: 0, team: 0 } }) });

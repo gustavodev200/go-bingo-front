@@ -2,10 +2,10 @@ import { reactionFor } from './reactions';
 
 describe('reactionFor', () => {
   it('shouts TRUCO and asks "corre ou aceita" only to the team that must answer', () => {
-    const msg = { event: 'truco:bet_requested', payload: { seq: 3, seat: 1, team: 1, value: 4 } } as const;
+    const msg = { event: 'truco:bet_requested', payload: { seq: 3, seat: 1, team: 1, value: 3 } } as const;
     expect(reactionFor(msg, 0)).toEqual({ shout: { text: 'TRUCO!', tone: 'bet' }, sfx: 'truco', speech: 'TRUUUCO! Corre ou aceita!' });
     expect(reactionFor(msg, 3).speech).toBe('TRUUUCO!');
-    expect(reactionFor({ event: 'truco:bet_requested', payload: { seq: 4, seat: 0, team: 0, value: 10 } }, 0)).toMatchObject({ shout: { text: 'DEZ!' }, speech: 'Vale dez!' });
+    expect(reactionFor({ event: 'truco:bet_requested', payload: { seq: 4, seat: 0, team: 0, value: 9 } }, 0)).toMatchObject({ shout: { text: 'NOVE!' }, speech: 'Vale nove!' });
   });
 
   it('reacts to answers, special hands and the Zap', () => {
@@ -20,6 +20,13 @@ describe('reactionFor', () => {
     expect(reactionFor({ event: 'truco:card_played', payload: { seq: 1, seat: 2, card: { rank: '5', suit: 'clubs' }, round: 1 } }, 0)).toEqual({ sfx: 'card' });
     expect(reactionFor({ event: 'truco:ten_decided', payload: { seq: 1, seat: 0, play: true } }, 1).shout!.tone).toBe('bet');
     expect(reactionFor({ event: 'truco:ten_decided', payload: { seq: 1, seat: 0, play: false } }, 1).sfx).toBe('run');
+  });
+
+  it('tells every player whether their team won, lost or tied the round', () => {
+    const round = (result: 0 | 1 | 'tie', n = 1) => ({ event: 'truco:round_ended', payload: { seq: 1, round: n, result, winningSeat: 0 } }) as const;
+    expect(reactionFor(round(0), 2)).toEqual({ banner: { text: 'Vocês ganharam a 1ª rodada', tone: 'good' } });
+    expect(reactionFor(round(0), 1)).toEqual({ banner: { text: 'Vocês perderam a 1ª rodada', tone: 'bad' } });
+    expect(reactionFor(round('tie', 2), 1).banner!.text).toBe('2ª rodada empatou');
   });
 
   it('celebrates from my point of view', () => {

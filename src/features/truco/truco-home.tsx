@@ -130,7 +130,7 @@ export function TrucoHome() {
           ))}
         </ol>
         <p className="text-muted-foreground text-xs leading-relaxed">
-          Depois: 3 &gt; 2 &gt; Ás &gt; Rei &gt; Valete &gt; Dama &gt; 7 &gt; 6 &gt; 5 &gt; 4. Mão vale 2; truco 4, seis, dez e doze. Partida até 12 tentos. Mão de dez vale 4; no 10 a 10 é mão de ferro, com as cartas às cegas.
+          Depois: 3 &gt; 2 &gt; Ás &gt; Rei &gt; Valete &gt; Dama &gt; 7 &gt; 6 &gt; 5 &gt; 4. Mão vale 1; truco 3, seis 6, nove 9 e doze 12. Partida até 12 tentos. Mão de dez vale 4; no 10 a 10 é mão de ferro, com as cartas às cegas.
         </p>
       </section>
 

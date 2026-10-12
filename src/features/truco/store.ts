@@ -12,6 +12,7 @@ export type ShoutTone = 'bet' | 'good' | 'bad' | 'info';
 
 export type TrucoEffect =
   | { id: number; kind: 'shout'; text: string; tone: ShoutTone }
+  | { id: number; kind: 'banner'; text: string; tone: ShoutTone }
   /** gesture = null: somebody made a face, but we do not know which (opponents). */
   | { id: number; kind: 'gesture'; seat: Seat; gesture: TrucoGesture | null };
 

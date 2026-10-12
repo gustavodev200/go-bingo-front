@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { useTrucoStore, type ShoutTone, type TrucoEffect } from './store';
 import styles from './truco.module.css';
 
-const LIFETIME: Record<TrucoEffect['kind'], number> = { shout: 1_700, gesture: 2_600 };
+const LIFETIME: Record<TrucoEffect['kind'], number> = { shout: 1_700, banner: 2_400, gesture: 2_600 };
 
 /** Removes each visual effect after its animation, so the store never grows. */
 export function useEffectsExpiry() {
@@ -55,6 +55,26 @@ export function ShoutOverlay() {
         )}
       >
         {shout.text}
+      </span>
+    </div>
+  );
+}
+
+const BANNER_TONE: Record<ShoutTone, string> = {
+  bet: 'bg-amber-300 text-amber-950',
+  good: 'bg-emerald-400 text-emerald-950',
+  bad: 'bg-rose-500 text-white',
+  info: 'bg-slate-200 text-slate-900',
+};
+
+/** Round result notice ("Vocês ganharam a 1ª rodada"), shown to every player from their own side. */
+export function RoundBanner() {
+  const banner = useTrucoStore((s) => s.effects.findLast((e) => e.kind === 'banner'));
+  if (!banner || banner.kind !== 'banner') return null;
+  return (
+    <div className="pointer-events-none absolute inset-x-0 top-[38%] z-20 flex justify-center px-4" role="status" aria-live="polite">
+      <span key={banner.id} className={cn('rounded-full px-5 py-2 text-center text-base font-black shadow-[0_6px_0_rgb(0_0_0/0.3)] sm:text-lg', BANNER_TONE[banner.tone], styles.bubble)}>
+        {banner.text}
       </span>
     </div>
   );

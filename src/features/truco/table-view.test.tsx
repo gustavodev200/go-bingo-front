@@ -50,7 +50,7 @@ describe('TableView', () => {
   });
 
   it('lets the opponents accept, run or raise a truco', async () => {
-    const state = roomState({ match: matchView({ turn: 1, phase: 'AWAITING_BET_RESPONSE', pendingBet: { value: 4, requestedBy: 1, team: 1 } }) });
+    const state = roomState({ match: matchView({ turn: 1, phase: 'AWAITING_BET_RESPONSE', pendingBet: { value: 3, requestedBy: 1, team: 1 } }) });
     const { a } = renderTable({ state });
     const group = screen.getByRole('group', { name: 'Responder aposta' });
     await userEvent.click(within(group).getByRole('button', { name: 'Seis!' }));

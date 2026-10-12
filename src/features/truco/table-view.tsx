@@ -15,7 +15,7 @@ import { ResultPanel } from './result-panel';
 import { availableActions, positionOf, type TablePosition } from './rules-view';
 import { Scoreboard } from './scoreboard';
 import { SeatBadge, TEAM_TONE } from './seat-badge';
-import { ShoutOverlay } from './shout-overlay';
+import { RoundBanner, ShoutOverlay } from './shout-overlay';
 import { SignalPicker } from './signal-picker';
 import type { Conventions } from './signals';
 import { useTrucoStore } from './store';
@@ -134,6 +134,7 @@ export function TableView({
             );
           })}
           <TableCenter state={state} mySeat={mySeat} />
+          <RoundBanner />
           <ShoutOverlay />
         </div>
       </div>

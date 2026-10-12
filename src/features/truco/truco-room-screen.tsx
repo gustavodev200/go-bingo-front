@@ -66,6 +66,7 @@ export function TrucoRoomScreen({ code }: { code: string }) {
         if (seat === null) return;
         const reaction = reactionFor(msg, seat);
         if (reaction.shout) addEffect({ kind: 'shout', ...reaction.shout });
+        if (reaction.banner) addEffect({ kind: 'banner', ...reaction.banner });
         playReaction(reaction, prefs.current, deps());
       },
       // Only the partner ever receives this event: show which gesture it was.

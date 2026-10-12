@@ -10,7 +10,7 @@ export function positionOf(seat: Seat, mySeat: Seat): TablePosition {
 
 export const teamLabel = (team: Team, myTeam: Team) => (team === myTeam ? 'Nós' : 'Eles');
 
-export const BET_LABEL: Record<number, string> = { 4: 'Truco', 6: 'Seis', 10: 'Dez', 12: 'Doze' };
+export { BET_NAMES as BET_LABEL } from '@/contracts';
 
 export function nextBet(value: number): number | null {
   const i = TRUCO_BET_LADDER.indexOf(value as (typeof TRUCO_BET_LADDER)[number]);

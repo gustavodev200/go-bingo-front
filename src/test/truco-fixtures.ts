@@ -14,7 +14,7 @@ export function matchView(over: Partial<TrucoMatchView> = {}): TrucoMatchView {
     phase: 'AWAITING_PLAY',
     kind: 'normal',
     tenTeam: null,
-    value: 2,
+    value: 1,
     pendingBet: null,
     lastRaiseTeam: null,
     turn: 0,

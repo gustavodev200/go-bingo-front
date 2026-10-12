@@ -49,17 +49,24 @@ describe('TrucoRoomScreen', () => {
   it('turns a validated announcement into a shout, a sound and a voice line', () => {
     render(<TrucoRoomScreen code="ABC234" />);
     act(() => useTrucoStore.getState().applySnapshot({ state: roomState(), mySeat: 0, hand: privateHand() }));
-    act(() => listeners.onAnnouncement({ event: 'truco:bet_requested', payload: { seq: 1, seat: 1, team: 1, value: 4 } }));
+    act(() => listeners.onAnnouncement({ event: 'truco:bet_requested', payload: { seq: 1, seat: 1, team: 1, value: 3 } }));
     expect(screen.getByText('TRUCO!')).toBeInTheDocument();
     expect(play).toHaveBeenCalledWith('truco');
     expect(speak).toHaveBeenCalledWith('TRUUUCO! Corre ou aceita!');
+  });
+
+  it('shows the round result banner to the player', () => {
+    render(<TrucoRoomScreen code="ABC234" />);
+    act(() => useTrucoStore.getState().applySnapshot({ state: roomState(), mySeat: 1, hand: privateHand() }));
+    act(() => listeners.onAnnouncement({ event: 'truco:round_ended', payload: { seq: 2, round: 1, result: 0, winningSeat: 0 } }));
+    expect(screen.getByText('Vocês perderam a 1ª rodada')).toBeInTheDocument();
   });
 
   it('keeps the voice silent when it is switched off', () => {
     localStorage.setItem('truco:voice', '0');
     render(<TrucoRoomScreen code="ABC234" />);
     act(() => useTrucoStore.getState().applySnapshot({ state: roomState(), mySeat: 0, hand: privateHand() }));
-    act(() => listeners.onAnnouncement({ event: 'truco:bet_requested', payload: { seq: 1, seat: 1, team: 1, value: 4 } }));
+    act(() => listeners.onAnnouncement({ event: 'truco:bet_requested', payload: { seq: 1, seat: 1, team: 1, value: 3 } }));
     expect(play).toHaveBeenCalledWith('truco');
     expect(speak).not.toHaveBeenCalled();
   });

@@ -9,15 +9,17 @@ export type Announced = {
 
 export interface Reaction {
   shout?: { text: string; tone: ShoutTone };
+  /** Smaller notice that does not cover the big shout (round results). */
+  banner?: { text: string; tone: ShoutTone };
   sfx?: TrucoSfx;
   /** pt-BR phrase for SpeechSynthesis. Never essential: the shout/state always tells the same thing. */
   speech?: string;
 }
 
 const BET_SHOUT: Record<number, [string, string]> = {
-  4: ['TRUCO!', 'TRUUUCO!'],
+  3: ['TRUCO!', 'TRUUUCO!'],
   6: ['SEIS!', 'Seis!'],
-  10: ['DEZ!', 'Vale dez!'],
+  9: ['NOVE!', 'Vale nove!'],
   12: ['DOZE!', 'Vale doze!'],
 };
 
@@ -35,6 +37,12 @@ export function reactionFor(msg: Announced, mySeat: Seat): Reaction {
       if (manilhaName(msg.payload.card) !== 'Zap') return { sfx: 'card' };
       const ours = teamOf(msg.payload.seat) === myTeam;
       return { shout: { text: 'ZAP!', tone: ours ? 'good' : 'bad' }, sfx: 'card', speech: ours ? 'É ZAP, meu parceiro!' : undefined };
+    }
+    case 'truco:round_ended': {
+      const { result, round } = msg.payload;
+      if (result === 'tie') return { banner: { text: `${round}ª rodada empatou`, tone: 'info' } };
+      const ours = result === myTeam;
+      return { banner: { text: `Vocês ${ours ? 'ganharam' : 'perderam'} a ${round}ª rodada`, tone: ours ? 'good' : 'bad' } };
     }
     case 'truco:bet_requested': {
       const [text, speech] = BET_SHOUT[msg.payload.value] ?? ['TRUCO!', 'Truco!'];

@@ -36,7 +36,7 @@ export function Scoreboard({ scores, myTeam, match }: { scores: [number, number]
           <span className="truncate text-[11px] font-bold text-amber-200">
             {match.kind !== 'normal' ? `${KIND_LABEL[match.kind]} · ` : ''}
             Vale {match.value}
-            {match.value > 2 && match.kind === 'normal' ? ` (${BET_LABEL[match.value]})` : ''}
+            {match.value > 1 && match.kind === 'normal' ? ` (${BET_LABEL[match.value]})` : ''}
           </span>
         )}
       </div>
