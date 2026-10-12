@@ -45,7 +45,7 @@ export function TrucoHome() {
         Jogos
       </Link>
       <header className="flex items-center justify-between gap-3">
-        <h1 className="font-display text-marquee text-3xl font-bold">Truco do Gu</h1>
+        <h1 className="font-display text-marquee text-3xl font-bold">Truco Mineiro</h1>
         <ProfilePill />
       </header>
 

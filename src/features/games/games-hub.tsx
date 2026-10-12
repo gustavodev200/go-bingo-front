@@ -1,7 +1,7 @@
 'use client';
 
 import { LogOut, Sparkles } from 'lucide-react';
-import { GuGamesLogo } from '@/components/brand/gu-games-logo';
+import { DedeGamesLogo } from '@/components/brand/dede-games-logo';
 import { Avatar } from '@/components/stage/avatar';
 import { Button } from '@/components/ui/button';
 import { useLogout } from '@/features/auth/use-logout';
@@ -18,7 +18,7 @@ export function GamesHub() {
   return (
     <main className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 pt-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] md:max-w-3xl lg:max-w-5xl">
       <header className="flex items-center justify-between gap-3">
-        <GuGamesLogo className="shrink-0" />
+        <DedeGamesLogo className="shrink-0" />
         <ProfilePill />
       </header>
 

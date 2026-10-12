@@ -22,7 +22,7 @@ export interface Game {
 export const GAMES: readonly Game[] = [
   {
     id: 'bingo',
-    name: 'Bingo do Gu',
+    name: 'Bingo',
     description: 'Globo girando, cartela na mão: marque os números e grite BINGO antes da galera.',
     href: '/bingo',
     status: 'available',
@@ -32,7 +32,7 @@ export const GAMES: readonly Game[] = [
   },
   {
     id: 'truco',
-    name: 'Truco do Gu',
+    name: 'Truco Mineiro',
     description: 'Truco Mineiro 2 contra 2 ao vivo: zap na mão, sinal pro parceiro e grite TRUCO na hora certa.',
     href: '/truco',
     status: 'available',

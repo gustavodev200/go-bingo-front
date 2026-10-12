@@ -10,7 +10,7 @@ export function InstallBanner() {
 
   return (
     <aside className="glass flex flex-col gap-3 p-4" aria-label="Instalar o aplicativo">
-      <p className="font-display text-lg font-semibold">Instale o GuGames</p>
+      <p className="font-display text-lg font-semibold">Instale o DedéGames</p>
       {mode === 'prompt' ? (
         <>
           <p className="text-muted-foreground text-sm">Abra direto da tela inicial, em tela cheia.</p>

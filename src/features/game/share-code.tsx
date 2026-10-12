@@ -8,7 +8,7 @@ export function ShareCode({ code }: { code: string }) {
   async function share() {
     const url = `${window.location.origin}/${code}`;
     if (navigator.share) {
-      await navigator.share({ title: 'Go Bingo', text: `Bora jogar bingo! Sala ${code}`, url }).catch(() => undefined);
+      await navigator.share({ title: 'Bingo', text: `Bora jogar bingo! Sala ${code}`, url }).catch(() => undefined);
       return;
     }
     await navigator.clipboard.writeText(url);

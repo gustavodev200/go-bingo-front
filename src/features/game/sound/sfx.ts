@@ -1,5 +1,5 @@
 export type Sfx = 'draw' | 'one-away' | 'bingo-me' | 'bingo-other' | 'ended' | TrucoSfx;
-/** Truco do Gu effects share the same synthesizer. */
+/** Truco Mineiro effects share the same synthesizer. */
 export type TrucoSfx = 'card' | 'truco' | 'accept' | 'run' | 'hand-won' | 'hand-lost' | 'signal' | 'match-won' | 'match-lost' | 'error';
 
 export interface Note {

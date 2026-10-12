@@ -59,7 +59,7 @@ export function RoomLobby({ state, mySeat, actions, conventions, setConventions 
   async function share() {
     const url = `${window.location.origin}/truco/${state.code}`;
     if (navigator.share) {
-      await navigator.share({ title: 'Truco do Gu', text: `Bora de truco? Mesa ${state.code}`, url }).catch(() => undefined);
+      await navigator.share({ title: 'Truco Mineiro', text: `Bora de truco? Mesa ${state.code}`, url }).catch(() => undefined);
       return;
     }
     await navigator.clipboard.writeText(url).catch(() => undefined);
@@ -77,7 +77,7 @@ export function RoomLobby({ state, mySeat, actions, conventions, setConventions 
   return (
     <main className="mx-auto flex w-full max-w-md flex-col gap-4 px-4 pt-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] md:max-w-2xl">
       <header className="flex items-center justify-between gap-2">
-        <h1 className="font-display text-marquee text-2xl font-bold">Truco do Gu</h1>
+        <h1 className="font-display text-marquee text-2xl font-bold">Truco Mineiro</h1>
         <span className="text-sm font-semibold text-violet-200" role="status">
           {seated}/{TRUCO_SEATS} na mesa
         </span>

@@ -18,14 +18,14 @@ describe('GamesHub', () => {
 
   it('lists the bingo as an available game leading to its lobby', () => {
     render(<GamesHub />);
-    const card = screen.getByRole('link', { name: 'Jogar Bingo do Gu' });
+    const card = screen.getByRole('link', { name: 'Jogar Bingo' });
     expect(card).toHaveAttribute('href', '/bingo');
     expect(within(card).getByText('Disponível')).toBeInTheDocument();
   });
 
-  it('lists the Truco do Gu leading to its lobby', () => {
+  it('lists the Truco Mineiro leading to its lobby', () => {
     render(<GamesHub />);
-    const card = screen.getByRole('link', { name: 'Jogar Truco do Gu' });
+    const card = screen.getByRole('link', { name: 'Jogar Truco Mineiro' });
     expect(card).toHaveAttribute('href', '/truco');
     expect(within(card).getByText('4 jogadores')).toBeInTheDocument();
   });

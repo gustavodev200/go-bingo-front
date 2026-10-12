@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { SwitchToGoogleAccount } from '@/features/auth/upgrade-button';
 
 const MESSAGES: Record<string, string> = {
-  identity_already_exists: 'Essa conta Google já tem um perfil no GuGames. Você pode entrar nela — o perfil de convidado atual será descartado (convidados não têm pontos a perder).',
+  identity_already_exists: 'Essa conta Google já tem um perfil no DedéGames. Você pode entrar nela — o perfil de convidado atual será descartado (convidados não têm pontos a perder).',
   exchange_failed: 'Não foi possível concluir o login. Tente novamente.',
 };
 

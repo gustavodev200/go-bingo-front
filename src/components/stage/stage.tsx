@@ -109,7 +109,7 @@ export function MarqueeTitle({ compact = false }: { compact?: boolean }) {
   const bulbs = compact ? 10 : 14;
   return (
     <h1 className={cn(styles.sign, 'relative rounded-2xl', compact ? 'px-2 py-1.5' : 'w-full px-3 py-2.5')}>
-      <span className="sr-only">Go Bingo</span>
+      <span className="sr-only">Bingo</span>
       <span aria-hidden className={cn('flex flex-col', compact ? 'gap-1' : 'gap-2')}>
         <BulbRow count={bulbs} offset={0} />
         {compact ? (

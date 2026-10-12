@@ -15,7 +15,7 @@ describe('ShareCode', () => {
     Object.defineProperty(navigator, 'share', { value: share, configurable: true });
     render(<ShareCode code="ABC234" />);
     await userEvent.click(screen.getByRole('button', { name: /compartilhar/i }));
-    expect(share).toHaveBeenCalledWith({ title: 'Go Bingo', text: 'Bora jogar bingo! Sala ABC234', url: `${window.location.origin}/ABC234` });
+    expect(share).toHaveBeenCalledWith({ title: 'Bingo', text: 'Bora jogar bingo! Sala ABC234', url: `${window.location.origin}/ABC234` });
   });
 
   it('falls back to copying the link', async () => {
