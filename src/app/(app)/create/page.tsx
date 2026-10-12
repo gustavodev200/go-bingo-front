@@ -7,7 +7,7 @@ export default function CreateRoomPage() {
   return (
     <main className="mx-auto flex w-full max-w-md flex-col gap-5 px-4 py-5">
       {/* no celular o dock faz esse papel */}
-      <Link href="/" className="hidden min-h-11 items-center gap-1 self-start md:flex text-sm text-violet-200 hover:text-white">
+      <Link href="/bingo" className="hidden min-h-11 items-center gap-1 self-start md:flex text-sm text-violet-200 hover:text-white">
         <ChevronLeft aria-hidden className="size-4" />
         Voltar
       </Link>

@@ -22,7 +22,7 @@ export async function createRoom(page: Page, name: string): Promise<string> {
 }
 
 export async function joinByCode(page: Page, code: string): Promise<void> {
-  await page.goto('/');
+  await page.goto('/bingo');
   await page.getByLabel('Código da sala').fill(code);
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/${code}$`));

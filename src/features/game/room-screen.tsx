@@ -92,7 +92,7 @@ export function RoomScreen({ code }: { code: string }) {
 
   async function leave() {
     await actions.leave();
-    router.push('/');
+    router.push('/bingo');
   }
 
   if (exit) {
@@ -101,7 +101,7 @@ export function RoomScreen({ code }: { code: string }) {
         <div className="glass flex flex-col gap-4 p-6 text-center" role="alert">
         <p className="font-display text-xl font-semibold">{exit.message ?? EXIT_MESSAGES[exit.reason]}</p>
         <Button asChild className="h-12 rounded-xl text-base">
-          <Link href="/">Voltar ao início</Link>
+          <Link href="/bingo">Voltar ao Bingo</Link>
         </Button>
         </div>
       </main>

@@ -229,11 +229,11 @@ describe('RoomScreen', () => {
     expect(screen.getByText(/reconectando…/i)).toBeInTheDocument();
   });
 
-  it('non-host leaves the room and goes home', async () => {
+  it('non-host leaves the room and goes back to the bingo lobby', async () => {
     renderWith(room({ hostId: ANA }));
     await userEvent.click(screen.getByRole('button', { name: /sair da sala/i }));
     expect(actions.leave).toHaveBeenCalled();
-    expect(push).toHaveBeenCalledWith('/');
+    expect(push).toHaveBeenCalledWith('/bingo');
   });
 
   it('shows the game while in progress without toasting players one away', () => {
