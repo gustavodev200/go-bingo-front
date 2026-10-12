@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { FakeSocket, flush } from '@/test/fake-socket';
 import { privateHand, roomState } from '@/test/truco-fixtures';
-import { createTable, useTrucoRoom, type TrucoListeners } from './connection';
+import { createTable, usePublicTables, useTrucoRoom, type TrucoListeners } from './connection';
 import { useTrucoStore } from './store';
 
 const socket = new FakeSocket();
@@ -131,16 +131,45 @@ describe('useTrucoRoom', () => {
 describe('createTable', () => {
   it('connects and creates a table', async () => {
     socket.acks.set('truco:create', { ok: true, data: snapshot });
-    const pending = createTable();
+    const pending = createTable(false);
     socket.fire('connect');
     await expect(pending).resolves.toEqual({ ok: true, data: snapshot });
+    expect(socket.emitted.at(-1)).toEqual({ event: 'truco:create', payload: { isPublic: false } });
   });
 
   it('reports when the server cannot be reached', async () => {
     socket.connected = false;
     socket.removeAllListeners();
-    const pending = createTable();
+    const pending = createTable(true);
     socket.fire('connect_error', new Error('down'));
     await expect(pending).resolves.toMatchObject({ ok: false });
+  });
+});
+
+describe('usePublicTables', () => {
+  const room = { code: 'QWE234', hostNickname: 'Ana', hostCharacter: null, players: 2 };
+
+  beforeEach(() => {
+    socket.removeAllListeners();
+    socket.acks.clear();
+    socket.emitted.length = 0;
+    socket.connected = false;
+  });
+
+  it('watches the public list, follows live updates and unwatches on unmount', async () => {
+    socket.acks.set('truco:watch_rooms', { ok: true, data: [room] });
+    socket.acks.set('truco:unwatch_rooms', { ok: true, data: null });
+    const hook = renderHook(() => usePublicTables());
+    expect(hook.result.current).toBeNull();
+    await act(async () => {
+      socket.fire('connect');
+      await flush();
+    });
+    expect(hook.result.current).toEqual([room]);
+    act(() => socket.fire('truco:rooms_updated', { rooms: [] }));
+    expect(hook.result.current).toEqual([]);
+    hook.unmount();
+    expect(socket.emitted.map((e) => e.event)).toEqual(['truco:watch_rooms', 'truco:unwatch_rooms']);
+    expect(socket.listenerCount('truco:rooms_updated')).toBe(0);
   });
 });

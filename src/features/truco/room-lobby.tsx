@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, ChevronLeft, Copy, Crown, Loader2, Share2, UserPlus, WifiOff } from 'lucide-react';
+import { Check, ChevronLeft, Copy, Crown, Globe, Loader2, Lock, Share2, UserPlus, WifiOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { teamOf, TRUCO_SEATS, type Seat, type TrucoRoomState } from '@/contracts';
 import { Avatar } from '@/components/stage/avatar';
@@ -82,6 +82,21 @@ export function RoomLobby({ state, mySeat, actions, conventions, setConventions 
           {seated}/{TRUCO_SEATS} na mesa
         </span>
       </header>
+
+      <section className="flex items-center justify-between gap-3 rounded-2xl bg-white/5 px-4 py-2 ring-1 ring-white/10" aria-label="Visibilidade">
+        <span className="flex items-center gap-2 text-sm">
+          {state.isPublic ? <Globe aria-hidden className="size-4 text-emerald-300" /> : <Lock aria-hidden className="size-4 text-amber-300" />}
+          <span>
+            <strong>{state.isPublic ? 'Mesa pública' : 'Mesa privada'}</strong>
+            <span className="text-violet-200/80"> · {state.isPublic ? 'aparece na lista do truco' : 'só entra quem tem o código'}</span>
+          </span>
+        </span>
+        {isHost && (
+          <Button variant="ghost" size="sm" className="h-9 shrink-0 rounded-xl text-amber-200" disabled={busy} onClick={run(() => actions.setVisibility(!state.isPublic))}>
+            {state.isPublic ? 'Tornar privada' : 'Tornar pública'}
+          </Button>
+        )}
+      </section>
 
       <section className="glass flex items-center justify-between gap-3 rounded-2xl border-dashed border-amber-300/40 px-4 py-3" aria-label="Código da mesa">
         <button type="button" onClick={() => void copyCode()} className="flex flex-col text-left" aria-label={`Copiar código ${state.code}`}>

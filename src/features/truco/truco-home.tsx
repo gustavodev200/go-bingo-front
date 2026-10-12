@@ -11,17 +11,19 @@ import { Label } from '@/components/ui/label';
 import { ProfilePill } from '@/features/profile/profile-pill';
 import { createTable } from './connection';
 import { PlayingCard } from './playing-card';
+import { PublicTables } from './public-tables';
 
 export function TrucoHome() {
   const router = useRouter();
   const [creating, setCreating] = useState(false);
+  const [isPublic, setIsPublic] = useState(true);
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   async function create() {
     setCreating(true);
     setError(null);
-    const res = await createTable();
+    const res = await createTable(isPublic);
     if (res.ok) router.push(`/truco/${res.data.state.code}`);
     else {
       setError(res.error.message);
@@ -52,6 +54,23 @@ export function TrucoHome() {
           <h2 className="font-display text-marquee text-2xl font-bold">Truco Mineiro, 2 contra 2</h2>
           <p className="text-muted-foreground text-sm">Quatro jogadores de verdade, em tempo real. Crie uma mesa e chame sua dupla e os adversários.</p>
         </div>
+        <fieldset className="flex flex-col gap-2">
+          <legend className="mb-2 text-sm font-medium">Quem pode entrar</legend>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { value: true, label: 'Pública', hint: 'Aparece na lista' },
+              { value: false, label: 'Privada', hint: 'Só com o código' },
+            ].map((option) => (
+              <label key={option.label} className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-white/15 px-3 py-2 has-checked:border-amber-300/70 has-checked:bg-amber-300/10">
+                <input type="radio" name="truco-visibility" className="accent-amber-400" checked={isPublic === option.value} onChange={() => setIsPublic(option.value)} />
+                <span className="flex flex-col leading-tight">
+                  <span className="text-sm font-semibold">{option.label}</span>
+                  <span className="text-muted-foreground text-xs">{option.hint}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
         <Button size="lg" className="h-12 gap-2 rounded-xl text-base" disabled={creating} onClick={() => void create()}>
           {creating ? <Loader2 aria-hidden className="animate-spin" /> : <Plus aria-hidden />}
           {creating ? 'Abrindo mesa…' : 'Criar mesa'}
@@ -86,6 +105,17 @@ export function TrucoHome() {
             {error}
           </p>
         )}
+      </section>
+
+      <section className="flex flex-col gap-3" aria-labelledby="public-tables-title">
+        <h2 id="public-tables-title" className="font-display flex items-center gap-2 text-lg font-semibold">
+          <span aria-hidden className="relative flex size-2.5">
+            <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75 motion-reduce:animate-none" />
+            <span className="relative inline-flex size-2.5 rounded-full bg-emerald-500" />
+          </span>
+          Mesas públicas
+        </h2>
+        <PublicTables />
       </section>
 
       <section className="glass flex flex-col gap-3 p-5" aria-labelledby="manilhas-title">

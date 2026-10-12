@@ -8,7 +8,7 @@ import { TableView } from './table-view';
 
 function actions(): TrucoActions {
   const ok = () => vi.fn(async () => true);
-  return { leave: ok(), ready: ok(), takeSeat: ok(), start: ok(), rematch: ok(), playCard: ok(), requestBet: ok(), respondBet: ok(), decideTen: ok(), signal: ok() };
+  return { leave: ok(), ready: ok(), takeSeat: ok(), setVisibility: ok(), start: ok(), rematch: ok(), playCard: ok(), requestBet: ok(), respondBet: ok(), decideTen: ok(), signal: ok() };
 }
 const audio = { voice: true, setVoice: vi.fn(), sfx: true, setSfx: vi.fn() };
 

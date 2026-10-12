@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Socket } from 'socket.io-client';
 import { toast } from 'sonner';
 import {
@@ -12,6 +12,7 @@ import {
   type TrucoBetResponse,
   type TrucoClientAckData,
   type TrucoGesture,
+  type TrucoPublicRoom,
   type TrucoServerEventPayloads,
   type TrucoSnapshot,
 } from '@/contracts';
@@ -63,10 +64,38 @@ function connected(socket: Socket): Promise<boolean> {
 }
 
 /** Opens a new table with the player at seat 0. */
-export async function createTable(): Promise<Ack<TrucoSnapshot>> {
+export async function createTable(isPublic: boolean): Promise<Ack<TrucoSnapshot>> {
   const socket = trucoSocket();
   if (!(await connected(socket))) return { ok: false, error: { code: 'INTERNAL', message: 'Sem conexão com o servidor' } };
-  return emitTruco(socket, 'truco:create');
+  return emitTruco(socket, 'truco:create', { isPublic });
+}
+
+/**
+ * Public tables still taking players, kept live while mounted (null while loading).
+ * Reconnections watch again, so the list never goes stale.
+ */
+export function usePublicTables(): TrucoPublicRoom[] | null {
+  const [rooms, setRooms] = useState<TrucoPublicRoom[] | null>(null);
+  useEffect(() => {
+    const socket = trucoSocket();
+    let active = true;
+    const watch = () =>
+      void emitTruco(socket, 'truco:watch_rooms').then((res) => {
+        if (active && res.ok) setRooms(res.data);
+      });
+    const onUpdate = ({ rooms: next }: { rooms: TrucoPublicRoom[] }) => setRooms(next);
+    socket.on(TrucoServerEvents.ROOMS_UPDATED, onUpdate);
+    socket.on('connect', watch);
+    if (socket.connected) watch();
+    else socket.connect();
+    return () => {
+      active = false;
+      socket.off(TrucoServerEvents.ROOMS_UPDATED, onUpdate);
+      socket.off('connect', watch);
+      if (socket.connected) void emitTruco(socket, 'truco:unwatch_rooms');
+    };
+  }, []);
+  return rooms;
 }
 
 const EXIT_BY_CODE: Partial<Record<ErrorCode, TrucoExit['reason']>> = {
@@ -79,6 +108,7 @@ export interface TrucoActions {
   leave(): Promise<boolean>;
   ready(ready: boolean): Promise<boolean>;
   takeSeat(seat: Seat): Promise<boolean>;
+  setVisibility(isPublic: boolean): Promise<boolean>;
   start(): Promise<boolean>;
   rematch(): Promise<boolean>;
   playCard(cardId: string): Promise<boolean>;
@@ -212,6 +242,7 @@ export function useTrucoRoom(code: string, listeners: TrucoListeners): TrucoActi
       },
       ready: (ready) => call('truco:ready', { ready }),
       takeSeat: (seat) => call('truco:take_seat', { seat }),
+      setVisibility: (isPublic) => call('truco:set_visibility', { isPublic }),
       start: () => call('truco:start'),
       rematch: () => call('truco:rematch'),
       playCard: (cardId) => call('truco:play_card', { actionId: newActionId(), cardId }),
