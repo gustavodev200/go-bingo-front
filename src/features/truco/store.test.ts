@@ -1,4 +1,4 @@
-import { privateHand, roomState } from '@/test/truco-fixtures';
+import { privateHand, roomState, seatPlayer } from '@/test/truco-fixtures';
 import { useTrucoStore } from './store';
 
 describe('useTrucoStore', () => {
@@ -12,6 +12,17 @@ describe('useTrucoStore', () => {
     expect(useTrucoStore.getState().state!.scores).toEqual([2, 0]);
     s.applyState(roomState({ version: 6, scores: [4, 0] }));
     expect(useTrucoStore.getState().state!.scores).toEqual([4, 0]);
+  });
+
+  it('follows my seat when I move to another one in the lobby', () => {
+    const s = useTrucoStore.getState();
+    const lobby = roomState({ phase: 'LOBBY', match: null, seats: [seatPlayer(0), seatPlayer(1), null, null] });
+    s.applySnapshot({ state: lobby, mySeat: 1, hand: null });
+    const moved = { ...lobby, version: 2, seats: [seatPlayer(0), null, null, { ...seatPlayer(1), seat: 3 as const, team: 1 as const }] };
+    s.applyState(moved);
+    expect(useTrucoStore.getState().mySeat).toBe(3);
+    s.applyState({ ...moved, version: 3, seats: [seatPlayer(0), null, null, null] });
+    expect(useTrucoStore.getState().mySeat).toBeNull();
   });
 
   it('drops duplicated announcements by sequence number', () => {

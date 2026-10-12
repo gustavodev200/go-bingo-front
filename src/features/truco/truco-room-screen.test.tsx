@@ -46,6 +46,14 @@ describe('TrucoRoomScreen', () => {
     expect(screen.getByRole('list', { name: 'Suas cartas' })).toBeInTheDocument();
   });
 
+  it('follows a seat change and explains when I am no longer seated', () => {
+    render(<TrucoRoomScreen code="ABC234" />);
+    const lobby = roomState({ phase: 'LOBBY', lobbyStatus: 'WAITING_PLAYERS', match: null });
+    act(() => useTrucoStore.getState().applySnapshot({ state: lobby, mySeat: 0, hand: null }));
+    act(() => useTrucoStore.getState().applyState({ ...lobby, version: 5, seats: [null, lobby.seats[1], lobby.seats[2], lobby.seats[3]] }));
+    expect(screen.getByText(/não está mais nesta mesa/)).toBeInTheDocument();
+  });
+
   it('turns a validated announcement into a shout, a sound and a voice line', () => {
     render(<TrucoRoomScreen code="ABC234" />);
     act(() => useTrucoStore.getState().applySnapshot({ state: roomState(), mySeat: 0, hand: privateHand() }));

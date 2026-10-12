@@ -22,6 +22,8 @@ interface TrucoStore {
   connection: TrucoConnection;
   state: TrucoRoomState | null;
   mySeat: Seat | null;
+  /** Who I am at this table; my seat is looked up by it on every state (seats can change in the lobby). */
+  myUserId: string | null;
   hand: TrucoPrivateHand | null;
   exit: TrucoExit | null;
   /** Highest announcement sequence handled; anything at or below it is a duplicate. */
@@ -45,6 +47,7 @@ const initial = {
   connection: 'connecting' as TrucoConnection,
   state: null,
   mySeat: null,
+  myUserId: null,
   hand: null,
   exit: null,
   lastSeq: 0,
@@ -52,6 +55,12 @@ const initial = {
 };
 
 /** Older or repeated room states never replace a newer one (the version only grows). */
+/** My seat in `state`, or null if I am not seated there (left, expired). */
+function seatOf(state: TrucoRoomState, userId: string | null): Seat | null {
+  const i = state.seats.findIndex((s) => s !== null && s.userId === userId);
+  return i < 0 ? null : (i as Seat);
+}
+
 function newer(current: TrucoRoomState | null, next: TrucoRoomState): boolean {
   return !current || current.code !== next.code || next.version > current.version;
 }
@@ -66,13 +75,14 @@ export const useTrucoStore = create<TrucoStore>((set, get) => ({
       state: newer(s.state, state) ? state : s.state,
       lastSeq: s.state && s.state.code !== state.code ? 0 : s.lastSeq,
       mySeat,
+      myUserId: state.seats[mySeat]?.userId ?? s.myUserId,
       hand,
     })),
   applyState: (state) =>
     set((s) => {
       if (!newer(s.state, state)) return {};
       // Back in the lobby there is no hand anymore.
-      return { state, hand: state.phase === 'LOBBY' ? null : s.hand };
+      return { state, mySeat: s.myUserId ? seatOf(state, s.myUserId) : s.mySeat, hand: state.phase === 'LOBBY' ? null : s.hand };
     }),
   applyHand: (hand) =>
     set((s) => {

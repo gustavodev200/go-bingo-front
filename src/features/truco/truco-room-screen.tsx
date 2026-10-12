@@ -49,6 +49,7 @@ export function TrucoRoomScreen({ code }: { code: string }) {
   const state = useTrucoStore((s) => s.state);
   const mySeat = useTrucoStore((s) => s.mySeat);
   const hand = useTrucoStore((s) => s.hand);
+  const myUserId = useTrucoStore((s) => s.myUserId);
   const exit = useTrucoStore((s) => s.exit);
   const audio = useTrucoAudioPrefs();
   const [conventions, setConventions] = useConventions();
@@ -95,6 +96,8 @@ export function TrucoRoomScreen({ code }: { code: string }) {
   }, [exit, router]);
 
   if (exit && exit.reason !== 'left') return <ExitScreen exit={exit} />;
+  // Seated before but gone from the latest state (seat released while away).
+  if (state && mySeat === null && myUserId && !exit) return <ExitScreen exit={{ reason: 'error', message: 'Você não está mais nesta mesa. Entre de novo pelo código.' }} />;
   if (!state || mySeat === null || exit)
     return (
       <div className="flex min-h-dvh items-center justify-center" aria-busy="true" role="status">
