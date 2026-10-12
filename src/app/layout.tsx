@@ -12,10 +12,10 @@ const fredoka = Fredoka({ variable: '--font-display', subsets: ['latin'], weight
 const luckiestGuy = Luckiest_Guy({ variable: '--font-show', subsets: ['latin'], weight: '400' });
 
 export const metadata: Metadata = {
-  applicationName: 'Go Bingo',
-  title: 'Go Bingo',
-  description: 'Bingo multiplayer com os amigos',
-  appleWebApp: { capable: true, title: 'Go Bingo', statusBarStyle: 'black-translucent' },
+  applicationName: 'GuGames',
+  title: { default: 'GuGames', template: '%s · GuGames' },
+  description: 'Jogos multiplayer para jogar com os amigos',
+  appleWebApp: { capable: true, title: 'GuGames', statusBarStyle: 'black-translucent' },
   formatDetection: { telephone: false },
   icons: {
     icon: [

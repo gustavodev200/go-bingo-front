@@ -3,9 +3,9 @@ import type { MetadataRoute } from 'next';
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: '/',
-    name: 'Go Bingo',
-    short_name: 'Go Bingo',
-    description: 'Bingo multiplayer com os amigos',
+    name: 'GuGames',
+    short_name: 'GuGames',
+    description: 'Jogos multiplayer para jogar com os amigos',
     start_url: '/',
     scope: '/',
     display: 'standalone',

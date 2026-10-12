@@ -1,7 +1,8 @@
 'use client';
 
 import { toast } from 'sonner';
-import { ConfettiRain, MarqueeTitle, MiniGlobe } from '@/components/stage/stage';
+import { GuGamesMark } from '@/components/brand/gu-games-logo';
+import { ConfettiRain } from '@/components/stage/stage';
 import { Button } from '@/components/ui/button';
 import { isInAppBrowser } from '@/lib/in-app-browser';
 import { createClient } from '@/lib/supabase/client';
@@ -22,10 +23,10 @@ export function LoginPanel({ userAgent, next }: { userAgent: string; next: strin
     <main className="relative flex min-h-dvh items-center justify-center">
       <ConfettiRain />
       <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-5 px-4 py-8">
-        <MiniGlobe />
-        <MarqueeTitle />
+        <GuGamesMark className="size-32" />
+        <h1 className="font-show text-marquee text-5xl leading-none tracking-wide">GuGames</h1>
         <p className="text-center text-sm font-medium text-violet-100/90">
-          O globo já está girando. <span className="text-amber-300">Pegue sua cartela!</span>
+          Vários jogos, um só salão. <span className="text-amber-300">Chame a galera!</span>
         </p>
 
         <div className="animate-in fade-in slide-in-from-bottom-4 glass flex w-full flex-col gap-3 p-5 duration-700">

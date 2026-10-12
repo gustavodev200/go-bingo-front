@@ -4,7 +4,7 @@ describe('manifest', () => {
   const m = manifest();
 
   it('is installable standalone in any orientation', () => {
-    expect(m).toMatchObject({ name: 'Go Bingo', short_name: 'Go Bingo', start_url: '/', display: 'standalone', orientation: 'any', lang: 'pt-BR', theme_color: '#4c1d95' });
+    expect(m).toMatchObject({ name: 'GuGames', short_name: 'GuGames', start_url: '/', display: 'standalone', orientation: 'any', lang: 'pt-BR', theme_color: '#4c1d95' });
   });
 
   it('declares 192, 512 and maskable icons', () => {
