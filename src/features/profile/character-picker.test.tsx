@@ -8,13 +8,13 @@ describe('CharacterPicker', () => {
   it('steps forward and back with the arrows, wrapping around the ends', async () => {
     const onChange = vi.fn();
     const { rerender } = render(<CharacterPicker value="c01" onChange={onChange} />);
-    expect(screen.getByText('Personagem 1 de 16')).toBeInTheDocument();
+    expect(screen.getByText('Personagem 1 de 17')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Próximo personagem' }));
     expect(onChange).toHaveBeenLastCalledWith('c02');
     await userEvent.click(screen.getByRole('button', { name: 'Personagem anterior' }));
-    expect(onChange).toHaveBeenLastCalledWith('c16');
+    expect(onChange).toHaveBeenLastCalledWith('c17');
 
-    rerender(<CharacterPicker value="c16" onChange={onChange} />);
+    rerender(<CharacterPicker value="c17" onChange={onChange} />);
     await userEvent.click(screen.getByRole('button', { name: 'Próximo personagem' }));
     expect(onChange).toHaveBeenLastCalledWith('c01');
   });

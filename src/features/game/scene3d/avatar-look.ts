@@ -4,13 +4,36 @@ export const HATS = ['none', 'tophat', 'cap', 'beanie', 'party'] as const;
 export const FACES = ['smile', 'grin', 'wow'] as const;
 export const SKIN_COLORS = ['#fde0c8', '#f5c6a0', '#e0a47a', '#c68642', '#8d5524', '#5c3a1e'] as const;
 export const HAIR_COLORS = ['#1f1308', '#4a2c12', '#a0522d', '#f4c542', '#e8590c', '#ec4899', '#22c55e', '#3b82f6'] as const;
+/** Sorteáveis pelo id. */
 export const HAIR_STYLES = ['short', 'spiky', 'bun', 'long', 'afro'] as const;
+/** + estilos só de personagem pronto: entrar no sorteio mudaria o boneco derivado de todo mundo. */
+export const ALL_HAIR_STYLES = [...HAIR_STYLES, 'quiff'] as const;
 export const PANTS_COLORS = ['#1e293b', '#1e3a8a', '#3f3f46', '#0f766e'] as const;
 
 export type Hat = (typeof HATS)[number];
 export type Face = (typeof FACES)[number];
-export type HairStyle = (typeof HAIR_STYLES)[number];
-export type AvatarLook = { body: string; accent: string; hat: Hat; face: Face; seed: number; skin: string; hair: string; hairStyle: HairStyle; pants: string };
+export type HairStyle = (typeof ALL_HAIR_STYLES)[number];
+export type AvatarLook = {
+  body: string;
+  accent: string;
+  hat: Hat;
+  face: Face;
+  seed: number;
+  skin: string;
+  hair: string;
+  hairStyle: HairStyle;
+  pants: string;
+  /** Extras de personagem pronto (o boneco derivado do id não usa): faixa diagonal branca com cruz na camisa, */
+  sash?: boolean;
+  /** bigode (cor) + narigão, */
+  mustache?: string;
+  /** sobrancelha de cor própria (senão = cabelo), */
+  brows?: string;
+  /** calção com perna de fora e meião, */
+  shorts?: boolean;
+  /** tênis colorido (senão = escuro com sola branca). */
+  shoes?: string;
+};
 
 /** FNV-1a 32 bits: rápido, estável entre navegadores. */
 export function hashId(id: string): number {

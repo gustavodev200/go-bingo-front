@@ -1,5 +1,5 @@
 import { CHARACTER_IDS } from '@/contracts';
-import { HAIR_STYLES, HATS, SKIN_COLORS, avatarFromId } from './avatar-look';
+import { ALL_HAIR_STYLES, HATS, SKIN_COLORS, avatarFromId } from './avatar-look';
 import { CHARACTERS, isCharacterId, lookFor } from './characters';
 
 const ID = '00000000-0000-4000-8000-000000000042';
@@ -12,7 +12,7 @@ describe('CHARACTERS', () => {
   it('covers every skin tone, hair style and hat', () => {
     const looks = Object.values(CHARACTERS);
     expect(new Set(looks.map((l) => l.skin))).toEqual(new Set(SKIN_COLORS));
-    expect(new Set(looks.map((l) => l.hairStyle))).toEqual(new Set(HAIR_STYLES));
+    expect(new Set(looks.map((l) => l.hairStyle))).toEqual(new Set(ALL_HAIR_STYLES));
     expect(new Set(looks.map((l) => l.hat))).toEqual(new Set(HATS));
   });
 });

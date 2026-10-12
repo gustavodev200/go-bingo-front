@@ -1,5 +1,6 @@
 import {
   BufferAttribute,
+  BufferGeometry,
   CapsuleGeometry,
   CircleGeometry,
   Color,
@@ -10,16 +11,17 @@ import {
   Matrix4,
   PlaneGeometry,
   Quaternion,
+  Shape,
+  ShapeGeometry,
   SphereGeometry,
   TorusGeometry,
   Vector2,
   Vector3,
-  type BufferGeometry,
   type EulerOrder,
   type WebGLProgramParametersWithUniforms,
 } from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import type { HairStyle, Hat } from './avatar-look';
+import { ALL_HAIR_STYLES, type HairStyle, type Hat } from './avatar-look';
 
 export type V3 = [number, number, number];
 export type HatType = Exclude<Hat, 'none'>;
@@ -171,6 +173,16 @@ function mouthGeometries() {
   };
 }
 
+/** Bigode cheio (duas metades caindo para fora + ponte) e narigão por cima do nariz pequeno; cor na instância. */
+function mustacheGeometry(): BufferGeometry {
+  const half = (side: -1 | 1) => onHead(xf(new SphereGeometry(0.07, 14, 10), ORIGIN, ORIGIN, [1.3, 0.55, 0.5]), side * 0.18, -0.27, 0.004, -side * 0.3);
+  return merge([half(-1), half(1), onHead(xf(new SphereGeometry(0.045, 12, 8), ORIGIN, ORIGIN, [1, 0.7, 0.5]), 0, -0.24, 0.006)].map((g) => paint(g, '#ffffff', hairShade)));
+}
+
+function bigNoseGeometry(): BufferGeometry {
+  return paint(onHead(xf(new SphereGeometry(0.062, 16, 12), ORIGIN, ORIGIN, [1.1, 0.95, 0.9]), 0, -0.1, -0.012), '#ffffff', (p) => 0.92 + 0.08 * smoothstep(-0.1, 0, p.y));
+}
+
 // ---------------------------------------------------------------- cabelo (espaço da cabeça)
 
 /** Mais escuro embaixo, mais claro no topo: volume sem textura. */
@@ -267,6 +279,17 @@ function hairGeometry(style: HairStyle): BufferGeometry {
     bun: () => [hairCap(-0.4), ...centerPartFringe(), ...bun()],
     long: () => [hairCap(-0.36), ...centerPartFringe(0.09), curtain(), lock(-0.9, -0.15, 0, 0.09, [0.5, 1.8, 0.5]), lock(0.9, -0.15, 0, 0.09, [0.5, 1.8, 0.5])],
     afro: afro,
+    // topete: massa subindo da testa + pontas para cima e para frente
+    quiff: () => [
+      hairCap(-0.3),
+      onHead(xf(new SphereGeometry(0.16, 16, 12), ORIGIN, ORIGIN, [1.45, 0.75, 0.8]), 0, 0.72, 0.03),
+      spike(-0.32, 0.62, 0.2),
+      spike(0, 0.68, 0.27),
+      spike(0.32, 0.62, 0.2),
+      spike(-0.16, 0.95, 0.24),
+      spike(0.16, 0.95, 0.24),
+      ...sideburns(),
+    ],
   };
   // o elástico do coque já vem pintado; o resto ganha o degradê de volume
   return merge(parts[style]().map((g) => (g.getAttribute('color') ? g : paint(g, '#ffffff', hairShade))));
@@ -333,36 +356,77 @@ function crownGeometry(): BufferGeometry {
 
 // ---------------------------------------------------------------- corpo (espaço do boneco: pés no chão)
 
-const lathe = (profile: [number, number][], scaleZ = 0.86) =>
+const lathe = (profile: [number, number][], scaleZ = 0.86, segments = 20) =>
   xf(
     new LatheGeometry(
       profile.map(([r, y]) => new Vector2(r, y)),
-      20,
+      segments,
     ),
     ORIGIN,
     ORIGIN,
     [1, 1, scaleZ],
   );
 
+/** Camisa: ombros arredondados, cintura, barra levemente aberta. */
+const TORSO: [number, number][] = [
+  [0.2, 0.335],
+  [0.232, 0.355],
+  [0.228, 0.42],
+  [0.214, 0.5],
+  [0.222, 0.6],
+  [0.212, 0.68],
+  [0.178, 0.74],
+  [0.12, 0.775],
+  [0.001, 0.79],
+];
+
+/**
+ * Faixa diagonal do ombro esquerdo do boneco (+x) ao quadril direito, dando a volta nas costas, com a cruz vermelha no peito:
+ * casca da camisa (mais fina e um pouco maior) recortada por uma laje inclinada.
+ */
+function sashGeometry(): BufferGeometry {
+  const fine = TORSO.flatMap(([r, y], i): [number, number][] => {
+    if (i === 0) return [[r, y]];
+    const [r0, y0] = TORSO[i - 1];
+    return [1, 2, 3, 4].map((k) => [r0 + ((r - r0) * k) / 4, y0 + ((y - y0) * k) / 4]);
+  });
+  const shell = lathe(fine, 0.86, 64).toNonIndexed();
+  const center = new Vector3(0, 0.555, 0);
+  const across = new Vector3(0.39, -0.42, 0).normalize();
+  const position = shell.getAttribute('position');
+  const normal = shell.getAttribute('normal');
+  const kept: number[] = [];
+  const normals: number[] = [];
+  const c = new Vector3();
+  for (let i = 0; i < position.count; i += 3) {
+    c.set(0, 0, 0);
+    for (let k = 0; k < 3; k++) c.add(new Vector3().fromBufferAttribute(position, i + k));
+    if (Math.abs(c.divideScalar(3).sub(center).dot(across)) > 0.055) continue;
+    for (let k = 0; k < 3; k++) {
+      kept.push(position.getX(i + k), position.getY(i + k), position.getZ(i + k));
+      normals.push(normal.getX(i + k), normal.getY(i + k), normal.getZ(i + k));
+    }
+  }
+  shell.dispose();
+  const band = new BufferGeometry();
+  band.setAttribute('position', new BufferAttribute(new Float32Array(kept), 3));
+  band.setAttribute('normal', new BufferAttribute(new Float32Array(normals), 3));
+  xf(band, ORIGIN, ORIGIN, [1.03, 1, 1.03]);
+
+  // cruz pátea: braços alargando para as pontas
+  const [a, b, s] = [0.008, 0.02, 0.036];
+  const cross = new Shape();
+  const outline: [number, number][] = [[a, a], [b, s], [-b, s], [-a, a], [-s, b], [-s, -b], [-a, -a], [-b, -s], [b, -s], [a, -a], [s, -b], [s, b]];
+  outline.forEach(([x, y], i) => (i ? cross.lineTo(x, y) : cross.moveTo(x, y)));
+  // mesmos atributos da faixa (não indexada, sem uv) para o merge
+  return merge([paint(band), paint(xf(new ShapeGeometry(cross).toNonIndexed().deleteAttribute('uv'), [0.062, 0.611, 0.192], [0, 0.234, 0]), '#dc2626')]);
+}
+
 function bodyGeometries() {
   return {
-    // camisa: ombros arredondados, cintura, barra levemente aberta e mais escura; bolso no peito
+    // camisa com barra mais escura; bolso no peito
     torso: merge([
-      paint(
-        lathe([
-          [0.2, 0.335],
-          [0.232, 0.355],
-          [0.228, 0.42],
-          [0.214, 0.5],
-          [0.222, 0.6],
-          [0.212, 0.68],
-          [0.178, 0.74],
-          [0.12, 0.775],
-          [0.001, 0.79],
-        ]),
-        '#ffffff',
-        (p) => (p.y < 0.37 ? 0.8 : 1),
-      ),
+      paint(lathe(TORSO), '#ffffff', (p) => (p.y < 0.37 ? 0.8 : 1)),
       paint(xf(new PlaneGeometry(0.075, 0.065), [0.092, 0.58, 0.176], [0, 0.5, 0]), '#ffffff', () => 0.75),
     ]),
     // calça (quadril) por baixo da camisa
@@ -383,6 +447,14 @@ function bodyGeometries() {
       paint(xf(new SphereGeometry(0.1, 14, 10), [0, -0.245, 0.035], ORIGIN, [0.92, 0.6, 1.3]), '#2b3446'),
       paint(xf(new CylinderGeometry(0.1, 0.1, 0.034, 16), [0, -0.29, 0.035], ORIGIN, [0.95, 1, 1.32]), '#f1f5f9'),
     ]),
+    // tênis de cor própria (cor na instância), sola um tom mais claro
+    sneakers: merge([
+      paint(xf(new SphereGeometry(0.1, 14, 10), [0, -0.245, 0.035], ORIGIN, [0.92, 0.6, 1.3])),
+      paint(xf(new CylinderGeometry(0.1, 0.1, 0.034, 16), [0, -0.29, 0.035], ORIGIN, [0.95, 1, 1.32]), '#ffffff', () => 1.25),
+    ]),
+    // calção (perna fica de fora) e meião: punho branco, resto preto
+    shorts: paint(xf(new CylinderGeometry(0.1, 0.108, 0.105, 14), [0, -0.022, 0])),
+    socks: paint(xf(new CylinderGeometry(0.093, 0.09, 0.08, 14, 8), [0, -0.165, 0]), '#ffffff', (p) => (p.y > -0.147 ? 1 : 0.08)),
     // manga curta pendurada no ombro; antebraço + mão (pele) pendurados no cotovelo
     arms: paint(xf(new CapsuleGeometry(0.074, 0.05, 4, 12), [0, -0.05, 0])),
     hands: merge([paint(xf(new CapsuleGeometry(0.05, 0.07, 4, 10), [0, -0.05, 0])), paint(xf(new SphereGeometry(0.068, 14, 10), [0, -0.145, 0], ORIGIN, [0.95, 1.05, 0.88]))]),
@@ -401,7 +473,10 @@ export function createAvatarGeometries() {
     brows: paint(xf(arcGeometry(0.09, 0.014, 1.15), ORIGIN, ORIGIN, [1, 1, 0.6]), '#ffffff', () => 0.8),
     cheeks: xf(new SphereGeometry(0.055, 12, 8), ORIGIN, ORIGIN, [1, 0.6, 0.25]),
     mouths: mouthGeometries(),
-    hair: Object.fromEntries((['short', 'spiky', 'bun', 'long', 'afro'] as const).map((s) => [s, hairGeometry(s)])) as Record<HairStyle, BufferGeometry>,
+    mustache: mustacheGeometry(),
+    bigNose: bigNoseGeometry(),
+    sash: sashGeometry(),
+    hair: Object.fromEntries(ALL_HAIR_STYLES.map((s) => [s, hairGeometry(s)])) as Record<HairStyle, BufferGeometry>,
     hats: Object.fromEntries(HAT_TYPES.map((t) => [t, hatGeometry(t)])) as Record<HatType, BufferGeometry>,
     crown: crownGeometry(),
     shadow: new CircleGeometry(0.35, 16),

@@ -24,6 +24,22 @@ export const CHARACTERS: Record<CharacterId, CharacterLook> = {
   c14: { body: '#f43f5e', accent: '#fde047', hat: 'cap', face: 'grin', skin: '#5c3a1e', hair: '#1f1308', hairStyle: 'short', pants: '#1e3a8a' },
   c15: { body: '#f97316', accent: '#60a5fa', hat: 'party', face: 'smile', skin: '#fde0c8', hair: '#3b82f6', hairStyle: 'bun', pants: '#0f766e' },
   c16: { body: '#eab308', accent: '#fb7185', hat: 'none', face: 'grin', skin: '#8d5524', hair: '#e8590c', hairStyle: 'spiky', pants: '#1e293b' },
+  // boneco de vinil: camisa preta com faixa branca diagonal e cruz vermelha, calção preto, meião, tênis rosa, topete loiro e bigode
+  c17: {
+    body: '#16181d',
+    accent: '#0b0c10',
+    hat: 'none',
+    face: 'smile',
+    skin: '#f5c6a0',
+    hair: '#f4c542',
+    hairStyle: 'quiff',
+    pants: '#16181d',
+    sash: true,
+    mustache: '#1f1308',
+    brows: '#1f1308',
+    shorts: true,
+    shoes: '#e11d74',
+  },
 };
 
 export const isCharacterId = (value: unknown): value is CharacterId => (CHARACTER_IDS as readonly unknown[]).includes(value);

@@ -38,4 +38,11 @@ describe('avatar geometries', () => {
     expect(origin(FACE.mouth).y).toBeLessThan(right.y);
     expect(origin(FACE.mouth).x).toBeCloseTo(0);
   });
+
+  it('runs the sash from the left shoulder (+x) down to the right hip (-x) across the chest', () => {
+    const position = geo.sash.getAttribute('position');
+    const front = Array.from({ length: position.count }, (_, i) => new Vector3().fromBufferAttribute(position, i)).filter((p) => p.z > 0.1);
+    expect(front.filter((p) => p.y > 0.7).every((p) => p.x > 0)).toBe(true);
+    expect(front.filter((p) => p.y < 0.42).every((p) => p.x < 0)).toBe(true);
+  });
 });

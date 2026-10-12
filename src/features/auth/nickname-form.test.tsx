@@ -27,9 +27,9 @@ describe('NicknameForm', () => {
     apiFetch.mockResolvedValue({});
     render(<NicknameForm next="/" suggestion="Ana" />);
     await userEvent.click(screen.getByRole('button', { name: /anterior/i }));
-    expect(screen.getByText('Personagem 16 de 16')).toBeInTheDocument();
+    expect(screen.getByText('Personagem 17 de 17')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /continuar/i }));
-    expect(apiFetch).toHaveBeenCalledWith('/me', expect.anything(), { method: 'PATCH', body: JSON.stringify({ nickname: 'Ana', character: 'c16' }) });
+    expect(apiFetch).toHaveBeenCalledWith('/me', expect.anything(), { method: 'PATCH', body: JSON.stringify({ nickname: 'Ana', character: 'c17' }) });
   });
 
   it('goes back to the login by signing out (otherwise the login would bounce back here)', async () => {

@@ -60,13 +60,16 @@ export function Avatar({
       {l.hairStyle === 'long' && <span className="absolute top-[10%] left-1/2 h-[64%] w-[84%] -translate-x-1/2 rounded-t-full rounded-b-[30%]" style={hair} />}
       {l.hairStyle === 'bun' && <span className="absolute top-[-4%] left-1/2 size-[30%] -translate-x-1/2 rounded-full" style={hair} />}
       {/* corpo (camisa) */}
-      <span className="absolute bottom-0 left-1/2 h-[34%] w-[52%] -translate-x-1/2 rounded-t-[45%] rounded-b-[25%]" style={{ background: shade(l.body) }} />
+      <span
+        className="absolute bottom-0 left-1/2 h-[34%] w-[52%] -translate-x-1/2 rounded-t-[45%] rounded-b-[25%]"
+        style={{ background: l.sash ? `linear-gradient(225deg, transparent 34%, #fff 34% 54%, transparent 54%), ${shade(l.body)}` : shade(l.body) }}
+      />
       {/* cabeça */}
       <span className="absolute top-[4%] left-1/2 h-[64%] w-[74%] -translate-x-1/2 overflow-hidden rounded-full" style={skin}>
         {l.hairStyle !== 'afro' && (
           <span
             className="absolute top-[-6%] left-[-4%] h-[44%] w-[108%] rounded-b-[40%]"
-            style={l.hairStyle === 'spiky' ? { ...hair, clipPath: 'polygon(0 0,100% 0,100% 100%,85% 70%,70% 100%,55% 70%,40% 100%,25% 70%,10% 100%,0 75%)' } : hair}
+            style={l.hairStyle === 'spiky' || l.hairStyle === 'quiff' ? { ...hair, clipPath: 'polygon(0 0,100% 0,100% 100%,85% 70%,70% 100%,55% 70%,40% 100%,25% 70%,10% 100%,0 75%)' } : hair}
           />
         )}
         <span className="absolute top-[50%] left-[28%] h-[14%] w-[11%] rounded-full bg-slate-900" />
@@ -74,6 +77,7 @@ export function Avatar({
         <span className="absolute top-[64%] left-[12%] size-[14%] rounded-full bg-rose-400/50" />
         <span className="absolute top-[64%] right-[12%] size-[14%] rounded-full bg-rose-400/50" />
         <span className={cn('absolute top-[70%] left-1/2 -translate-x-1/2', MOUTH[l.face])} />
+        {l.mustache && <span className="absolute top-[62%] left-1/2 h-[12%] w-[44%] -translate-x-1/2 rounded-b-full" style={{ background: l.mustache }} />}
       </span>
       <Hat look={l} host={host} />
     </span>
