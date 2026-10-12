@@ -7,7 +7,12 @@ function fakeAudio(state: AudioContextState = 'running') {
   const ctx = {
     currentTime: 10,
     state,
-    resume: vi.fn(async () => undefined),
+    resume: vi.fn(async () => {
+      ctx.state = 'running';
+    }),
+    suspend: vi.fn(async () => {
+      ctx.state = 'suspended';
+    }),
     destination: {},
     createGain: () => ({ gain: param(), connect: vi.fn() }),
     createOscillator: () => {
@@ -24,7 +29,7 @@ function fakeAudio(state: AudioContextState = 'running') {
       };
     },
   };
-  return { ctx: ctx as unknown as AudioCtxLike, oscillators, resume: ctx.resume };
+  return { ctx: ctx as unknown as AudioCtxLike, oscillators, resume: ctx.resume, suspend: ctx.suspend, raw: ctx };
 }
 
 describe('createSfxPlayer', () => {
@@ -66,5 +71,40 @@ describe('createSfxPlayer', () => {
       player.unlock();
       player.play('bingo-me');
     }).not.toThrow();
+  });
+
+  describe('idle suspend (battery)', () => {
+    afterEach(() => vi.useRealTimers());
+
+    it('suspends the context once the last sound ends and nothing else plays', async () => {
+      vi.useFakeTimers();
+      const audio = fakeAudio();
+      const player = createSfxPlayer(() => audio.ctx, 3000);
+      player.play('draw');
+      const lastEndMs = Math.max(...SFX_NOTES.draw.map((n) => (n.at + n.dur + 0.02) * 1000));
+      await vi.advanceTimersByTimeAsync(lastEndMs + 2900);
+      expect(audio.suspend).not.toHaveBeenCalled();
+      player.play('draw'); // novo som adia a suspensão
+      await vi.advanceTimersByTimeAsync(lastEndMs + 2900);
+      expect(audio.suspend).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(200);
+      expect(audio.suspend).toHaveBeenCalledTimes(1);
+      // Suspenso por ociosidade ainda conta como liberado (não volta a pedir gesto).
+      expect(player.isRunning()).toBe(true);
+    });
+
+    it('resumes automatically on the next sound', async () => {
+      vi.useFakeTimers();
+      const audio = fakeAudio();
+      const player = createSfxPlayer(() => audio.ctx, 1000);
+      player.unlock();
+      await vi.advanceTimersByTimeAsync(1100);
+      expect(audio.suspend).toHaveBeenCalledTimes(1);
+      player.play('draw');
+      expect(audio.resume).toHaveBeenCalledTimes(1);
+      await vi.advanceTimersByTimeAsync(0);
+      expect(audio.raw.state).toBe('running');
+      expect(audio.oscillators.length).toBeGreaterThan(0);
+    });
   });
 });

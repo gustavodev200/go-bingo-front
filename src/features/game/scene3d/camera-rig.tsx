@@ -5,8 +5,11 @@ import { useEffect, useRef } from 'react';
 import type { PerspectiveCamera } from 'three';
 import { approach, cameraFor, focusOn, orbitPosition, type CameraView } from './camera';
 import type { Vec3 } from './slots';
+import { useStageActivity } from './stage-activity';
 
 const MAX_YAW = 0.26; // ~15°
+/** Abaixo disso (unidades da cena) a câmera já chegou: para de pedir FPS ativo. */
+const SETTLED = 0.005;
 
 /**
  * Enquadra pelo aspect da região do canvas (lobby ou partida); arrasto horizontal gira até ±15° e volta com mola.
@@ -18,15 +21,18 @@ export function CameraRig({ view = 'lobby', focus = null, spread }: { view?: Cam
   const targetYaw = useRef(0);
   const pos = useRef<Vec3 | null>(null);
   const look = useRef<Vec3 | null>(null);
+  const activity = useStageActivity();
 
   useEffect(() => {
     const el = gl.domElement;
     let startX: number | null = null;
     const down = (e: PointerEvent) => {
       startX = e.clientX;
+      activity.keepActive(300);
     };
     const move = (e: PointerEvent) => {
       if (startX === null) return;
+      activity.keepActive(300);
       const dx = (e.clientX - startX) / Math.max(1, el.clientWidth);
       targetYaw.current = Math.max(-MAX_YAW, Math.min(MAX_YAW, -dx * 0.8));
     };
@@ -44,7 +50,7 @@ export function CameraRig({ view = 'lobby', focus = null, spread }: { view?: Cam
       el.removeEventListener('pointercancel', up);
       window.removeEventListener('pointerup', up);
     };
-  }, [gl]);
+  }, [gl, activity]);
 
   useFrame((state, delta) => {
     const camera = state.camera as PerspectiveCamera;
@@ -59,6 +65,13 @@ export function CameraRig({ view = 'lobby', focus = null, spread }: { view?: Cam
     }
     camera.position.set(...pos.current);
     camera.lookAt(...look.current);
+    // Arrasto voltando com mola, troca de enquadramento ou deslize até o vencedor: FPS ativo até assentar.
+    const moving =
+      Math.abs(targetYaw.current - yaw.current) > 0.001 ||
+      Math.abs(camera.fov - setup.fov) > 0.01 ||
+      pos.current.some((v, i) => Math.abs(v - desired[i]) > SETTLED) ||
+      look.current.some((v, i) => Math.abs(v - setup.target[i]) > SETTLED);
+    if (moving) activity.keepActive(100);
   });
 
   return null;

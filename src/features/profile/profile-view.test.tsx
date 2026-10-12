@@ -105,4 +105,17 @@ describe('ProfileView', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Tentar de novo' }));
     expect(reload).toHaveBeenCalled();
   });
+
+  it('battery saver switch turns the power-save quality on and off', async () => {
+    localStorage.clear();
+    render(<ProfileView />);
+    const toggle = screen.getByRole('switch', { name: 'Economia de bateria' });
+    expect(toggle).toHaveAttribute('aria-checked', 'false');
+    await userEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-checked', 'true');
+    expect(localStorage.getItem('go-bingo:scene-quality')).toBe('low');
+    await userEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-checked', 'false');
+    expect(localStorage.getItem('go-bingo:scene-quality')).toBe('auto');
+  });
 });

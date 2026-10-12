@@ -1,11 +1,12 @@
 'use client';
 
-import { ChevronLeft, LogOut } from 'lucide-react';
+import { BatteryLow, ChevronLeft, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { Coins } from '@/components/stage/coin';
 import { Button } from '@/components/ui/button';
 import { UpgradeButton } from '@/features/auth/upgrade-button';
 import { useLogout } from '@/features/auth/use-logout';
+import { usePowerSave } from '@/features/game/power-save';
 import { useProfile } from '@/features/profile/profile-context';
 import { CharacterEditor } from './character-editor';
 import { CoinHistory } from './coin-history';
@@ -17,6 +18,7 @@ export function ProfileView() {
   const { profile, refresh } = useProfile();
   const { state, stats, reload } = useProfileStats();
   const logout = useLogout();
+  const [powerSave, setPowerSave] = usePowerSave();
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-col gap-5 px-4 pt-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
@@ -61,6 +63,26 @@ export function ProfileView() {
           <CoinHistory entries={stats.coinHistory} />
         </section>
       )}
+
+      <section className="glass flex items-center gap-3 p-4" aria-label="Aparelho">
+        <BatteryLow aria-hidden className="size-6 shrink-0 text-amber-200" />
+        <div className="min-w-0 flex-1">
+          <p id="power-save-label" className="text-sm font-semibold">
+            Economia de bateria
+          </p>
+          <p className="text-xs text-violet-200/70">Cenas 3D mais leves e fundo do salão parado.</p>
+        </div>
+        <Button
+          variant="outline"
+          role="switch"
+          aria-checked={powerSave}
+          aria-labelledby="power-save-label"
+          className="h-11 min-w-20 rounded-xl"
+          onClick={() => setPowerSave(!powerSave)}
+        >
+          {powerSave ? 'Ligada' : 'Desligada'}
+        </Button>
+      </section>
 
       <Button variant="ghost" className="h-11 gap-2 self-center rounded-xl text-violet-200" onClick={() => void logout()} aria-label="Sair da conta">
         <LogOut aria-hidden />

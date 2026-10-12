@@ -5,6 +5,11 @@
 }
 
 /* --- holofotes --- */
+/*
+ * Só transform anima (compositor gira a camada já rasterizada). Antes havia `filter: blur` + `mix-blend-mode: screen`:
+ * o blur era quase invisível (o clip-path é aplicado depois do filtro e corta as bordas suaves), mas os dois obrigavam
+ * a GPU a refazer desfoque e mistura da tela inteira a cada quadro — e os painéis `glass` por cima a redesfocar junto.
+ */
 .beam {
   position: absolute;
   top: -10%;
@@ -12,8 +17,6 @@
   height: 130%;
   clip-path: polygon(46% 0, 54% 0, 100% 100%, 0 100%);
   transform-origin: top center;
-  mix-blend-mode: screen;
-  filter: blur(8px);
   animation: sway 7s ease-in-out infinite alternate;
 }
 .beamLeft {
@@ -41,17 +44,24 @@
   right: -50%;
   bottom: 0;
   height: 45%;
+  overflow: hidden;
+  transform: perspective(320px) rotateX(62deg);
+  transform-origin: bottom;
+  mask-image: linear-gradient(to top, black 25%, transparent);
+}
+/* Grade num filho 1 ladrilho mais alto que desliza com translate: animar background-position repintava a cada quadro. */
+.floor::before {
+  content: '';
+  position: absolute;
+  inset: -48px 0 0;
   background-image:
     linear-gradient(rgb(167 139 250 / 0.3) 1px, transparent 1px),
     linear-gradient(90deg, rgb(167 139 250 / 0.3) 1px, transparent 1px);
   background-size: 48px 48px;
-  transform: perspective(320px) rotateX(62deg);
-  transform-origin: bottom;
-  mask-image: linear-gradient(to top, black 25%, transparent);
   animation: floor 2.4s linear infinite;
 }
 @keyframes floor {
-  to { background-position: 0 48px; }
+  to { transform: translateY(48px); }
 }
 
 /* --- confete (mesmas cores da comemoração no 3D) --- */
@@ -135,19 +145,31 @@
   background: linear-gradient(to bottom, rgb(112 26 117 / 0.85), rgb(46 16 101 / 0.9));
   box-shadow: 0 0 0 2px rgb(251 191 36 / 0.75), 0 0 40px -6px rgb(245 158 11 / 0.7), inset 0 0 30px rgb(0 0 0 / 0.35);
 }
-/* Mesma onda do bulbLevel do 3D: período ~1,13 s, cada lâmpada 108 ms atrás da vizinha. */
+/*
+ * Mesma onda do bulbLevel do 3D: período ~1,13 s, cada lâmpada 108 ms atrás da vizinha.
+ * Lâmpada apagada embaixo e acesa (com brilho) por cima variando só a opacidade: animar background/box-shadow repintava.
+ */
 .bulb {
+  position: relative;
   width: 8px;
   height: 8px;
   border-radius: 50%;
+  background: #78350f;
+}
+.bulb::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
   background: #fde68a;
-  box-shadow: 0 0 8px #fbbf24;
+  box-shadow: 0 0 10px #fbbf24, 0 0 2px #fff;
+  opacity: 0;
   animation: chase 1.13s linear infinite;
   animation-delay: calc(var(--i) * 0.108s - 4.52s);
 }
 @keyframes chase {
-  0%, 50%, 100% { background: #78350f; box-shadow: none; }
-  25% { background: #fde68a; box-shadow: 0 0 10px #fbbf24, 0 0 2px #fff; }
+  0%, 50%, 100% { opacity: 0; }
+  25% { opacity: 1; }
 }
 
 /* --- bola de bingo (título, cartela, número sorteado) --- */
@@ -187,12 +209,30 @@
 
 @media (prefers-reduced-motion: reduce) {
   .beam,
-  .floor,
+  .floor::before,
   .confetti,
   .globe,
   .innerBall,
-  .bulb,
+  .bulb::after,
   .bob {
     animation: none !important;
   }
+  /* Sem animação as lâmpadas ficam acesas, como antes. */
+  .bulb::after {
+    opacity: 1;
+  }
+}
+
+/* Palco 3D montado: o fundo fica quase todo atrás do canvas — não precisa compor a tela inteira por baixo a cada quadro. */
+:global(html[data-stage]) .beam,
+:global(html[data-stage]) .floor::before,
+/* Modo economia de bateria (escolhido pelo usuário): decoração parada. */
+:global(html[data-power-save]) .beam,
+:global(html[data-power-save]) .floor::before,
+:global(html[data-power-save]) .confetti,
+:global(html[data-power-save]) .globe,
+:global(html[data-power-save]) .innerBall,
+:global(html[data-power-save]) .bulb::after,
+:global(html[data-power-save]) .bob {
+  animation-play-state: paused;
 }

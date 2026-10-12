@@ -6,7 +6,8 @@ import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { Color, Object3D, type Group, type InstancedMesh, type Mesh } from 'three';
 import { letterFor } from '@/contracts';
 import { LETTER_COLORS } from './ambience';
-import { GLOBE_CENTER, ballFlight, globeSpin, innerBall } from './globe';
+import { BALL_SHOW_MS, GLOBE_CENTER, ballFlight, globeSpin, innerBall } from './globe';
+import { useStageActivity } from './stage-activity';
 
 const INK = '#0f0f14';
 
@@ -44,6 +45,7 @@ export function Globe({ lastNumber, drawCount, innerBalls }: { lastNumber: numbe
   const lastDrawAt = useRef(0);
   const seenCount = useRef<number | null>(null);
   const o = useMemo(() => new Object3D(), []);
+  const activity = useStageActivity();
 
   // Bolinhas da gaiola nas cores das colunas, como as sorteadas.
   useLayoutEffect(() => {
@@ -56,9 +58,13 @@ export function Globe({ lastNumber, drawCount, innerBalls }: { lastNumber: numbe
 
   // Só anima um sorteio novo (+1) com a cena montada; recarga, remontagem e ressincronização não animam.
   useEffect(() => {
-    if (seenCount.current !== null && drawCount === seenCount.current + 1) lastDrawAt.current = performance.now();
+    if (seenCount.current !== null && drawCount === seenCount.current + 1) {
+      lastDrawAt.current = performance.now();
+      // Arranque do globo + voo da bola em FPS cheio; o resto da partida o globo gira devagar no ocioso.
+      activity.keepActive(BALL_SHOW_MS);
+    }
     seenCount.current = drawCount;
-  }, [drawCount]);
+  }, [drawCount, activity]);
 
   useFrame((_, delta) => {
     const now = performance.now();

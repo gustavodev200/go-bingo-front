@@ -4,6 +4,10 @@ import type { QualityOverride } from './quality';
 const MODE_KEY = 'go-bingo:scene-mode';
 const QUALITY_KEY = 'go-bingo:scene-quality';
 const QUALITIES: QualityOverride[] = ['auto', 'high', 'medium', 'low'];
+/** Disparado (nesta aba) ao trocar a qualidade; as outras abas recebem o `storage`. */
+export const QUALITY_EVENT = 'go-bingo:scene-quality';
+/** "Economia de bateria" é o nível baixo fixo: 30/20 FPS, sem sombras nem efeitos extras, decoração CSS parada. */
+export const POWER_SAVE_QUALITY: QualityOverride = 'low';
 
 function read(key: string): string | null {
   try {
@@ -37,4 +41,5 @@ export function readQualityOverride(): QualityOverride {
 
 export function writeQualityOverride(quality: QualityOverride) {
   write(QUALITY_KEY, quality);
+  window.dispatchEvent(new Event(QUALITY_EVENT));
 }

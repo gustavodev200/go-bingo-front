@@ -4,6 +4,10 @@ import { useFrame } from '@react-three/fiber';
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import { Color, DoubleSide, Object3D, type InstancedMesh } from 'three';
 import { CONFETTI_COLORS, confettiParticle } from './ambience';
+import { useStageActivity } from './stage-activity';
+
+/** Chuva em FPS cheio no começo da comemoração; depois continua no ocioso (atrás do diálogo de resultado). */
+const ACTIVE_MS = 8000;
 
 /**
  * Confete da comemoração (início da partida / vitória). Fica montado e escondido desde o começo:
@@ -14,6 +18,7 @@ export function Confetti({ count, active }: { count: number; active: boolean }) 
   const start = useRef(0);
   const o = useMemo(() => new Object3D(), []);
   const colors = useMemo(() => CONFETTI_COLORS.map((c) => new Color(c)), []);
+  const activity = useStageActivity();
 
   useLayoutEffect(() => {
     const m = mesh.current;
@@ -30,6 +35,7 @@ export function Confetti({ count, active }: { count: number; active: boolean }) 
     const m = mesh.current;
     if (!m || !active) return;
     const elapsed = performance.now() - start.current;
+    if (elapsed < ACTIVE_MS) activity.keepActive(150);
     for (let i = 0; i < count; i++) {
       const p = confettiParticle(i, elapsed);
       o.position.set(...p.position);

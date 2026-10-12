@@ -6,6 +6,7 @@ import { Color, DoubleSide, Euler, Matrix4, Object3D, Quaternion, Vector3, type 
 import { ALL_HAIR_STYLES, type Face, type HairStyle } from './avatar-look';
 import { FACE, HAT_TYPES, HEAD_Y, characterShader, createAvatarGeometries, disposeAvatarGeometries, type HatType, type V3 } from './avatar-geometry';
 import { PHASE_MS, WAVE_MS, pose, type AvatarState } from './pose';
+import { useStageActivity } from './stage-activity';
 
 export const MAX_AVATARS = 32; // 25 na sala + quem está saindo
 const GHOST = new Color('#c4b5fd');
@@ -23,6 +24,8 @@ const FROM_WAIST = new Matrix4().makeTranslation(0, -WAIST_Y, 0);
 const SHOULDER: V3 = [0.235, 0.665, 0];
 const ELBOW_Y = -0.09;
 const HIP: V3 = [0.105, 0.3, 0];
+/** Comemoração (vitória/dança) em FPS cheio só no começo; depois segue no ocioso, atrás do diálogo de resultado. */
+const CELEBRATION_ACTIVE_MS = 8000;
 /** Piscar: a cada ~4 s, 120 ms de olho fechado; fase diferente por boneco. */
 const BLINK_PERIOD_S = 4.2;
 const BLINK_S = 0.12;
@@ -101,6 +104,7 @@ export function AvatarCrowd({
     hats: { tophat: null, cap: null, beanie: null, party: null },
   });
   const ids = useRef<string[]>([]);
+  const activity = useStageActivity();
   const geo = useMemo(() => createAvatarGeometries(), []);
   useEffect(() => () => disposeAvatarGeometries(geo), [geo]);
   const tmp = useMemo(
@@ -159,6 +163,7 @@ export function AvatarCrowd({
     };
     /** Lilás ao virar fantasma (desconectado), dourado no brilho de "por 1"/vitória. */
     const tint = (hex: string, ghost: number, glow = 0) => tmp.color.copy(cached(hex)).lerp(GHOST, ghost).lerp(GOLD, glow);
+    let moving = false;
 
     for (const s of states) {
       const ps = pose(s, now);
@@ -169,6 +174,8 @@ export function AvatarCrowd({
       const elapsed = now - s.phaseStart;
       const walking = (s.phase === 'entering' && elapsed < PHASE_MS.entering) || (s.phase === 'leaving' && elapsed >= WAVE_MS);
       const celebrating = s.phase === 'winner' || s.phase === 'dance';
+      // Andar, pular e comemorar pedem FPS ativo; respirar/piscar/fantasma ficam no ocioso.
+      if (walking || (celebrating && elapsed < CELEBRATION_ACTIVE_MS) || (s.phase === 'ready-jump' && elapsed < PHASE_MS['ready-jump'])) moving = true;
       const mood: Mood = celebrating ? 'happy' : ghost > 0.5 ? 'sleepy' : s.oneAway ? 'wow' : s.phase === 'ready-jump' ? 'grin' : look.face;
 
       // estica na velocidade vertical (pulos) e encolhe a largura junto: volume constante, pulo menos "duro"
@@ -250,6 +257,8 @@ export function AvatarCrowd({
         put(p.shadow, tmp.o.matrix);
       }
     }
+
+    if (moving) activity.keepActive(150);
 
     for (const mesh of allMeshes(p)) {
       // Desenha só as instâncias em uso: sala com 2 pessoas = 2 bonecos; peça sem uso nem entra no draw.

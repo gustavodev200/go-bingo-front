@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import type { DisplayMode } from './scene3d/display-mode';
 import type { QualityOverride } from './scene3d/quality';
 
-const QUALITY_LABELS: Record<QualityOverride, string> = { auto: 'Automática', high: 'Alta', medium: 'Média', low: 'Baixa' };
+const QUALITY_LABELS: Record<QualityOverride, string> = { auto: 'Automática', high: 'Alta', medium: 'Equilibrada', low: 'Economia de bateria' };
 
 export function SceneControls({
   mode,

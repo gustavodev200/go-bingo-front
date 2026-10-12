@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Fredoka, Geist, Geist_Mono, Luckiest_Guy } from 'next/font/google';
 import { Toaster } from '@/components/ui/sonner';
 import { StageBackdrop } from '@/components/stage/stage';
+import { PowerSaveSync } from '@/features/game/power-save';
 import { OfflineBanner } from '@/features/pwa/offline-banner';
 import { PwaProvider } from '@/features/pwa/pwa-provider';
 import './globals.css';
@@ -40,6 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       {/* suppressHydrationWarning: extensões do navegador (ex.: ColorZilla) injetam atributos no <body> antes da hidratação. */}
       <body className="bg-background text-foreground min-h-dvh font-sans antialiased" suppressHydrationWarning>
         <StageBackdrop />
+        <PowerSaveSync />
         <div className="min-h-dvh pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)]">
           <PwaProvider>
             <OfflineBanner />

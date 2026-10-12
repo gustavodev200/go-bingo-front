@@ -161,16 +161,30 @@
   animation: bubble 2.6s ease-out both;
 }
 
+/*
+ * Vez de jogar: anel + brilho fixos e um halo largo por cima pulsando só na opacidade (compositor).
+ * Animar box-shadow repintava a mesa a cada quadro durante a partida inteira (sempre há alguém na vez).
+ */
 @keyframes turn {
   0%,
   100% {
-    box-shadow: 0 0 0 3px rgb(253 224 71 / 0.9), 0 0 18px 4px rgb(253 224 71 / 0.55);
+    opacity: 0;
   }
   50% {
-    box-shadow: 0 0 0 3px rgb(253 224 71 / 0.6), 0 0 30px 10px rgb(253 224 71 / 0.25);
+    opacity: 1;
   }
 }
 .turn {
+  position: relative;
+  box-shadow: 0 0 0 3px rgb(253 224 71 / 0.8), 0 0 18px 4px rgb(253 224 71 / 0.45);
+}
+.turn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: 0 0 30px 10px rgb(253 224 71 / 0.3);
   animation: turn 1.2s ease-in-out infinite;
 }
 
@@ -186,16 +200,23 @@
   animation: fall linear infinite;
 }
 
+/* Mão de ferro: brilho externo numa camada própria pulsando na opacidade (animar filter repintava a cada quadro). */
 @keyframes iron {
   0%,
   100% {
-    filter: drop-shadow(0 0 0 transparent);
+    opacity: 0;
   }
   50% {
-    filter: drop-shadow(0 0 14px rgb(148 163 184 / 0.9));
+    opacity: 1;
   }
 }
-.iron {
+.iron::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: 0 0 14px rgb(148 163 184 / 0.9);
   animation: iron 1.6s ease-in-out infinite;
 }
 
@@ -210,9 +231,9 @@
   .fromRight,
   .wiggle,
   .bubble,
-  .turn,
+  .turn::before,
   .confetti,
-  .iron {
+  .iron::before {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
   }

@@ -1,12 +1,15 @@
 'use client';
 
 import { Canvas } from '@react-three/fiber';
-import { useCallback, useEffect, useRef, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { CharacterId } from '@/contracts';
 import { AvatarCrowd } from './avatar-crowd';
 import { lookFor } from './characters';
+import { FrameDriver } from './frame-driver';
 import { PHASE_MS, type AvatarState, type Phase } from './pose';
+import { TIER_SETTINGS } from './quality';
 import { slotPosition } from './slots';
+import { StageActivityContext, createStageActivity } from './stage-activity';
 
 /** Id fixo só para a vitrine (fase do piscar/respirar). */
 const PREVIEW_ID = 'character-preview';
@@ -34,6 +37,7 @@ function previewState(character: CharacterId, phase: Phase): AvatarState {
 export default function CharacterStage({ character, fallback }: { character: CharacterId; fallback: ReactNode }) {
   const statesRef = useRef(new Map<string, AvatarState>());
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const [activity] = useState(() => createStageActivity());
 
   /** Toca uma animação curta e agenda a volta ao idle (a pose de dança/pulo não para sozinha). */
   const play = useCallback(
@@ -55,6 +59,8 @@ export default function CharacterStage({ character, fallback }: { character: Cha
       aria-hidden="true"
       role="presentation"
       dpr={[1, 2]}
+      // Um boneco parado respirando não precisa de 60-120 FPS: pulo/dança sobem para o teto ativo (o AvatarCrowd avisa).
+      frameloop="demand"
       gl={{ antialias: true, alpha: true, stencil: false }}
       camera={{ fov: 30, near: 0.1, far: 20, position: [X, Y + 1.1, Z + 3.35] }}
       onCreated={({ camera }) => camera.lookAt(X, Y + 0.86, Z)}
@@ -67,7 +73,10 @@ export default function CharacterStage({ character, fallback }: { character: Cha
       <directionalLight position={[X + 2.5, Y + 4, Z + 5]} intensity={1.8} color="#fff1d6" />
       <pointLight position={[X - 2, Y + 1.5, Z - 1]} intensity={6} color="#ec4899" distance={6} />
       <pointLight position={[X + 2, Y + 1.5, Z - 1]} intensity={6} color="#22d3ee" distance={6} />
-      <AvatarCrowd statesRef={statesRef} onTap={() => play('dance')} castShadow={false} fakeShadow />
+      <StageActivityContext.Provider value={activity}>
+        <FrameDriver settings={TIER_SETTINGS.medium} />
+        <AvatarCrowd statesRef={statesRef} onTap={() => play('dance')} castShadow={false} fakeShadow />
+      </StageActivityContext.Provider>
     </Canvas>
   );
 }

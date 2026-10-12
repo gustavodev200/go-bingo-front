@@ -1,10 +1,12 @@
 'use client';
 
-import { PerformanceMonitor, Preload } from '@react-three/drei';
+import { Preload } from '@react-three/drei';
 import { Canvas, useThree } from '@react-three/fiber';
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useState, type ReactNode } from 'react';
 import { contextLossGuard } from './context-loss';
+import { FrameDriver } from './frame-driver';
 import { TIER_SETTINGS, initialQuality, pickInitialTier, stepDown, stepUp, type QualityOverride, type QualityState, type Tier, type TierSettings } from './quality';
+import { StageActivityContext, createStageActivity } from './stage-activity';
 
 function startQuality(override: QualityOverride): QualityState {
   const nav = navigator as Navigator & { deviceMemory?: number };
@@ -30,17 +32,24 @@ function ContextLossWatcher({ onLost }: { onLost: () => void }) {
   return null;
 }
 
-function usePageHidden() {
-  const [hidden, setHidden] = useState(false);
+let mountedStages = 0;
+
+/**
+ * `<html data-stage>` enquanto um palco 3D está montado: o fundo CSS animado (holofotes, chão) fica quase todo atrás
+ * do canvas e pausa (stage.module.css) — sem repintar/recompor a tela inteira por baixo da cena.
+ */
+function useStageFlag() {
   useEffect(() => {
-    const update = () => setHidden(document.visibilityState === 'hidden');
-    document.addEventListener('visibilitychange', update);
-    return () => document.removeEventListener('visibilitychange', update);
+    mountedStages += 1;
+    document.documentElement.dataset.stage = '';
+    return () => {
+      mountedStages -= 1;
+      if (mountedStages === 0) delete document.documentElement.dataset.stage;
+    };
   }, []);
-  return hidden;
 }
 
-/** Canvas comum do lobby e da partida: qualidade adaptativa, DPR, pausa em segundo plano, perda de contexto. */
+/** Canvas comum do lobby e da partida: qualidade adaptativa, DPR, teto de FPS, pausa em segundo plano/fora da tela, perda de contexto. */
 export function StageCanvas({
   qualityOverride,
   onContextLost,
@@ -56,39 +65,36 @@ export function StageCanvas({
     setAppliedOverride(qualityOverride);
     setQuality(startQuality(qualityOverride));
   }
-  const inclined = useRef(false);
-  const hidden = usePageHidden();
+  const [activity] = useState(() => createStageActivity());
   const settings = TIER_SETTINGS[quality.tier];
+  const decline = useCallback(() => setQuality(stepDown), []);
+  const incline = useCallback(() => setQuality(stepUp), []);
+  useStageFlag();
 
   return (
     <Canvas
       aria-hidden="true"
       role="presentation"
       dpr={quality.dpr}
-      frameloop={hidden ? 'never' : 'always'}
+      // Sob demanda: o FrameDriver pede quadros no teto do perfil e para com a aba oculta ou o canvas fora da tela.
+      frameloop="demand"
       shadows={settings.shadows === 'real'}
       // stencil: nenhum efeito usa; sem ele o framebuffer fica menor (menos banda de memória no celular).
-      gl={{ antialias: settings.antialias, powerPreference: 'high-performance', stencil: false }}
+      // powerPreference 'default': 'high-performance' acordava a GPU dedicada em notebook híbrido (bateria) sem ganho para esta cena.
+      gl={{ antialias: settings.antialias, powerPreference: 'default', stencil: false }}
       camera={{ fov: 45, near: 0.1, far: 100, position: [0, 9, 20] }}
       style={{ touchAction: 'pan-y' }}
     >
       <ContextLossWatcher onLost={onContextLost} />
-      {qualityOverride === 'auto' && (
-        <PerformanceMonitor
-          flipflops={3}
-          onDecline={() => setQuality(stepDown)}
-          onIncline={() => {
-            if (inclined.current) return;
-            inclined.current = true;
-            setQuality(stepUp);
-          }}
-        />
-      )}
-      <color attach="background" args={['#1a0b3d']} />
-      <fog attach="fog" args={['#1a0b3d', 24, 60]} />
-      {children(settings, quality.tier)}
-      {/* Compila todos os shaders (inclusive de objetos escondidos, como o confete) na montagem: sem engasgo na 1ª aparição. */}
-      <Preload all />
+      <StageActivityContext.Provider value={activity}>
+        {/* Qualidade manual não adapta; "auto" desce/sobe pelo que o aparelho entrega de fato. */}
+        <FrameDriver settings={settings} onDecline={qualityOverride === 'auto' ? decline : undefined} onIncline={qualityOverride === 'auto' ? incline : undefined} />
+        <color attach="background" args={['#1a0b3d']} />
+        <fog attach="fog" args={['#1a0b3d', 24, 60]} />
+        {children(settings, quality.tier)}
+        {/* Compila todos os shaders (inclusive de objetos escondidos, como o confete) na montagem: sem engasgo na 1ª aparição. */}
+        <Preload all />
+      </StageActivityContext.Provider>
     </Canvas>
   );
 }
