@@ -5,13 +5,14 @@ let pathname = '/';
 vi.mock('next/navigation', () => ({ usePathname: () => pathname }));
 
 describe('AppDock', () => {
-  it('links home, create and ranking, marking the current page', () => {
+  it('links home, ranking and profile, marking the current page', () => {
     pathname = '/ranking';
     render(<AppDock />);
     const nav = screen.getByRole('navigation', { name: 'Navegação' });
     expect(nav).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /início/i })).toHaveAttribute('href', '/');
-    expect(screen.getByRole('link', { name: 'Criar sala' })).toHaveAttribute('href', '/create');
+    expect(screen.getByRole('link', { name: /perfil/i })).toHaveAttribute('href', '/perfil');
+    expect(screen.queryByRole('link', { name: /criar sala/i })).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /ranking/i })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('link', { name: /início/i })).not.toHaveAttribute('aria-current');
   });
