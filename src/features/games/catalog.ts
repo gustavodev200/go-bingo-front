@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import { TrucoArt } from '@/features/truco/truco-art';
+import { UnoArt } from '@/features/uno/uno-art';
 import { BingoArt } from './bingo-art';
 
 export type GameStatus = 'available' | 'coming-soon';
@@ -39,5 +40,15 @@ export const GAMES: readonly Game[] = [
     tags: ['4 jogadores', 'Duplas', 'Tempo real'],
     glow: '#22c55e',
     Art: TrucoArt,
+  },
+  {
+    id: 'uno',
+    name: 'UNO',
+    description: 'De 2 a 6 na mesa: +4 na hora certa, desafie o blefe e não esqueça de gritar UNO!',
+    href: '/uno',
+    status: 'available',
+    tags: ['2 a 6 jogadores', 'Salas públicas', 'Tempo real'],
+    glow: '#ef4444',
+    Art: UnoArt,
   },
 ];

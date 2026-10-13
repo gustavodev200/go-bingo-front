@@ -1,0 +1,232 @@
+/* Hot red/orange stage with a soft swirl, like a game show set. */
+.backdrop {
+  background:
+    radial-gradient(circle at 50% 42%, rgb(255 214 102 / 0.35), transparent 38%),
+    repeating-conic-gradient(from 0deg at 50% 45%, rgb(255 255 255 / 0.045) 0 9deg, transparent 9deg 18deg),
+    radial-gradient(ellipse at 50% 40%, #ff6a1a 0%, #e5281b 45%, #8f0f1c 85%, #4a0712 100%);
+}
+
+/* The table: a darker oval under the piles, so the center reads as the play area. */
+.table {
+  background: radial-gradient(ellipse at center, rgb(0 0 0 / 0.28), rgb(0 0 0 / 0.12) 55%, transparent 72%);
+}
+
+.face {
+  box-shadow:
+    inset 0 0 0 clamp(2px, 5cqw, 5px) #fff,
+    0 3px 8px rgb(0 0 0 / 0.45);
+}
+
+/* The tilted white oval in the middle of every face. */
+.oval {
+  position: absolute;
+  inset: 16% 10%;
+  border-radius: 50%;
+  transform: rotate(-28deg) skewX(-6deg);
+}
+
+.wildOval {
+  background: conic-gradient(from 45deg, #e5281b 0 25%, #facc15 0 50%, #16a34a 0 75%, #2563eb 0);
+}
+
+.back {
+  background:
+    radial-gradient(ellipse at center, transparent 55%, rgb(0 0 0 / 0.35)),
+    #161616;
+  box-shadow:
+    inset 0 0 0 clamp(2px, 5cqw, 5px) #fff,
+    0 3px 8px rgb(0 0 0 / 0.45);
+}
+
+.backOval {
+  position: absolute;
+  inset: 14% 8%;
+  border-radius: 50%;
+  background: #e5281b;
+  transform: rotate(-28deg);
+  box-shadow: inset 0 0 0 clamp(1px, 3cqw, 3px) #fff;
+}
+
+.logo {
+  color: #facc15;
+  text-shadow:
+    -1px 1px 0 #000,
+    -2px 2px 0 #000;
+  transform: rotate(-28deg);
+}
+
+/* The current color glows around the piles; the arrows turn with the play direction. */
+.ring {
+  border-radius: 50%;
+  border: clamp(4px, 1.2cqmin, 9px) solid var(--uno-color);
+  box-shadow:
+    0 0 30px 4px color-mix(in oklch, var(--uno-color), transparent 40%),
+    inset 0 0 30px 4px color-mix(in oklch, var(--uno-color), transparent 55%);
+  transition:
+    border-color 0.4s,
+    box-shadow 0.4s;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.arrows {
+  animation: spin 9s linear infinite;
+}
+.arrowsReverse {
+  animation: spin 9s linear infinite reverse;
+}
+
+@keyframes deal {
+  from {
+    transform: translateY(-30vh) rotate(-25deg) scale(0.5);
+    opacity: 0;
+  }
+}
+.deal {
+  animation: deal 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
+}
+
+@keyframes land {
+  from {
+    transform: translateY(-40%) scale(1.5) rotate(var(--tilt, 0deg));
+    opacity: 0;
+  }
+}
+.land {
+  animation: land 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+@keyframes turn {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(250 204 21 / 0.9);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgb(250 204 21 / 0);
+  }
+}
+.turn {
+  animation: turn 1.1s ease-out infinite;
+}
+
+@keyframes wiggle {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  25% {
+    transform: rotate(-10deg) scale(1.08);
+  }
+  75% {
+    transform: rotate(10deg) scale(1.08);
+  }
+}
+.wiggle {
+  animation: wiggle 0.5s ease-in-out 2;
+}
+
+@keyframes shout {
+  0% {
+    transform: scale(0.2) rotate(-12deg);
+    opacity: 0;
+  }
+  18% {
+    transform: scale(1.18) rotate(-4deg);
+    opacity: 1;
+  }
+  28% {
+    transform: scale(0.96) rotate(-6deg);
+  }
+  36%,
+  80% {
+    transform: scale(1) rotate(-5deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.3) rotate(-5deg);
+    opacity: 0;
+  }
+}
+.shout {
+  animation: shout 1.7s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+@keyframes rays {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.rays {
+  background: repeating-conic-gradient(from 0deg, rgb(253 224 71 / 0.35) 0 10deg, transparent 10deg 20deg);
+  animation: rays 6s linear infinite;
+  mask-image: radial-gradient(circle, black 20%, transparent 70%);
+}
+
+@keyframes bubble {
+  0% {
+    transform: translate(-50%, 8px) scale(0.6);
+    opacity: 0;
+  }
+  15%,
+  85% {
+    transform: translate(-50%, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -12px) scale(0.9);
+    opacity: 0;
+  }
+}
+.bubble {
+  animation: bubble 2.4s ease-out both;
+}
+
+@keyframes banner {
+  0% {
+    transform: translateY(10px) scale(0.8);
+    opacity: 0;
+  }
+  12%,
+  85% {
+    transform: none;
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.banner {
+  animation: banner 2.4s ease-out both;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+.pulse {
+  animation: pulse 0.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arrows,
+  .arrowsReverse,
+  .deal,
+  .land,
+  .turn,
+  .wiggle,
+  .shout,
+  .rays,
+  .bubble,
+  .banner,
+  .pulse {
+    animation: none;
+  }
+}
