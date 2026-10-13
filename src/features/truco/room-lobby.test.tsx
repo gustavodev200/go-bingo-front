@@ -10,7 +10,7 @@ vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
 function actions(): TrucoActions {
   const ok = () => vi.fn(async () => true);
-  return { leave: ok(), ready: ok(), takeSeat: ok(), setVisibility: ok(), start: ok(), rematch: ok(), playCard: ok(), requestBet: ok(), respondBet: ok(), decideTen: ok(), signal: ok() };
+  return { leave: ok(), ready: ok(), takeSeat: ok(), setVisibility: ok(), setMode: ok(), start: ok(), rematch: ok(), playCard: ok(), requestBet: ok(), respondBet: ok(), decideTen: ok(), signal: ok() };
 }
 
 const lobby = (seats: TrucoRoomState['seats'], over = {}) => roomState({ phase: 'LOBBY', lobbyStatus: 'WAITING_PLAYERS', match: null, seats, ...over });
@@ -68,6 +68,23 @@ describe('RoomLobby columns', () => {
     renderLobby(lobby([seatPlayer(0), seatPlayer(1), seatPlayer(2), seatPlayer(3)]), 1);
     const names = within(screen.getByRole('list')).getAllByRole('listitem').map((li) => li.getAttribute('aria-label'));
     expect(names).toEqual(['Bia', 'Caio', 'Duda', 'Ana']);
+  });
+});
+
+describe('RoomLobby mode', () => {
+  it('shows the mode and lets the host switch it', async () => {
+    const a = renderLobby();
+    expect(screen.getByRole('heading', { name: 'Truco Mineiro' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Truco Mineiro' })).toBeDisabled();
+    await userEvent.click(screen.getByRole('radio', { name: 'Truco Goiano' }));
+    expect(a.setMode).toHaveBeenCalledWith('goiano');
+  });
+
+  it('shows the goiano rules and blocks the switch for other players', () => {
+    renderLobby(lobby([seatPlayer(0), seatPlayer(1), null, null], { mode: 'goiano' }), 1);
+    expect(screen.getByRole('heading', { name: 'Truco Goiano' })).toBeInTheDocument();
+    expect(screen.getByText(/Até 15 tentos/)).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Truco Mineiro' })).toBeDisabled();
   });
 });
 

@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, type CSSProperties } from 'react';
-import { TRUCO_TARGET_SCORE, type Seat, type Team } from '@/contracts';
+import type { Seat, Team } from '@/contracts';
 import { cn } from '@/lib/utils';
 import { positionOf, type TablePosition } from './rules-view';
 import styles from './truco.module.css';
 
 /** Seeds in the middle at the start: enough for both teams to pull. */
-const MONTE = TRUCO_TARGET_SCORE * 2 - 1;
+const monteSize = (targetScore: number) => targetScore * 2 - 1;
 
 const SEED_COLORS = {
   monte: { body: '#b91c1c', cap: '#111' },
@@ -101,11 +101,11 @@ function Pile({ side, position, count, base, from }: { side: 'us' | 'them'; posi
  * each team pulling the team's tentos next to them, in the team's color.
  * Decorative: the scoreboard on top keeps the numbers.
  */
-export function TentoPiles({ scores, mySeat }: { scores: [number, number]; mySeat: Seat }) {
+export function TentoPiles({ scores, mySeat, targetScore }: { scores: [number, number]; mySeat: Seat; targetScore: number }) {
   const seen = useScoreHistory(scores);
   const myTeam = (mySeat % 2) as Team;
   const them = (1 - myTeam) as Team;
-  const monte = Math.max(0, MONTE - scores[0] - scores[1]);
+  const monte = Math.max(0, monteSize(targetScore) - scores[0] - scores[1]);
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0">
       <div className="absolute top-1/2 left-1/2 size-[6em] -translate-1/2 text-[clamp(10px,min(3.2vw,3.2dvh),18px)]" data-testid="tentos-monte" data-count={monte}>

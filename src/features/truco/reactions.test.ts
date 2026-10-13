@@ -13,6 +13,7 @@ describe('reactionFor', () => {
     expect(reactionFor({ event: 'truco:bet_resolved', payload: { seq: 1, seat: 1, response: 'run', value: 2 } }, 0).sfx).toBe('run');
     expect(reactionFor({ event: 'truco:hand_dealt', payload: { seq: 1, handNumber: 9, kind: 'iron', tenTeam: null } }, 0).speech).toBe('Mão de ferro!');
     expect(reactionFor({ event: 'truco:hand_dealt', payload: { seq: 1, handNumber: 9, kind: 'ten', tenTeam: 0 } }, 0).shout!.text).toBe('MÃO DE DEZ!');
+    expect(reactionFor({ event: 'truco:hand_dealt', payload: { seq: 1, handNumber: 9, kind: 'ten', tenTeam: 0 } }, 0, 'goiano')).toMatchObject({ shout: { text: 'MÃO DE 14!' }, speech: 'Mão de 14!' });
     expect(reactionFor({ event: 'truco:hand_dealt', payload: { seq: 1, handNumber: 2, kind: 'normal', tenTeam: null } }, 0)).toEqual({ sfx: 'card' });
     const zap = { event: 'truco:card_played', payload: { seq: 1, seat: 2, card: { rank: '4', suit: 'clubs' }, round: 1 } } as const;
     expect(reactionFor(zap, 0).speech).toBe('É ZAP, meu parceiro!');

@@ -1,4 +1,7 @@
-import { TRUCO_BET_LADDER, teamOf, type Seat, type Team, type TrucoRoomState, type TrucoRoundView } from '@/contracts';
+import { TRUCO_BET_LADDER, TRUCO_RULES, teamOf, type Seat, type Team, type TrucoMode, type TrucoRoomState, type TrucoRoundView } from '@/contracts';
+
+/** Rules of the table (older servers send no mode: mineiro). */
+export const rulesOf = (mode: TrucoMode | undefined) => TRUCO_RULES[mode ?? 'mineiro'];
 
 /** Where a seat sits on screen: the player is always at the bottom, play goes to their right. */
 export type TablePosition = 'bottom' | 'right' | 'top' | 'left';
@@ -27,7 +30,7 @@ export interface AvailableActions {
   raiseValue: number | null;
   /** We asked and wait for the opponents. */
   waitingResponse: boolean;
-  /** Mão de dez: 'mine' when our team decides, 'theirs' when we wait. */
+  /** Mão de dez/14: 'mine' when our team decides, 'theirs' when we wait. */
   tenDecision: 'mine' | 'theirs' | null;
 }
 

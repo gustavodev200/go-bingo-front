@@ -1,12 +1,11 @@
-import { TRUCO_TARGET_SCORE, type Team, type TrucoMatchView } from '@/contracts';
+import type { Team, TrucoMatchView, TrucoRules } from '@/contracts';
 import { cn } from '@/lib/utils';
 import { BET_LABEL } from './rules-view';
 
-const KIND_LABEL = { ten: 'Mão de dez', iron: 'Mão de ferro' } as const;
-
 /** NÓS × ELES with the round dots of the current hand and what the hand is worth. */
-export function Scoreboard({ scores, myTeam, match }: { scores: [number, number]; myTeam: Team; match: TrucoMatchView | null }) {
+export function Scoreboard({ scores, myTeam, match, rules }: { scores: [number, number]; myTeam: Team; match: TrucoMatchView | null; rules: TrucoRules }) {
   const them = (1 - myTeam) as Team;
+  const kindLabel = { ten: rules.tenHandName, iron: 'Mão de ferro' } as const;
   const rounds = match?.rounds ?? [];
   return (
     <div role="group" aria-label="Placar" className="flex min-w-0 flex-1 items-stretch overflow-hidden rounded-2xl border border-white/10 bg-violet-950/70 text-center shadow-lg backdrop-blur">
@@ -18,7 +17,7 @@ export function Scoreboard({ scores, myTeam, match }: { scores: [number, number]
       </div>
       <div className="flex min-w-0 flex-1 flex-col items-center justify-center gap-1 px-2 py-1">
         <span className="text-[10px] font-semibold tracking-widest text-violet-200 uppercase">
-          Tentos · até {TRUCO_TARGET_SCORE}
+          Tentos · até {rules.targetScore}
         </span>
         <div className="flex items-center gap-1.5" aria-label="Rodadas da mão">
           {[0, 1, 2].map((i) => {
@@ -34,7 +33,7 @@ export function Scoreboard({ scores, myTeam, match }: { scores: [number, number]
         </div>
         {match && (
           <span className="truncate text-[11px] font-bold text-amber-200">
-            {match.kind !== 'normal' ? `${KIND_LABEL[match.kind]} · ` : ''}
+            {match.kind !== 'normal' ? `${kindLabel[match.kind]} · ` : ''}
             Vale {match.value}
             {match.value > 1 && match.kind === 'normal' ? ` (${BET_LABEL[match.value]})` : ''}
           </span>

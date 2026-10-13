@@ -9,7 +9,7 @@ import styles from './truco.module.css';
 
 const CONFETTI = ['#fde047', '#34d399', '#f472b6', '#60a5fa', '#fb923c'];
 
-export function ResultPanel({ result, myTeam, onRematch, onLeave }: { result: TrucoMatchResult; myTeam: Team; onRematch(): Promise<unknown>; onLeave(): Promise<unknown> }) {
+export function ResultPanel({ result, myTeam, targetScore, onRematch, onLeave }: { result: TrucoMatchResult; myTeam: Team; targetScore: number; onRematch(): Promise<unknown>; onLeave(): Promise<unknown> }) {
   const { busy, run } = useBusy();
   const won = result.winnerTeam === myTeam;
   return (
@@ -31,7 +31,7 @@ export function ResultPanel({ result, myTeam, onRematch, onLeave }: { result: Tr
           {won ? 'Vitória!' : 'Derrota'}
         </h2>
         <p className="text-sm text-violet-100">
-          {result.reason === 'abandoned' ? (won ? 'Os adversários abandonaram a mesa.' : 'Sua dupla abandonou a mesa.') : won ? 'Vocês fizeram 12 tentos. Essa foi nossa!' : 'Eles chegaram aos 12 tentos.'}
+          {result.reason === 'abandoned' ? (won ? 'Os adversários abandonaram a mesa.' : 'Sua dupla abandonou a mesa.') : won ? `Vocês fizeram ${targetScore} tentos. Essa foi nossa!` : `Eles chegaram aos ${targetScore} tentos.`}
         </p>
         <p className="font-display text-3xl font-black tabular-nums">
           <span className="text-emerald-300">{result.scores[myTeam]}</span>

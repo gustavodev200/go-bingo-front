@@ -33,8 +33,8 @@ export const GAMES: readonly Game[] = [
   },
   {
     id: 'truco',
-    name: 'Truco Mineiro',
-    description: 'Truco Mineiro 2 contra 2 ao vivo: zap na mão, sinal pro parceiro e grite TRUCO na hora certa.',
+    name: 'Truco',
+    description: 'Truco Mineiro ou Goiano, 2 contra 2 ao vivo: zap na mão, sinal pro parceiro e grite TRUCO na hora certa.',
     href: '/truco',
     status: 'available',
     tags: ['4 jogadores', 'Duplas', 'Tempo real'],

@@ -1,4 +1,4 @@
-import { manilhaName, teamOf, type Seat, type TrucoServerEventPayloads } from '@/contracts';
+import { manilhaName, TRUCO_RULES, teamOf, type Seat, type TrucoMode, type TrucoServerEventPayloads } from '@/contracts';
 import type { TrucoSfx } from '@/features/game/sound/sfx';
 import type { ShoutTone } from './store';
 
@@ -24,14 +24,17 @@ const BET_SHOUT: Record<number, [string, string]> = {
 };
 
 /** How the table reacts (big text, sound, voice) to a validated server announcement. */
-export function reactionFor(msg: Announced, mySeat: Seat): Reaction {
+export function reactionFor(msg: Announced, mySeat: Seat, mode: TrucoMode = 'mineiro'): Reaction {
   const myTeam = teamOf(mySeat);
   switch (msg.event) {
     case 'truco:match_started':
       return { shout: { text: 'BOA SORTE!', tone: 'info' } };
     case 'truco:hand_dealt':
       if (msg.payload.kind === 'iron') return { shout: { text: 'MÃO DE FERRO!', tone: 'bet' }, sfx: 'truco', speech: 'Mão de ferro!' };
-      if (msg.payload.kind === 'ten') return { shout: { text: 'MÃO DE DEZ!', tone: 'bet' }, sfx: 'truco', speech: 'Mão de dez!' };
+      if (msg.payload.kind === 'ten') {
+        const name = TRUCO_RULES[mode].tenHandName;
+        return { shout: { text: `${name.toUpperCase()}!`, tone: 'bet' }, sfx: 'truco', speech: `${name}!` };
+      }
       return { sfx: 'card' };
     case 'truco:card_played': {
       if (manilhaName(msg.payload.card) !== 'Zap') return { sfx: 'card' };

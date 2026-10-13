@@ -23,9 +23,9 @@ describe('GamesHub', () => {
     expect(within(card).getByText('Disponível')).toBeInTheDocument();
   });
 
-  it('lists the Truco Mineiro leading to its lobby', () => {
+  it('lists the Truco leading to its lobby', () => {
     render(<GamesHub />);
-    const card = screen.getByRole('link', { name: 'Jogar Truco Mineiro' });
+    const card = screen.getByRole('link', { name: 'Jogar Truco' });
     expect(card).toHaveAttribute('href', '/truco');
     expect(within(card).getByText('4 jogadores')).toBeInTheDocument();
   });

@@ -8,7 +8,7 @@ import { TableView } from './table-view';
 
 function actions(): TrucoActions {
   const ok = () => vi.fn(async () => true);
-  return { leave: ok(), ready: ok(), takeSeat: ok(), setVisibility: ok(), start: ok(), rematch: ok(), playCard: ok(), requestBet: ok(), respondBet: ok(), decideTen: ok(), signal: ok() };
+  return { leave: ok(), ready: ok(), takeSeat: ok(), setVisibility: ok(), setMode: ok(), start: ok(), rematch: ok(), playCard: ok(), requestBet: ok(), respondBet: ok(), decideTen: ok(), signal: ok() };
 }
 const audio = { voice: true, setVoice: vi.fn(), sfx: true, setSfx: vi.fn() };
 
@@ -66,6 +66,14 @@ describe('TableView', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Jogar' }));
     expect(a.decideTen).toHaveBeenCalledWith(true);
     expect(screen.getByText(/Mão de dez · Vale 4/)).toBeInTheDocument();
+  });
+
+  it('uses the goiano rules: mão de 14 worth 3, game to 15', () => {
+    const state = roomState({ mode: 'goiano', scores: [14, 2], match: matchView({ phase: 'AWAITING_TEN_DECISION', kind: 'ten', tenTeam: 0, value: 3 }) });
+    renderTable({ state, hand: privateHand({ partnerCards: [{ rank: '7', suit: 'hearts' }] }) });
+    expect(screen.getByText(/Mão de 14 · Vale 3/)).toBeInTheDocument();
+    expect(screen.getByText('Tentos · até 15')).toBeInTheDocument();
+    expect(screen.getByText(/correndo, eles ganham 1/)).toBeInTheDocument();
   });
 
   it('shows blind cards in the mão de ferro', () => {

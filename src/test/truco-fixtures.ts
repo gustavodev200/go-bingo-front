@@ -31,6 +31,7 @@ export function roomState(over: Partial<TrucoRoomState> = {}): TrucoRoomState {
     version: 1,
     hostId: userId(0),
     isPublic: true,
+    mode: 'mineiro',
     phase: 'PLAYING',
     lobbyStatus: null,
     seats: ([0, 1, 2, 3] as Seat[]).map((s) => seatPlayer(s)),

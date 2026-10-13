@@ -64,9 +64,9 @@ export function TrucoRoomScreen({ code }: { code: string }) {
     const { addEffect } = useTrucoStore.getState();
     return {
       onAnnouncement: (msg) => {
-        const seat = useTrucoStore.getState().mySeat;
+        const { mySeat: seat, state } = useTrucoStore.getState();
         if (seat === null) return;
-        const reaction = reactionFor(msg, seat);
+        const reaction = reactionFor(msg, seat, state?.mode);
         if (reaction.shout) addEffect({ kind: 'shout', ...reaction.shout });
         if (reaction.banner) addEffect({ kind: 'banner', ...reaction.banner });
         playReaction(reaction, prefs.current, deps());

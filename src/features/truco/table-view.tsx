@@ -12,7 +12,7 @@ import { ActionBar } from './action-bar';
 import type { TrucoActions } from './connection';
 import { MyHand } from './my-hand';
 import { ResultPanel } from './result-panel';
-import { availableActions, positionOf, type TablePosition } from './rules-view';
+import { availableActions, positionOf, rulesOf, type TablePosition } from './rules-view';
 import { Scoreboard } from './scoreboard';
 import { SeatBadge, TEAM_TONE } from './seat-badge';
 import { RoundBanner, ShoutOverlay } from './shout-overlay';
@@ -91,6 +91,7 @@ export function TableView({
   const myTeam = teamOf(mySeat);
   const me = state.seats[mySeat];
   const available = availableActions(state, mySeat);
+  const rules = rulesOf(state.mode);
   const gestureFor = (seat: Seat) => effects.findLast((e) => e.kind === 'gesture' && e.seat === seat) as Extract<(typeof effects)[number], { kind: 'gesture' }> | undefined;
   const turnPlayer = match ? state.seats[match.turn] : null;
   const myGesture = gestureFor(mySeat);
@@ -98,7 +99,7 @@ export function TableView({
   return (
     <div className="relative flex h-dvh flex-col overflow-hidden bg-[radial-gradient(ellipse_at_top,#4c1d95,#1e0b3d_70%)]">
       <header className="flex items-center gap-2 px-2 pt-[calc(0.5rem+env(safe-area-inset-top))] pb-1 sm:px-4">
-        <Scoreboard scores={state.scores} myTeam={myTeam} match={match} />
+        <Scoreboard scores={state.scores} myTeam={myTeam} match={match} rules={rules} />
         <div className="flex flex-col gap-1 sm:flex-row">
           <SoundToggle muted={!audio.sfx} onChange={(muted) => audio.setSfx(!muted)} />
           <NarrationToggle enabled={audio.voice} onChange={audio.setVoice} />
@@ -108,7 +109,7 @@ export function TableView({
 
       <div className="relative min-h-0 flex-1 px-2 py-1 sm:px-6">
         <div className={cn(styles.felt, 'relative mx-auto h-full w-full max-w-4xl rounded-[clamp(20px,min(8vw,10dvh),72px)] [container-type:size]')}>
-          {match && <TentoPiles scores={state.scores} mySeat={mySeat} />}
+          {match && <TentoPiles scores={state.scores} mySeat={mySeat} targetScore={rules.targetScore} />}
           {([1, 2, 3] as const).map((offset) => {
             const seat = ((mySeat + offset) % 4) as Seat;
             const player = state.seats[seat];
@@ -149,6 +150,7 @@ export function TableView({
           onRespond={actions.respondBet}
           onDecideTen={actions.decideTen}
           turnName={turnPlayer?.nickname ?? null}
+          rules={rules}
         />
         <div className="flex items-end justify-between gap-2">
           <div className="flex w-16 flex-col items-center gap-1 sm:w-24">
@@ -173,7 +175,7 @@ export function TableView({
         </div>
       </footer>
 
-      {state.phase === 'FINISHED' && state.result && <ResultPanel result={state.result} myTeam={myTeam} onRematch={actions.rematch} onLeave={actions.leave} />}
+      {state.phase === 'FINISHED' && state.result && <ResultPanel result={state.result} myTeam={myTeam} targetScore={rules.targetScore} onRematch={actions.rematch} onLeave={actions.leave} />}
     </div>
   );
 }

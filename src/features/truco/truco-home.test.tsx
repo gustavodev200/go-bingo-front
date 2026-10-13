@@ -7,7 +7,7 @@ const push = vi.fn();
 const createTable = vi.fn();
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }));
 let publicRooms: unknown = [];
-vi.mock('./connection', () => ({ createTable: (isPublic: boolean) => createTable(isPublic), usePublicTables: () => publicRooms }));
+vi.mock('./connection', () => ({ createTable: (isPublic: boolean, mode: string) => createTable(isPublic, mode), usePublicTables: () => publicRooms }));
 vi.mock('@/features/profile/profile-pill', () => ({ ProfilePill: () => null }));
 
 describe('TrucoHome', () => {
@@ -17,7 +17,7 @@ describe('TrucoHome', () => {
     createTable.mockResolvedValue({ ok: true, data: { state: roomState({ code: 'QWE234' }), mySeat: 0, hand: null } });
     render(<TrucoHome />);
     await userEvent.click(screen.getByRole('button', { name: 'Criar mesa' }));
-    expect(createTable).toHaveBeenCalledWith(true);
+    expect(createTable).toHaveBeenCalledWith(true, 'mineiro');
     expect(push).toHaveBeenCalledWith('/truco/QWE234');
   });
 
@@ -44,13 +44,21 @@ describe('TrucoHome', () => {
     render(<TrucoHome />);
     await userEvent.click(screen.getByRole('radio', { name: /Privada/ }));
     await userEvent.click(screen.getByRole('button', { name: 'Criar mesa' }));
-    expect(createTable).toHaveBeenCalledWith(false);
+    expect(createTable).toHaveBeenCalledWith(false, 'mineiro');
+  });
+
+  it('creates a Truco Goiano table when chosen', async () => {
+    createTable.mockResolvedValue({ ok: true, data: { state: roomState({ code: 'QWE234' }), mySeat: 0, hand: null } });
+    render(<TrucoHome />);
+    await userEvent.click(screen.getByRole('radio', { name: /Truco Goiano/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'Criar mesa' }));
+    expect(createTable).toHaveBeenCalledWith(true, 'goiano');
   });
 
   it('lists public tables with free seats', () => {
-    publicRooms = [{ code: 'RTY234', hostNickname: 'Bia', hostCharacter: null, players: 3 }];
+    publicRooms = [{ code: 'RTY234', hostNickname: 'Bia', hostCharacter: null, players: 3, mode: 'goiano' }];
     render(<TrucoHome />);
-    expect(screen.getByRole('link', { name: 'Entrar na mesa de Bia, 3 de 4 jogadores' })).toHaveAttribute('href', '/truco/RTY234');
+    expect(screen.getByRole('link', { name: 'Entrar na mesa de Bia, Truco Goiano, 3 de 4 jogadores' })).toHaveAttribute('href', '/truco/RTY234');
     publicRooms = [];
   });
 

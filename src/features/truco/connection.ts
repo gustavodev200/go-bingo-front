@@ -12,6 +12,7 @@ import {
   type TrucoBetResponse,
   type TrucoClientAckData,
   type TrucoGesture,
+  type TrucoMode,
   type TrucoPublicRoom,
   type TrucoServerEventPayloads,
   type TrucoSnapshot,
@@ -64,10 +65,10 @@ function connected(socket: Socket): Promise<boolean> {
 }
 
 /** Opens a new table with the player at seat 0. */
-export async function createTable(isPublic: boolean): Promise<Ack<TrucoSnapshot>> {
+export async function createTable(isPublic: boolean, mode: TrucoMode): Promise<Ack<TrucoSnapshot>> {
   const socket = trucoSocket();
   if (!(await connected(socket))) return { ok: false, error: { code: 'INTERNAL', message: 'Sem conexão com o servidor' } };
-  return emitTruco(socket, 'truco:create', { isPublic });
+  return emitTruco(socket, 'truco:create', { isPublic, mode });
 }
 
 /**
@@ -109,6 +110,7 @@ export interface TrucoActions {
   ready(ready: boolean): Promise<boolean>;
   takeSeat(seat: Seat): Promise<boolean>;
   setVisibility(isPublic: boolean): Promise<boolean>;
+  setMode(mode: TrucoMode): Promise<boolean>;
   start(): Promise<boolean>;
   rematch(): Promise<boolean>;
   playCard(cardId: string): Promise<boolean>;
@@ -243,6 +245,7 @@ export function useTrucoRoom(code: string, listeners: TrucoListeners): TrucoActi
       ready: (ready) => call('truco:ready', { ready }),
       takeSeat: (seat) => call('truco:take_seat', { seat }),
       setVisibility: (isPublic) => call('truco:set_visibility', { isPublic }),
+      setMode: (mode) => call('truco:set_mode', { mode }),
       start: () => call('truco:start'),
       rematch: () => call('truco:rematch'),
       playCard: (cardId) => call('truco:play_card', { actionId: newActionId(), cardId }),

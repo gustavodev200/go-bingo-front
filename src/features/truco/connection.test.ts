@@ -131,16 +131,16 @@ describe('useTrucoRoom', () => {
 describe('createTable', () => {
   it('connects and creates a table', async () => {
     socket.acks.set('truco:create', { ok: true, data: snapshot });
-    const pending = createTable(false);
+    const pending = createTable(false, 'goiano');
     socket.fire('connect');
     await expect(pending).resolves.toEqual({ ok: true, data: snapshot });
-    expect(socket.emitted.at(-1)).toEqual({ event: 'truco:create', payload: { isPublic: false } });
+    expect(socket.emitted.at(-1)).toEqual({ event: 'truco:create', payload: { isPublic: false, mode: 'goiano' } });
   });
 
   it('reports when the server cannot be reached', async () => {
     socket.connected = false;
     socket.removeAllListeners();
-    const pending = createTable(true);
+    const pending = createTable(true, 'mineiro');
     socket.fire('connect_error', new Error('down'));
     await expect(pending).resolves.toMatchObject({ ok: false });
   });
