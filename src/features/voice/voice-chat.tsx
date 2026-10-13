@@ -3,6 +3,7 @@
 import { Headphones, Loader2, Mic, MicOff, PhoneOff } from 'lucide-react';
 import type { VoiceGame } from '@/contracts';
 import { cn } from '@/lib/utils';
+import { useDragPosition } from './use-drag-position';
 import { useVoiceChat, type VoiceChat as VoiceChatState } from './use-voice-chat';
 import type { VoicePeerView } from './voice-engine';
 
@@ -37,6 +38,28 @@ function PeerBubble({ peer }: { peer: VoicePeerView }) {
   );
 }
 
+/** Default spot: left edge, a third of the way down. */
+const DEFAULT_SPOT = { x: 0, y: 0.33 };
+export const VOICE_POSITION_KEY = 'voice-chat-position';
+
+/** Floating holder the player can drag anywhere; the spot is remembered across rooms. */
+function Draggable({ label, className, children }: { label?: string; className?: string; children: React.ReactNode }) {
+  const { ref, style, dragging, onPointerDown, onClickCapture } = useDragPosition<HTMLDivElement>(VOICE_POSITION_KEY, DEFAULT_SPOT);
+  return (
+    <div
+      ref={ref}
+      role={label ? 'region' : undefined}
+      aria-label={label}
+      style={style}
+      onPointerDown={onPointerDown}
+      onClickCapture={onClickCapture}
+      className={cn('z-30 select-none', dragging && 'scale-105 opacity-90', className)}
+    >
+      {children}
+    </div>
+  );
+}
+
 /** Stateless panel, so it can be shown with any VoiceChat state. */
 export function VoiceChatPanel({ voice }: { voice: VoiceChatState }) {
   const { view } = voice;
@@ -44,16 +67,16 @@ export function VoiceChatPanel({ voice }: { voice: VoiceChatState }) {
 
   if (view.status === 'off')
     return (
-      <div className="fixed top-1/3 left-2 z-30">
-        <button type="button" onClick={voice.join} aria-label="Entrar no chat de voz" title="Entrar no chat de voz" className={cn(roundButton, 'border-violet-300/50 bg-violet-950/70 text-violet-100')}>
+      <Draggable>
+        <button type="button" onClick={voice.join} aria-label="Entrar no chat de voz" title="Entrar no chat de voz (arraste para mover)" className={cn(roundButton, 'border-violet-300/50 bg-violet-950/70 text-violet-100')}>
           <Headphones aria-hidden className="size-5" />
         </button>
-      </div>
+      </Draggable>
     );
 
   const joining = view.status === 'joining';
   return (
-    <section aria-label="Chat de voz" className="fixed top-1/3 left-2 z-30 flex flex-col items-center gap-2 rounded-full bg-black/40 p-1.5 backdrop-blur-sm">
+    <Draggable label="Chat de voz" className="flex flex-col items-center gap-2 rounded-full bg-black/40 p-1.5 backdrop-blur-sm">
       {view.hasMic ? (
         <button
           type="button"
@@ -88,7 +111,7 @@ export function VoiceChatPanel({ voice }: { voice: VoiceChatState }) {
       <button type="button" onClick={voice.leave} aria-label="Sair do chat de voz" title="Sair do chat de voz" className={cn(roundButton, 'size-9 border-white/20 bg-black/60 text-rose-200')}>
         <PhoneOff aria-hidden className="size-4" />
       </button>
-    </section>
+    </Draggable>
   );
 }
 
