@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { ConnectionBanner } from '@/features/game/connection-banner';
+import { VoiceChat } from '@/features/voice/voice-chat';
 import { sharedNarrator } from '@/features/game/sound/narration';
 import { sharedSfxPlayer } from '@/features/game/sound/sfx-player';
 import { playReaction, useTrucoAudioPrefs } from './audio';
@@ -108,6 +109,7 @@ export function TrucoRoomScreen({ code }: { code: string }) {
   return (
     <>
       <ConnectionBanner status={connection} />
+      <VoiceChat game="truco" code={state.code} />
       {state.phase === 'LOBBY' ? (
         <RoomLobby state={state} mySeat={mySeat} actions={actions} conventions={conventions} setConventions={setConventions} />
       ) : (

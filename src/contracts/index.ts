@@ -8,3 +8,4 @@ export * from './events';
 export * from './http';
 export * from './truco';
 export * from './uno';
+export * from './voice';

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ConnectionBanner } from '@/features/game/connection-banner';
 import { sharedNarrator } from '@/features/game/sound/narration';
 import { sharedSfxPlayer } from '@/features/game/sound/sfx-player';
+import { VoiceChat } from '@/features/voice/voice-chat';
 import { playReaction, useUnoAudioPrefs } from './audio';
 import { useUnoRoom, type UnoListeners } from './connection';
 import { reactionFor } from './reactions';
@@ -105,6 +106,7 @@ export function UnoRoomScreen({ code }: { code: string }) {
   return (
     <>
       <ConnectionBanner status={connection} />
+      <VoiceChat game="uno" code={state.code} />
       {state.phase === 'LOBBY' ? <RoomLobby state={state} mySeat={mySeat} actions={actions} /> : <TableView state={state} mySeat={mySeat} hand={hand} actions={actions} audio={audio} />}
     </>
   );

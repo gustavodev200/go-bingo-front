@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { useProfile } from '@/features/profile/profile-context';
 import { createSessionTelemetry, reportSessionSummary } from '@/lib/telemetry';
 import { useWakeLock } from '@/features/pwa/use-wake-lock';
+import { VoiceChat } from '@/features/voice/voice-chat';
 import { ConnectionBanner } from './connection-banner';
 import { GameView } from './game-view';
 import { LobbyView } from './lobby-view';
@@ -119,6 +120,7 @@ export function RoomScreen({ code }: { code: string }) {
   return (
     <>
       <ConnectionBanner status={connection} />
+      <VoiceChat game="bingo" code={snapshot.code} />
       {showGame ? (
         <GameView
           actions={actions}
