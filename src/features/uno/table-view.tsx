@@ -144,7 +144,7 @@ export function TableView({ state, mySeat, hand, actions, audio }: { state: UnoR
       <footer className="relative flex flex-col px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] sm:px-4">
         <TurnControls available={available} actions={actions} turnName={turnPlayer?.nickname ?? null} />
         {hand && state.phase === 'PLAYING' && <MyHand cards={hand.cards} playable={available.playable} drawnId={hand.drawnCardId} myTurn={available.myTurn} onPlay={play} />}
-        <div className="flex items-end justify-between gap-2">
+        <div className="relative z-10 flex items-end justify-between gap-2 pt-1">
           {me && (
             <div className="flex items-end gap-2">
               <div className="relative flex flex-col items-center gap-1">

@@ -11,7 +11,7 @@ const SIZES = {
   xs: 'w-[clamp(14px,min(4vw,3.6dvh),24px)]',
   sm: 'w-[clamp(30px,min(9vw,7dvh),52px)]',
   md: 'w-[clamp(46px,min(15vw,12dvh),92px)]',
-  lg: 'w-[clamp(52px,min(19vw,15dvh),104px)]',
+  lg: 'w-[var(--uno-hand-card)]',
 } as const;
 
 function symbolOf(card: UnoCard): string {
@@ -51,7 +51,8 @@ function WildFourArt() {
  * the card through container units, so one component serves every size.
  */
 export function UnoCardView({ card, size = 'md', dim = false, className, style }: { card: UnoCard | null; size?: keyof typeof SIZES; dim?: boolean; className?: string; style?: CSSProperties }) {
-  const base = cn('@container relative aspect-[5/7.6] shrink-0 select-none overflow-hidden rounded-[10%]', SIZES[size], className);
+  // block: a container query needs a non-inline box, or cqw falls back to the table.
+  const base = cn('@container relative block aspect-[5/7.6] shrink-0 select-none overflow-hidden rounded-[10%]', SIZES[size], className);
   if (!card) {
     return (
       <span aria-hidden style={style} className={cn(base, styles.back)}>
@@ -65,7 +66,7 @@ export function UnoCardView({ card, size = 'md', dim = false, className, style }
   const ink = wild ? '#111' : COLOR_HEX[card.color as UnoColor];
   const long = symbol.length > 1;
   return (
-    <span role="img" aria-label={cardLabel(card)} style={{ ...style, background: wild ? '#161616' : ink }} className={cn(base, styles.face, dim && 'opacity-50 saturate-50')}>
+    <span role="img" aria-label={cardLabel(card)} style={{ ...style, background: wild ? '#161616' : ink }} className={cn(base, styles.face, dim && 'brightness-[0.55] saturate-[0.6]')}>
       <span className={cn(styles.oval, wild ? styles.wildOval : 'bg-white')} />
       {card.value === 'wild4' && <WildFourArt />}
       {symbol && card.value !== 'wild4' && (

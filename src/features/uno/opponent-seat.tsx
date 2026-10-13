@@ -86,9 +86,9 @@ export function OpponentSeat({
       )}
       {cards > 0 && (
         <div aria-label={`${cards} ${cards === 1 ? 'carta' : 'cartas'} na mão`} className="relative flex items-center">
-          <span className="flex -space-x-[60%]">
+          <span className="flex">
             {Array.from({ length: fan }, (_, i) => (
-              <UnoCardView key={i} card={null} size="xs" className={styles.deal} style={{ rotate: `${(i - (fan - 1) / 2) * 9}deg`, animationDelay: `${i * 40}ms` }} />
+              <UnoCardView key={i} card={null} size="xs" className={styles.deal} style={{ marginLeft: i === 0 ? 0 : 'calc(-0.7 * clamp(14px, min(4vw, 3.6dvh), 24px))', rotate: `${(i - (fan - 1) / 2) * 9}deg`, animationDelay: `${i * 40}ms` }} />
             ))}
           </span>
           <span className="ml-1 rounded-full bg-white px-1.5 text-xs font-black text-slate-900 tabular-nums shadow">{cards}</span>

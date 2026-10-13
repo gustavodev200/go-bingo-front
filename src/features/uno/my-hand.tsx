@@ -12,9 +12,10 @@ import styles from './uno.module.css';
  */
 export function MyHand({ cards, playable, drawnId, myTurn, onPlay }: { cards: UnoHandCard[]; playable: ReadonlySet<string>; drawnId: string | null; myTurn: boolean; onPlay(card: UnoHandCard): void }) {
   const n = cards.length;
-  const overlap = n <= 5 ? '-0.4rem' : n <= 8 ? '-1.6rem' : n <= 12 ? '-2.4rem' : '-2.9rem';
+  // Overlap just enough for the whole hand to fit the row (margin % = % of the row width), never less than a sliver.
+  const overlap = n > 1 ? `min(-0.5rem, calc((100% - ${n} * var(--uno-hand-card)) / ${n - 1}))` : '0';
   return (
-    <ul aria-label="Suas cartas" className="flex justify-center px-2 pt-6 pb-1">
+    <ul aria-label="Suas cartas" className="flex justify-center px-1 pt-6 pb-1 [--uno-hand-card:clamp(46px,min(15vw,13dvh),100px)]">
       {cards.map((c, i) => {
         const canPlay = playable.has(c.id);
         const angle = n > 1 ? (i - (n - 1) / 2) * Math.min(5, 40 / n) : 0;

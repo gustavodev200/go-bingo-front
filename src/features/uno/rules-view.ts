@@ -61,7 +61,7 @@ export function placementOf(index: number, count: number): { left: number; top: 
   const to = 12;
   const angle = ((from + ((to - from) * index) / (count - 1)) * Math.PI) / 180;
   return {
-    left: Math.round(50 + 44 * Math.cos(angle)),
+    left: Math.round(50 + 38 * Math.cos(angle)),
     top: Math.round(48 - 42 * Math.sin(angle)),
   };
 }
