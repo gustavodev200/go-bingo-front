@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { Socket } from "socket.io-client";
-import { toast } from "sonner";
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { Socket } from 'socket.io-client';
+import { toast } from 'sonner';
 import {
   UNO_NAMESPACE,
   UnoServerEvents,
@@ -15,10 +15,10 @@ import {
   type UnoPublicRoom,
   type UnoServerEventPayloads,
   type UnoSnapshot,
-} from "@/contracts";
-import { createSocket } from "@/lib/socket";
-import type { Announced } from "./reactions";
-import { useUnoStore, type UnoExit } from "./store";
+} from '@/contracts';
+import { createSocket } from '@/lib/socket';
+import type { Announced } from './reactions';
+import { useUnoStore, type UnoExit } from './store';
 
 // Socket.IO listeners receive whatever the server sent; payloads are narrowed per event below.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -37,19 +37,13 @@ export function unoSocket(): Socket {
   return shared;
 }
 
-export async function emitUno<E extends keyof UnoClientAckData>(
-  socket: Socket,
-  event: E,
-  payload: object = {},
-): Promise<Ack<UnoClientAckData[E]>> {
+export async function emitUno<E extends keyof UnoClientAckData>(socket: Socket, event: E, payload: object = {}): Promise<Ack<UnoClientAckData[E]>> {
   try {
-    return (await socket
-      .timeout(ACK_TIMEOUT_MS)
-      .emitWithAck(event, payload)) as Ack<UnoClientAckData[E]>;
+    return (await socket.timeout(ACK_TIMEOUT_MS).emitWithAck(event, payload)) as Ack<UnoClientAckData[E]>;
   } catch {
     return {
       ok: false,
-      error: { code: "INTERNAL", message: "Sem resposta do servidor" },
+      error: { code: 'INTERNAL', message: 'Sem resposta do servidor' },
     };
   }
 }
@@ -59,30 +53,28 @@ function connected(socket: Socket): Promise<boolean> {
   return new Promise((resolve) => {
     const done = (ok: boolean) => {
       clearTimeout(timer);
-      socket.off("connect", onConnect);
-      socket.off("connect_error", onError);
+      socket.off('connect', onConnect);
+      socket.off('connect_error', onError);
       resolve(ok);
     };
     const onConnect = () => done(true);
     const onError = () => done(false);
     const timer = setTimeout(() => done(false), CONNECT_TIMEOUT_MS);
-    socket.on("connect", onConnect);
-    socket.on("connect_error", onError);
+    socket.on('connect', onConnect);
+    socket.on('connect_error', onError);
     socket.connect();
   });
 }
 
 /** Opens a new table with the player at seat 0. */
-export async function createUnoTable(
-  isPublic: boolean,
-): Promise<Ack<UnoSnapshot>> {
+export async function createUnoTable(isPublic: boolean): Promise<Ack<UnoSnapshot>> {
   const socket = unoSocket();
   if (!(await connected(socket)))
     return {
       ok: false,
-      error: { code: "INTERNAL", message: "Sem conexão com o servidor" },
+      error: { code: 'INTERNAL', message: 'Sem conexão com o servidor' },
     };
-  return emitUno(socket, "uno:create", { isPublic });
+  return emitUno(socket, 'uno:create', { isPublic });
 }
 
 /**
@@ -95,29 +87,28 @@ export function usePublicUnoTables(): UnoPublicRoom[] | null {
     const socket = unoSocket();
     let active = true;
     const watch = () =>
-      void emitUno(socket, "uno:watch_rooms").then((res) => {
+      void emitUno(socket, 'uno:watch_rooms').then((res) => {
         if (active && res.ok) setRooms(res.data);
       });
-    const onUpdate = ({ rooms: next }: { rooms: UnoPublicRoom[] }) =>
-      setRooms(next);
+    const onUpdate = ({ rooms: next }: { rooms: UnoPublicRoom[] }) => setRooms(next);
     socket.on(UnoServerEvents.ROOMS_UPDATED, onUpdate);
-    socket.on("connect", watch);
+    socket.on('connect', watch);
     if (socket.connected) watch();
     else socket.connect();
     return () => {
       active = false;
       socket.off(UnoServerEvents.ROOMS_UPDATED, onUpdate);
-      socket.off("connect", watch);
-      if (socket.connected) void emitUno(socket, "uno:unwatch_rooms");
+      socket.off('connect', watch);
+      if (socket.connected) void emitUno(socket, 'uno:unwatch_rooms');
     };
   }, []);
   return rooms;
 }
 
-const EXIT_BY_CODE: Partial<Record<ErrorCode, UnoExit["reason"]>> = {
-  NOT_FOUND: "not_found",
-  ROOM_FULL: "full",
-  GAME_IN_PROGRESS: "in_progress",
+const EXIT_BY_CODE: Partial<Record<ErrorCode, UnoExit['reason']>> = {
+  NOT_FOUND: 'not_found',
+  ROOM_FULL: 'full',
+  GAME_IN_PROGRESS: 'in_progress',
 };
 
 export interface UnoActions {
@@ -139,14 +130,11 @@ export interface UnoActions {
 export interface UnoListeners {
   /** A validated announcement seen for the first time (duplicates are dropped by seq). */
   onAnnouncement(msg: Announced): void;
-  onEmote(payload: UnoServerEventPayloads["uno:emoted"]): void;
+  onEmote(payload: UnoServerEventPayloads['uno:emoted']): void;
   onError(): void;
 }
 
-const newActionId = () =>
-  typeof crypto !== "undefined" && "randomUUID" in crypto
-    ? crypto.randomUUID()
-    : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+const newActionId = () => (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`);
 
 /**
  * Joins the table `code` and keeps the store in sync. On every (re)connection it
@@ -177,23 +165,19 @@ export function useUnoRoom(code: string, listeners: UnoListeners): UnoActions {
       const s = useUnoStore.getState();
       switch (event) {
         case UnoServerEvents.STATE:
-          return s.applyState(payload as UnoServerEventPayloads["uno:state"]);
+          return s.applyState(payload as UnoServerEventPayloads['uno:state']);
         case UnoServerEvents.PRIVATE_HAND:
-          return s.applyHand(
-            payload as UnoServerEventPayloads["uno:private_hand"],
-          );
+          return s.applyHand(payload as UnoServerEventPayloads['uno:private_hand']);
         case UnoServerEvents.EMOTED:
-          return listenersRef.current.onEmote(
-            payload as UnoServerEventPayloads["uno:emoted"],
-          );
+          return listenersRef.current.onEmote(payload as UnoServerEventPayloads['uno:emoted']);
         case UnoServerEvents.ROOM_CLOSED:
           return s.setExit({
-            reason: "not_found",
-            message: "A mesa foi encerrada",
+            reason: 'not_found',
+            message: 'A mesa foi encerrada',
           });
         default: {
           const seq = (payload as { seq?: unknown }).seq;
-          if (typeof seq === "number" && s.accept(seq))
+          if (typeof seq === 'number' && s.accept(seq))
             listenersRef.current.onAnnouncement({
               event,
               payload,
@@ -209,7 +193,7 @@ export function useUnoRoom(code: string, listeners: UnoListeners): UnoActions {
       });
 
     function join(attempt: number) {
-      void emitUno(socket, "uno:join", { code }).then((res) => {
+      void emitUno(socket, 'uno:join', { code }).then((res) => {
         if (!active || useUnoStore.getState().exit) return;
         const s = useUnoStore.getState();
         if (res.ok) {
@@ -218,42 +202,35 @@ export function useUnoRoom(code: string, listeners: UnoListeners): UnoActions {
           const queued = pending;
           pending = [];
           queued.forEach((m) => handle(m.event, m.payload));
-          s.setConnection("online");
-        } else if (
-          res.error.code === "INTERNAL" &&
-          attempt < JOIN_MAX_ATTEMPTS
-        ) {
-          s.setConnection("reconnecting");
+          s.setConnection('online');
+        } else if (res.error.code === 'INTERNAL' && attempt < JOIN_MAX_ATTEMPTS) {
+          s.setConnection('reconnecting');
           retryTimer = setTimeout(() => join(attempt + 1), JOIN_RETRY_MS);
         } else {
           pending = [];
           s.setExit({
-            reason: EXIT_BY_CODE[res.error.code] ?? "error",
+            reason: EXIT_BY_CODE[res.error.code] ?? 'error',
             message: res.error.message,
           });
         }
       });
     }
 
-    on("connect", () => {
+    on('connect', () => {
       if (useUnoStore.getState().exit) return;
       joining = true;
       pending = [];
       clearTimeout(retryTimer);
       join(1);
     });
-    on("disconnect", () =>
-      useUnoStore.getState().setConnection("reconnecting"),
-    );
-    on("connect_error", (error: Error) => {
-      if (error.message === "UNAUTHENTICATED")
-        useUnoStore
-          .getState()
-          .setExit({
-            reason: "error",
-            message: "Sua sessão expirou. Entre de novo.",
-          });
-      else useUnoStore.getState().setConnection("reconnecting");
+    on('disconnect', () => useUnoStore.getState().setConnection('reconnecting'));
+    on('connect_error', (error: Error) => {
+      if (error.message === 'UNAUTHENTICATED')
+        useUnoStore.getState().setExit({
+          reason: 'error',
+          message: 'Sua sessão expirou. Entre de novo.',
+        });
+      else useUnoStore.getState().setConnection('reconnecting');
     });
 
     if (socket.connected) join(1);
@@ -269,10 +246,7 @@ export function useUnoRoom(code: string, listeners: UnoListeners): UnoActions {
   }, [code]);
 
   return useMemo<UnoActions>(() => {
-    const call = async <E extends keyof UnoClientAckData>(
-      event: E,
-      payload: object = {},
-    ): Promise<boolean> => {
+    const call = async <E extends keyof UnoClientAckData>(event: E, payload: object = {}): Promise<boolean> => {
       const res = await emitUno(unoSocket(), event, payload);
       if (!res.ok) {
         toast.error(res.error.message);
@@ -282,26 +256,22 @@ export function useUnoRoom(code: string, listeners: UnoListeners): UnoActions {
     };
     return {
       leave: async () => {
-        const ok = await call("uno:leave");
-        if (ok)
-          useUnoStore
-            .getState()
-            .setExit({ reason: "left", message: "Você saiu da mesa" });
+        const ok = await call('uno:leave');
+        if (ok) useUnoStore.getState().setExit({ reason: 'left', message: 'Você saiu da mesa' });
         return ok;
       },
-      ready: (ready) => call("uno:ready", { ready }),
-      setRules: (rules) => call("uno:set_rules", { rules }),
-      setVisibility: (isPublic) => call("uno:set_visibility", { isPublic }),
-      start: () => call("uno:start"),
-      rematch: () => call("uno:rematch"),
-      playCard: (cardId, opts = {}) =>
-        call("uno:play_card", { actionId: newActionId(), cardId, ...opts }),
-      draw: () => call("uno:draw", { actionId: newActionId() }),
-      pass: () => call("uno:pass", { actionId: newActionId() }),
-      challenge: () => call("uno:challenge", { actionId: newActionId() }),
-      callUno: () => call("uno:call_uno", { actionId: newActionId() }),
-      catchUno: () => call("uno:catch_uno", { actionId: newActionId() }),
-      emote: (emote) => call("uno:emote", { emote }),
+      ready: (ready) => call('uno:ready', { ready }),
+      setRules: (rules) => call('uno:set_rules', { rules }),
+      setVisibility: (isPublic) => call('uno:set_visibility', { isPublic }),
+      start: () => call('uno:start'),
+      rematch: () => call('uno:rematch'),
+      playCard: (cardId, opts = {}) => call('uno:play_card', { actionId: newActionId(), cardId, ...opts }),
+      draw: () => call('uno:draw', { actionId: newActionId() }),
+      pass: () => call('uno:pass', { actionId: newActionId() }),
+      challenge: () => call('uno:challenge', { actionId: newActionId() }),
+      callUno: () => call('uno:call_uno', { actionId: newActionId() }),
+      catchUno: () => call('uno:catch_uno', { actionId: newActionId() }),
+      emote: (emote) => call('uno:emote', { emote }),
     };
   }, []);
 }

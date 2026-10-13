@@ -1,30 +1,19 @@
-import { create } from "zustand";
-import type {
-  UnoEmote,
-  UnoPrivateHand,
-  UnoRoomState,
-  UnoSnapshot,
-} from "@/contracts";
+import { create } from 'zustand';
+import type { UnoEmote, UnoPrivateHand, UnoRoomState, UnoSnapshot } from '@/contracts';
 
-export type UnoConnection = "connecting" | "online" | "reconnecting";
+export type UnoConnection = 'connecting' | 'online' | 'reconnecting';
 
 export interface UnoExit {
-  reason: "not_found" | "full" | "in_progress" | "error" | "left";
+  reason: 'not_found' | 'full' | 'in_progress' | 'error' | 'left';
   message: string;
 }
 
-export type ShoutTone = "bet" | "good" | "bad" | "info";
+export type ShoutTone = 'bet' | 'good' | 'bad' | 'info';
 
 export type UnoEffect =
-  | { id: number; kind: "shout"; text: string; tone: ShoutTone }
-  | { id: number; kind: "banner"; text: string; tone: ShoutTone }
-  | { id: number; kind: "emote"; seat: number; emote: UnoEmote };
+  { id: number; kind: 'shout'; text: string; tone: ShoutTone } | { id: number; kind: 'banner'; text: string; tone: ShoutTone } | { id: number; kind: 'emote'; seat: number; emote: UnoEmote };
 
-type NewEffect = UnoEffect extends infer E
-  ? E extends UnoEffect
-    ? Omit<E, "id">
-    : never
-  : never;
+type NewEffect = UnoEffect extends infer E ? (E extends UnoEffect ? Omit<E, 'id'> : never) : never;
 
 interface UnoStore {
   connection: UnoConnection;
@@ -52,7 +41,7 @@ interface UnoStore {
 let effectId = 0;
 
 const initial = {
-  connection: "connecting" as UnoConnection,
+  connection: 'connecting' as UnoConnection,
   state: null,
   mySeat: null,
   myUserId: null,
@@ -70,9 +59,7 @@ function seatOf(state: UnoRoomState, userId: string | null): number | null {
 
 /** Older or repeated room states never replace a newer one (the version only grows). */
 function newer(current: UnoRoomState | null, next: UnoRoomState): boolean {
-  return (
-    !current || current.code !== next.code || next.version > current.version
-  );
+  return !current || current.code !== next.code || next.version > current.version;
 }
 
 export const useUnoStore = create<UnoStore>((set, get) => ({
@@ -94,7 +81,7 @@ export const useUnoStore = create<UnoStore>((set, get) => ({
       return {
         state,
         mySeat: s.myUserId ? seatOf(state, s.myUserId) : s.mySeat,
-        hand: state.phase === "LOBBY" ? null : s.hand,
+        hand: state.phase === 'LOBBY' ? null : s.hand,
       };
     }),
   applyHand: (hand) =>
@@ -114,6 +101,5 @@ export const useUnoStore = create<UnoStore>((set, get) => ({
     }));
     return id;
   },
-  removeEffect: (id) =>
-    set((s) => ({ effects: s.effects.filter((e) => e.id !== id) })),
+  removeEffect: (id) => set((s) => ({ effects: s.effects.filter((e) => e.id !== id) })),
 }));
