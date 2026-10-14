@@ -39,4 +39,9 @@ describe('reactionFor', () => {
     expect(reactionFor({ event: 'truco:match_started', payload: { seq: 1 } }, 1).shout!.text).toBe('BOA SORTE!');
     expect(reactionFor({ event: 'truco:player_reconnected', payload: { seq: 1, seat: 1 } }, 1)).toEqual({});
   });
+
+  it('tells me my partner voted, and nothing to the others', () => {
+    expect(reactionFor({ event: 'truco:bet_voted', payload: { seq: 1, seat: 3, team: 1 } }, 1).banner).toEqual({ text: 'Seu parceiro votou', tone: 'info' });
+    expect(reactionFor({ event: 'truco:bet_voted', payload: { seq: 1, seat: 3, team: 1 } }, 0)).toEqual({});
+  });
 });

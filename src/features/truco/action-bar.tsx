@@ -2,7 +2,7 @@
 
 import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
-import type { TrucoBetResponse, TrucoCard, TrucoRules } from '@/contracts';
+import type { TrucoBetResponse, TrucoBetVotes, TrucoCard, TrucoRules } from '@/contracts';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { PlayingCard } from './playing-card';
@@ -33,6 +33,8 @@ export function ActionBar({
   onDecideTen,
   turnName,
   rules,
+  betVotes = null,
+  partnerName = null,
 }: {
   actions: AvailableActions;
   rules: TrucoRules;
@@ -41,6 +43,9 @@ export function ActionBar({
   onRespond(response: TrucoBetResponse): Promise<unknown>;
   onDecideTen(play: boolean): Promise<unknown>;
   turnName: string | null;
+  /** My vote and my partner's while our team answers a bet. */
+  betVotes?: TrucoBetVotes | null;
+  partnerName?: string | null;
 }) {
   const { busy, run } = useBusy();
 
@@ -72,23 +77,35 @@ export function ActionBar({
   if (actions.tenDecision === 'theirs') return <Status>Adversários decidindo a {rules.tenHandName.toLowerCase()}…</Status>;
 
   if (actions.mustRespond) {
+    const mine = betVotes?.mine ?? null;
+    const partner = betVotes?.partner ?? null;
+    const label: Record<TrucoBetResponse, string> = { accept: 'Aceitar', run: 'Correr', raise: actions.raiseValue !== null ? `${BET_LABEL[actions.raiseValue]}!` : 'Aumentar' };
+    const vote = (response: TrucoBetResponse, className: string, variant?: 'secondary') => (
+      <Button
+        disabled={busy}
+        variant={variant}
+        aria-pressed={mine === response}
+        onClick={run(() => onRespond(response))}
+        className={cn(shoutButton, className, mine === response && 'ring-4 ring-amber-300 ring-offset-2 ring-offset-black/40', mine !== null && mine !== response && 'opacity-60')}
+      >
+        {label[response]}
+      </Button>
+    );
     return (
-      <div className="flex flex-wrap items-center justify-center gap-2" role="group" aria-label="Responder aposta">
-        <Button disabled={busy} onClick={run(() => onRespond('accept'))} className={cn(shoutButton, 'from-emerald-300 to-emerald-600 text-white [--primary-shadow:var(--color-emerald-800)]')}>
-          Aceitar
-        </Button>
-        <Button disabled={busy} variant="secondary" onClick={run(() => onRespond('run'))} className={shoutButton}>
-          Correr
-        </Button>
-        {actions.raiseValue !== null && (
-          <Button disabled={busy} onClick={run(() => onRespond('raise'))} className={cn(shoutButton, 'from-rose-400 to-red-700 text-white [--primary-shadow:var(--color-red-900)]')}>
-            {BET_LABEL[actions.raiseValue]}!
-          </Button>
-        )}
+      <div className="flex flex-col items-center gap-1.5" role="group" aria-label="Responder aposta">
+        <p className="text-center text-xs font-semibold text-violet-100">Votação da dupla · se discordarem, vale o voto mais ousado</p>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          {vote('accept', 'from-emerald-300 to-emerald-600 text-white [--primary-shadow:var(--color-emerald-800)]')}
+          {vote('run', '', 'secondary')}
+          {actions.raiseValue !== null && vote('raise', 'from-rose-400 to-red-700 text-white [--primary-shadow:var(--color-red-900)]')}
+        </div>
+        <p role="status" className={cn('rounded-full px-3 py-0.5 text-sm font-bold', partner ? 'bg-emerald-400 text-emerald-950' : 'bg-white/10 text-violet-100')}>
+          {partner ? `${partnerName ?? 'Seu parceiro'} votou: ${label[partner]}` : 'Seu parceiro ainda não votou'}
+        </p>
       </div>
     );
   }
-  if (actions.waitingResponse) return <Status>Aguardando os adversários responderem…</Status>;
+  if (actions.waitingResponse) return <Status>Adversários votando… ({actions.votesCast}/2)</Status>;
 
   return (
     <div className="flex min-h-12 items-center justify-center gap-3">

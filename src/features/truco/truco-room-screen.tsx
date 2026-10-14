@@ -74,6 +74,7 @@ export function TrucoRoomScreen({ code }: { code: string }) {
       // Only the partner ever receives this event: show which gesture it was.
       onSignal: ({ fromSeat, gesture }) => {
         addEffect({ kind: 'gesture', seat: fromSeat, gesture });
+        useTrucoStore.getState().setPartnerSignal({ gesture, handNumber: useTrucoStore.getState().state?.match?.handNumber ?? 0 });
         playReaction({ sfx: 'signal' }, prefs.current, deps());
       },
       // Opponents only see that somebody made a face.

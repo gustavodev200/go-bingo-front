@@ -87,7 +87,8 @@ describe('TrucoRoomScreen', () => {
       listeners.onGesture({ seat: 3 });
       listeners.onError();
     });
-    expect(screen.getByText(/Zap \(4 de paus\)/)).toBeInTheDocument();
+    expect(screen.getByRole('status', { name: 'Sinal do parceiro' })).toHaveTextContent('Zap (4 de paus)');
+    expect(screen.getByText('Último sinal: 😉 Zap (4 de paus)')).toBeInTheDocument();
     expect(screen.getByLabelText('fez um gesto')).toBeInTheDocument();
     expect(play).toHaveBeenCalledWith('signal');
     expect(play).toHaveBeenCalledWith('error');

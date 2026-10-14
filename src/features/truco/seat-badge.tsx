@@ -57,17 +57,21 @@ export function SeatBadge({
     <div className={cn('flex items-center gap-1.5', vertical ? 'flex-col' : 'flex-row')} data-position={position}>
       <div className="relative flex flex-col items-center gap-1">
         <div className={cn('relative rounded-full p-0.5 ring-3', tone.ring, isTurn && styles.turn, !player.connected && 'opacity-50 grayscale')}>
-          <div key={gesture?.id} className={cn('flex size-[clamp(34px,min(12vw,9dvh),64px)] items-end justify-center overflow-hidden rounded-full bg-violet-950/70', gesture && styles.wiggle)}>
+          <div key={gesture?.id} className={cn('flex size-[clamp(42px,min(14vw,10dvh),72px)] items-end justify-center overflow-hidden rounded-full bg-violet-950/70', gesture && styles.wiggle)}>
             <Avatar id={player.userId} character={player.character} className="w-[85%] translate-y-[6%]" />
           </div>
           {isHost && <Crown aria-label="Anfitrião" className="absolute -top-2 -left-1 size-4 fill-amber-300 text-amber-500" />}
           {isDealer && <span title="Quem deu as cartas" className="absolute -right-1 -bottom-1 flex size-5 items-center justify-center rounded-full bg-white text-[10px] font-black text-slate-900 shadow">D</span>}
           {gesture && (
-            <span key={`b${gesture.id}`} className={cn('absolute -top-9 left-1/2 z-20 -translate-x-1/2 rounded-2xl bg-white px-2 py-1 text-center text-xs font-bold whitespace-nowrap text-slate-900 shadow-lg', styles.bubble)}>
+            <span
+              key={`b${gesture.id}`}
+              // The seat at the top hugs the scoreboard: its bubble opens to the side.
+              className={cn('absolute z-20 rounded-2xl bg-white px-2 py-1 text-center font-bold whitespace-nowrap text-slate-900 shadow-lg ring-2', position === 'top' ? 'top-1/2 right-full mr-2 -translate-y-1/2' : '-top-11 left-1/2 -translate-x-1/2', known ? 'ring-emerald-400' : 'ring-white', styles.bubble)}
+            >
               {known ? (
-                <>
-                  <span className="text-lg leading-none">{known.emoji}</span> {conventions[gesture.gesture!]}
-                </>
+                <span role="img" aria-label={`${known.label}: ${conventions[gesture.gesture!]}`} className="text-2xl leading-none">
+                  {known.emoji}
+                </span>
               ) : (
                 <span aria-label="fez um gesto">✨</span>
               )}

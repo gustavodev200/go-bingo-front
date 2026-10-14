@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { useTrucoStore, type ShoutTone, type TrucoEffect } from './store';
 import styles from './truco.module.css';
 
-const LIFETIME: Record<TrucoEffect['kind'], number> = { shout: 1_700, banner: 2_400, gesture: 2_600 };
+const LIFETIME: Record<TrucoEffect['kind'], number> = { shout: 1_700, banner: 2_400, gesture: 4_500 };
 
 /** Removes each visual effect after its animation, so the store never grows. */
 export function useEffectsExpiry() {

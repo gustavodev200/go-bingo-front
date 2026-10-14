@@ -39,10 +39,10 @@ describe('availableActions', () => {
   });
 
   it('asks the opponents to respond and the requesters to wait', () => {
-    const state = roomState({ match: matchView({ phase: 'AWAITING_BET_RESPONSE', pendingBet: { value: 3, requestedBy: 0, team: 0 } }) });
-    expect(availableActions(state, 1)).toMatchObject({ mustRespond: true, raiseValue: 6, waitingResponse: false });
+    const state = roomState({ match: matchView({ phase: 'AWAITING_BET_RESPONSE', pendingBet: { value: 3, requestedBy: 0, team: 0, votes: 1 } }) });
+    expect(availableActions(state, 1)).toMatchObject({ mustRespond: true, raiseValue: 6, waitingResponse: false, votesCast: 1 });
     expect(availableActions(state, 2)).toMatchObject({ mustRespond: false, waitingResponse: true });
-    const top = roomState({ match: matchView({ phase: 'AWAITING_BET_RESPONSE', pendingBet: { value: 12, requestedBy: 0, team: 0 } }) });
+    const top = roomState({ match: matchView({ phase: 'AWAITING_BET_RESPONSE', pendingBet: { value: 12, requestedBy: 0, team: 0, votes: 0 } }) });
     expect(availableActions(top, 1).raiseValue).toBeNull();
   });
 

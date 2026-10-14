@@ -29,6 +29,8 @@ interface TrucoStore {
   /** Highest announcement sequence handled; anything at or below it is a duplicate. */
   lastSeq: number;
   effects: TrucoEffect[];
+  /** The last gesture my partner sent in this hand (kept so a missed animation is not lost). */
+  partnerSignal: { gesture: TrucoGesture; handNumber: number } | null;
   reset(): void;
   setConnection(connection: TrucoConnection): void;
   setExit(exit: TrucoExit | null): void;
@@ -38,6 +40,7 @@ interface TrucoStore {
   /** true the first time a sequence number is seen. */
   accept(seq: number): boolean;
   addEffect(effect: NewEffect): number;
+  setPartnerSignal(signal: { gesture: TrucoGesture; handNumber: number } | null): void;
   removeEffect(id: number): void;
 }
 
@@ -52,6 +55,7 @@ const initial = {
   exit: null,
   lastSeq: 0,
   effects: [],
+  partnerSignal: null,
 };
 
 /** Older or repeated room states never replace a newer one (the version only grows). */
@@ -94,6 +98,7 @@ export const useTrucoStore = create<TrucoStore>((set, get) => ({
     set({ lastSeq: seq });
     return true;
   },
+  setPartnerSignal: (partnerSignal) => set({ partnerSignal }),
   addEffect: (effect) => {
     const id = ++effectId;
     set((s) => ({ effects: [...s.effects.slice(-5), { ...effect, id } as TrucoEffect] }));

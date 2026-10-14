@@ -1,7 +1,7 @@
 'use client';
 
 import { LogOut } from 'lucide-react';
-import { teamOf, type Seat, type TrucoPrivateHand, type TrucoRoomState } from '@/contracts';
+import { partnerOf, teamOf, type Seat, type TrucoPrivateHand, type TrucoRoomState } from '@/contracts';
 import { Avatar } from '@/components/stage/avatar';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -17,7 +17,8 @@ import { Scoreboard } from './scoreboard';
 import { SeatBadge, TEAM_TONE } from './seat-badge';
 import { RoundBanner, ShoutOverlay } from './shout-overlay';
 import { SignalPicker } from './signal-picker';
-import type { Conventions } from './signals';
+import { PartnerSignalToast } from './signal-toast';
+import { GESTURES, type Conventions } from './signals';
 import { useTrucoStore } from './store';
 import { TableCenter } from './table-center';
 import { TentoPiles } from './tento-piles';
@@ -95,6 +96,8 @@ export function TableView({
   const gestureFor = (seat: Seat) => effects.findLast((e) => e.kind === 'gesture' && e.seat === seat) as Extract<(typeof effects)[number], { kind: 'gesture' }> | undefined;
   const turnPlayer = match ? state.seats[match.turn] : null;
   const myGesture = gestureFor(mySeat);
+  const partnerSignal = useTrucoStore((s) => s.partnerSignal);
+  const lastSignal = partnerSignal && match && partnerSignal.handNumber === match.handNumber && state.phase === 'PLAYING' ? partnerSignal.gesture : null;
 
   return (
     <div className="relative flex h-dvh flex-col overflow-hidden bg-[radial-gradient(ellipse_at_top,#4c1d95,#1e0b3d_70%)]">
@@ -138,11 +141,17 @@ export function TableView({
           })}
           <TableCenter state={state} mySeat={mySeat} />
           <RoundBanner />
+          <PartnerSignalToast state={state} mySeat={mySeat} conventions={conventions} />
           <ShoutOverlay />
         </div>
       </div>
 
       <footer className="relative flex flex-col gap-1 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] sm:px-4">
+        {lastSignal && (
+          <p className="self-center rounded-full bg-emerald-950/80 px-3 py-1 text-xs font-bold text-emerald-100 ring-1 ring-emerald-400/60" title="Só você vê os sinais do seu parceiro">
+            {`Último sinal: ${GESTURES[lastSignal].emoji} ${conventions[lastSignal]}`}
+          </p>
+        )}
         <ActionBar
           actions={available}
           partnerCards={hand?.partnerCards ?? null}
@@ -151,6 +160,8 @@ export function TableView({
           onDecideTen={actions.decideTen}
           turnName={turnPlayer?.nickname ?? null}
           rules={rules}
+          betVotes={hand?.betVotes ?? null}
+          partnerName={state.seats[partnerOf(mySeat)]?.nickname ?? null}
         />
         <div className="flex items-end justify-between gap-2">
           <div className="flex w-16 flex-col items-center gap-1 sm:w-24">

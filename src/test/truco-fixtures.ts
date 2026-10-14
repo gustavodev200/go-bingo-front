@@ -51,6 +51,7 @@ export function privateHand(over: Partial<TrucoPrivateHand> = {}): TrucoPrivateH
       { id: 'h1s0c2', card: { rank: 'Q', suit: 'spades' } },
     ],
     partnerCards: null,
+    betVotes: null,
     ...over,
   };
 }

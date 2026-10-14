@@ -49,14 +49,39 @@ describe('TableView', () => {
     expect(screen.queryByRole('button', { name: 'Truco!' })).not.toBeInTheDocument();
   });
 
-  it('lets the opponents accept, run or raise a truco', async () => {
-    const state = roomState({ match: matchView({ turn: 1, phase: 'AWAITING_BET_RESPONSE', pendingBet: { value: 3, requestedBy: 1, team: 1 } }) });
-    const { a } = renderTable({ state });
+  it('lets the opponents vote to accept, run or raise a truco', async () => {
+    const state = roomState({ match: matchView({ turn: 1, phase: 'AWAITING_BET_RESPONSE', pendingBet: { value: 3, requestedBy: 1, team: 1, votes: 0 } }) });
+    const { a } = renderTable({ state, hand: privateHand({ betVotes: { mine: null, partner: null } }) });
+    expect(screen.getByText('Seu parceiro ainda não votou')).toBeInTheDocument();
     const group = screen.getByRole('group', { name: 'Responder aposta' });
     await userEvent.click(within(group).getByRole('button', { name: 'Seis!' }));
     expect(a.respondBet).toHaveBeenCalledWith('raise');
     await userEvent.click(within(group).getByRole('button', { name: 'Correr' }));
     expect(a.respondBet).toHaveBeenCalledWith('run');
+  });
+
+  it('shows my vote and my partner vote while we decide', () => {
+    const state = roomState({ match: matchView({ turn: 1, phase: 'AWAITING_BET_RESPONSE', pendingBet: { value: 3, requestedBy: 1, team: 1, votes: 2 } }) });
+    renderTable({ state, hand: privateHand({ betVotes: { mine: 'run', partner: 'accept' } }) });
+    expect(screen.getByText('Caio votou: Aceitar')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Correr' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Aceitar' })).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('tells the requesters the opponents are still voting', () => {
+    const state = roomState({ match: matchView({ turn: 1, phase: 'AWAITING_BET_RESPONSE', pendingBet: { value: 3, requestedBy: 0, team: 0, votes: 1 } }) });
+    renderTable({ state });
+    expect(screen.getByText('Adversários votando… (1/2)')).toBeInTheDocument();
+  });
+
+  it('shows the partner signal big on the table and keeps it for the hand', () => {
+    renderTable();
+    act(() => {
+      useTrucoStore.getState().addEffect({ kind: 'gesture', seat: 2, gesture: 'wink' });
+      useTrucoStore.getState().setPartnerSignal({ gesture: 'wink', handNumber: 1 });
+    });
+    expect(screen.getByRole('status', { name: 'Sinal do parceiro' })).toHaveTextContent('Caio');
+    expect(screen.getByText('Último sinal: 😉 Zap (4 de paus)')).toBeInTheDocument();
   });
 
   it('shows the partner cards and the choice in a mão de dez', async () => {

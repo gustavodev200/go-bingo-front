@@ -52,6 +52,9 @@ export function reactionFor(msg: Announced, mySeat: Seat, mode: TrucoMode = 'min
       const againstUs = msg.payload.team !== myTeam;
       return { shout: { text, tone: 'bet' }, sfx: 'truco', speech: againstUs ? `${speech} Corre ou aceita!` : speech };
     }
+    case 'truco:bet_voted':
+      // Only my partner's vote matters to me; the vote itself arrives in my private hand.
+      return msg.payload.seat !== mySeat && msg.payload.team === myTeam ? { banner: { text: 'Seu parceiro votou', tone: 'info' } } : {};
     case 'truco:bet_resolved':
       return msg.payload.response === 'accept' ? { shout: { text: 'ACEITO!', tone: 'good' }, sfx: 'accept', speech: 'Aceito!' } : { shout: { text: 'CORREU!', tone: 'info' }, sfx: 'run', speech: 'Correu!' };
     case 'truco:ten_decided':

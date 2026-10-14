@@ -28,6 +28,8 @@ export interface AvailableActions {
   /** The opponents asked: we may accept, run or raise to `raiseValue`. */
   mustRespond: boolean;
   raiseValue: number | null;
+  /** Votes already cast by the responding team (0–2). */
+  votesCast: number;
   /** We asked and wait for the opponents. */
   waitingResponse: boolean;
   /** Mão de dez/14: 'mine' when our team decides, 'theirs' when we wait. */
@@ -41,6 +43,7 @@ const NONE: AvailableActions = {
   mustRespond: false,
   raiseValue: null,
   waitingResponse: false,
+  votesCast: 0,
   tenDecision: null,
 };
 
@@ -58,6 +61,7 @@ export function availableActions(state: TrucoRoomState | null, mySeat: Seat | nu
     mustRespond: m.phase === 'AWAITING_BET_RESPONSE' && pending !== null && pending.team !== myTeam,
     raiseValue: m.phase === 'AWAITING_BET_RESPONSE' && pending !== null && pending.team !== myTeam ? nextBet(pending.value) : null,
     waitingResponse: m.phase === 'AWAITING_BET_RESPONSE' && pending !== null && pending.team === myTeam,
+    votesCast: m.phase === 'AWAITING_BET_RESPONSE' && pending ? pending.votes : 0,
     tenDecision: m.phase === 'AWAITING_TEN_DECISION' ? (m.tenTeam === myTeam ? 'mine' : 'theirs') : null,
   };
 }
