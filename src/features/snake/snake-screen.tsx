@@ -1,18 +1,19 @@
 'use client';
 
-import { ChevronLeft, ChevronRight, Loader2, Volume2, VolumeX, X, Zap } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Copy, Crown, DoorOpen, Globe, Loader2, Lock, Share2, Volume2, VolumeX, X, Zap } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from 'react';
-import { SNAKE_SKINS, snakeViewScaleFor } from '@/contracts';
+import { SNAKE_MAX_PLAYERS, SNAKE_SKINS, snakeViewScaleFor, type SnakeRoomState } from '@/contracts';
 import { Button } from '@/components/ui/button';
 import { ConnectionBanner } from '@/features/game/connection-banner';
 import { useProfile } from '@/features/profile/profile-context';
 import { cn } from '@/lib/utils';
-import { useSnakeArena, type SnakeActions } from './connection';
+import { useSnakeRoom, type SnakeActions } from './connection';
 import { SnakeInput, type PadLike } from './input';
 import { isMuted, sfx, toggleMute, unlockAudio } from './media/audio';
-import { drawMinimap, drawSkinPreview, SnakeRenderer } from './media/renderer';
-import { useSnakeStore, type SnakeDeath } from './store';
+import { drawMinimap, drawSkinPreview, initialQuality, QualityGovernor, qualityFor, SnakeRenderer } from './media/renderer';
+import { useSnakeStore, type SnakeDeath, type SnakeExit } from './store';
 import { SnakeView } from './view';
 
 /** World units across the longer screen side at the closest zoom. */
@@ -167,7 +168,82 @@ function SkinPicker({ skin, onChange }: { skin: number; onChange: (skin: number)
   );
 }
 
-function Menu({ skin, setSkin, onPlay, busy, error, total }: { skin: number; setSkin: (s: number) => void; onPlay: () => void; busy: boolean; error: string | null; total: number | null }) {
+/** Room code to share, who is in, visibility (host) and the way out. */
+function RoomPanel({ room, actions }: { room: SnakeRoomState; actions: SnakeActions }) {
+  const { profile } = useProfile();
+  const isHost = room.hostId === profile.id;
+  const [copied, setCopied] = useState(false);
+  async function share() {
+    const url = `${window.location.origin}/snake/${room.code}`;
+    try {
+      if (navigator.share) await navigator.share({ title: 'Snake.io', text: `Bora jogar Snake.io! Sala ${room.code}`, url });
+      else {
+        await navigator.clipboard.writeText(url);
+        setCopied(true);
+      }
+    } catch {
+      /* share sheet closed */
+    }
+  }
+  return (
+    <section aria-label="Sala" className="flex flex-col gap-2 rounded-2xl bg-black/30 p-3 text-left">
+      <div className="flex items-center gap-2">
+        <span className="text-muted-foreground text-xs font-bold uppercase">Sala</span>
+        <b className="font-mono text-lg tracking-[0.25em]">{room.code}</b>
+        <button type="button" aria-label="Compartilhar sala" onClick={() => void share()} className="grid size-8 place-items-center rounded-full bg-white/10 hover:bg-white/20">
+          {typeof navigator !== 'undefined' && 'share' in navigator ? <Share2 aria-hidden className="size-4" /> : <Copy aria-hidden className="size-4" />}
+        </button>
+        {copied && <span className="text-xs text-green-400">Link copiado!</span>}
+        <span className="ml-auto text-sm font-bold text-amber-200 tabular-nums">
+          {room.players.length}/{SNAKE_MAX_PLAYERS}
+        </span>
+      </div>
+      <ul aria-label="Jogadores na sala" className="flex max-h-24 flex-wrap gap-1.5 overflow-y-auto">
+        {room.players.map((p) => (
+          <li key={p.userId} className={cn('flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-xs font-semibold', !p.connected && 'opacity-50')}>
+            {p.userId === room.hostId && <Crown aria-label="Anfitrião" className="size-3 text-amber-300" />}
+            <span aria-hidden className={cn('size-1.5 rounded-full', p.playing ? 'bg-green-400' : 'bg-slate-400')} />
+            {p.nickname}
+          </li>
+        ))}
+      </ul>
+      <div className="flex gap-2">
+        {isHost ? (
+          <Button type="button" variant="secondary" size="sm" className="flex-1 gap-1.5 rounded-xl" onClick={() => void actions.setVisibility(!room.isPublic)}>
+            {room.isPublic ? <Globe aria-hidden className="size-4" /> : <Lock aria-hidden className="size-4" />}
+            {room.isPublic ? 'Pública' : 'Privada'}
+          </Button>
+        ) : (
+          <span className="text-muted-foreground flex flex-1 items-center gap-1.5 text-xs">
+            {room.isPublic ? <Globe aria-hidden className="size-4" /> : <Lock aria-hidden className="size-4" />}
+            {room.isPublic ? 'Sala pública' : 'Sala privada'}
+          </span>
+        )}
+        <Button type="button" variant="secondary" size="sm" className="flex-1 gap-1.5 rounded-xl" onClick={() => void actions.leave()}>
+          <DoorOpen aria-hidden className="size-4" /> Sair da sala
+        </Button>
+      </div>
+    </section>
+  );
+}
+
+function Menu({
+  skin,
+  setSkin,
+  onPlay,
+  busy,
+  error,
+  room,
+  actions,
+}: {
+  skin: number;
+  setSkin: (s: number) => void;
+  onPlay: () => void;
+  busy: boolean;
+  error: string | null;
+  room: SnakeRoomState;
+  actions: SnakeActions;
+}) {
   const { profile } = useProfile();
   const best = readNumber(BEST_KEY, 0);
   return (
@@ -194,10 +270,8 @@ function Menu({ skin, setSkin, onPlay, busy, error, total }: { skin: number; set
             {error}
           </p>
         )}
-        <p className="text-muted-foreground text-xs">
-          {total !== null ? `🐍 ${total} cobras na arena agora` : 'Conectando à arena…'}
-          {best > 0 && ` · 🏆 recorde ${best}`}
-        </p>
+        <RoomPanel room={room} actions={actions} />
+        {best > 0 && <p className="text-muted-foreground -mt-2 text-xs">🏆 Seu recorde: {best}</p>}
         <ul className="text-muted-foreground flex flex-col gap-1 text-left text-xs leading-relaxed">
           <li>
             <b className="text-white">Computador:</b> a cobra segue o mouse; segure o clique ou Espaço para o impulso. WASD/setas e controle também.
@@ -207,9 +281,6 @@ function Menu({ skin, setSkin, onPlay, busy, error, total }: { skin: number; set
           </li>
           <li>Coma os pontos, faça os outros baterem no seu corpo e fuja da borda vermelha. O impulso gasta tamanho.</li>
         </ul>
-        <Link href="/" className="text-sm text-violet-200 hover:text-white">
-          ← Voltar aos jogos
-        </Link>
       </div>
     </div>
   );
@@ -318,16 +389,41 @@ function Hud({ scoreRef }: { scoreRef: RefObject<HTMLElement | null> }) {
   );
 }
 
-/** Snake.io: one open arena — menu over the live arena, the game, and the death summary. */
-export function SnakeScreen() {
+const EXIT_TITLE: Record<SnakeExit['reason'], string> = {
+  not_found: 'Sala não encontrada',
+  full: 'Sala cheia',
+  error: 'Não deu para entrar',
+  left: 'Você saiu',
+};
+
+function ExitScreen({ exit }: { exit: SnakeExit }) {
+  return (
+    <main role="alert" className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-4 px-4 text-center">
+      <span aria-hidden className="text-6xl">
+        🐍
+      </span>
+      <h1 className="font-display text-marquee text-3xl font-bold">{EXIT_TITLE[exit.reason]}</h1>
+      <p className="text-violet-100">{exit.message}</p>
+      <Button asChild size="lg" className="h-12 rounded-xl">
+        <Link href="/snake">
+          <ChevronLeft aria-hidden /> Voltar ao lobby do Snake.io
+        </Link>
+      </Button>
+    </main>
+  );
+}
+
+/** One Snake.io room: joins it and shows the live arena with the menu, the game and the death summary. */
+export function SnakeRoomScreen({ code }: { code: string }) {
+  const router = useRouter();
   const [view] = useState(() => new SnakeView());
   const [input] = useState(() => new SnakeInput());
-  const actions: SnakeActions = useSnakeArena(view);
+  const actions: SnakeActions = useSnakeRoom(code, view);
   const connection = useSnakeStore((s) => s.connection);
   const phase = useSnakeStore((s) => s.phase);
   const death = useSnakeStore((s) => s.death);
-  const fatal = useSnakeStore((s) => s.error);
-  const total = useSnakeStore((s) => s.leaderboard?.total ?? null);
+  const exit = useSnakeStore((s) => s.exit);
+  const room = useSnakeStore((s) => s.room);
   const arenaR = useSnakeStore((s) => s.radius);
   const [skin, setSkinState] = useState(() => Math.min(SNAKE_SKINS.length - 1, Math.max(0, readNumber(SKIN_KEY, 0))));
   const [busy, setBusy] = useState(false);
@@ -345,6 +441,10 @@ export function SnakeScreen() {
     phaseRef.current = phase;
     arenaRef.current = arenaR;
   }, [phase, arenaR]);
+
+  useEffect(() => {
+    if (exit?.reason === 'left') router.replace('/snake');
+  }, [exit, router]);
 
   const setSkin = (s: number) => {
     setSkinState(s);
@@ -376,6 +476,10 @@ export function SnakeScreen() {
     const cv = canvasRef.current;
     if (!cv?.getContext('2d')) return;
     const renderer = new SnakeRenderer(cv);
+    // Weak phones start light; the governor lowers or raises the quality from real frame times.
+    const governor = new QualityGovernor(initialQuality());
+    let quality = qualityFor(governor.level);
+    renderer.setQuality(quality);
     const fit = () => renderer.resize(window.innerWidth, window.innerHeight);
     fit();
     window.addEventListener('resize', fit);
@@ -390,8 +494,12 @@ export function SnakeScreen() {
 
     const loop = (now: number) => {
       raf = requestAnimationFrame(loop);
-      const dt = Math.min(0.1, (now - last) / 1000);
+      // Low quality draws ~30 times a second: half the work, still smooth thanks to interpolation.
+      if (quality.frameMs && now - last < quality.frameMs - 2) return;
+      const dtMs = now - last;
+      const dt = Math.min(0.1, dtMs / 1000);
       last = now;
+      const workStart = performance.now();
       const playing = phaseRef.current === 'playing';
       const scene = view.scene(now, input.angle);
       const me = playing ? scene?.me : undefined;
@@ -438,6 +546,10 @@ export function SnakeScreen() {
         ghosts: scene?.ghosts ?? [],
         bits: scene?.bits ?? [],
       });
+      if (!document.hidden && governor.sample(dtMs, performance.now() - workStart)) {
+        quality = qualityFor(governor.level);
+        renderer.setQuality(quality);
+      }
     };
     raf = requestAnimationFrame(loop);
     const onHide = () => document.hidden && input.reset();
@@ -464,21 +576,7 @@ export function SnakeScreen() {
     }
   }
 
-  if (fatal)
-    return (
-      <main role="alert" className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-4 px-4 text-center">
-        <span aria-hidden className="text-6xl">
-          🐍
-        </span>
-        <h1 className="font-display text-marquee text-3xl font-bold">Não deu para entrar</h1>
-        <p className="text-violet-100">{fatal}</p>
-        <Button asChild size="lg" className="h-12 rounded-xl">
-          <Link href="/">
-            <ChevronLeft aria-hidden /> Voltar aos jogos
-          </Link>
-        </Button>
-      </main>
-    );
+  if (exit && exit.reason !== 'left') return <ExitScreen exit={exit} />;
 
   return (
     <div className="fixed inset-0 z-50 touch-none overflow-hidden bg-[#0b1020] select-none">
@@ -492,17 +590,21 @@ export function SnakeScreen() {
             <Button variant="secondary" size="icon" className="size-10 rounded-full bg-black/45" aria-label={muted ? 'Ligar som' : 'Desligar som'} onClick={() => setMuted(toggleMute())}>
               {muted ? <VolumeX aria-hidden /> : <Volume2 aria-hidden />}
             </Button>
-            <Button asChild variant="secondary" size="icon" className="size-10 rounded-full bg-black/45">
-              {/* Leaving the page drops the socket, which ends the snake on the server. */}
-              <Link href="/" aria-label="Sair do jogo">
-                <X aria-hidden />
-              </Link>
+            <Button variant="secondary" size="icon" className="size-10 rounded-full bg-black/45" aria-label="Sair da sala" onClick={() => void actions.leave()}>
+              <X aria-hidden />
             </Button>
           </div>
         </>
       )}
-      {phase === 'menu' && <Menu skin={skin} setSkin={setSkin} onPlay={() => void play()} busy={busy || connection !== 'online'} error={playError} total={total} />}
-      {phase === 'dead' && death && shownDeath?.death === death && <DeathCard death={death} bestBefore={shownDeath.bestBefore} busy={busy} onAgain={() => void play()} onMenu={() => useSnakeStore.getState().toMenu()} />}
+      {!room && (
+        <div role="status" aria-busy="true" className="absolute inset-0 z-20 grid place-items-center text-white">
+          {connection === 'reconnecting' ? 'Reconectando à sala…' : 'Entrando na sala…'}
+        </div>
+      )}
+      {phase === 'menu' && room && <Menu skin={skin} setSkin={setSkin} onPlay={() => void play()} busy={busy || connection !== 'online'} error={playError} room={room} actions={actions} />}
+      {phase === 'dead' && death && shownDeath?.death === death && (
+        <DeathCard death={death} bestBefore={shownDeath.bestBefore} busy={busy} onAgain={() => void play()} onMenu={() => useSnakeStore.getState().toMenu()} />
+      )}
     </div>
   );
 }

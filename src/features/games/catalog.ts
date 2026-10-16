@@ -66,10 +66,10 @@ export const GAMES: readonly Game[] = [
   {
     id: 'snake',
     name: 'Snake.io',
-    description: 'Arena aberta ao vivo: coma, cresça, use o impulso e faça as outras cobras baterem no seu corpo.',
+    description: 'Salas de até 20 ao vivo: coma, cresça, use o impulso e faça as outras cobras baterem no seu corpo.',
     href: '/snake',
     status: 'available',
-    tags: ['Multijogador', 'Arena aberta', 'Tempo real'],
+    tags: ['Até 20 jogadores', 'Salas públicas', 'Tempo real'],
     glow: '#3cf27a',
     Art: SnakeArt,
   },

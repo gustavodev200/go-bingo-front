@@ -48,7 +48,7 @@ describe('GamesHub', () => {
     render(<GamesHub />);
     const card = screen.getByRole('link', { name: 'Jogar Snake.io' });
     expect(card).toHaveAttribute('href', '/snake');
-    expect(within(card).getByText('Arena aberta')).toBeInTheDocument();
+    expect(within(card).getByText('Até 20 jogadores')).toBeInTheDocument();
   });
 });
 
