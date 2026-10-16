@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react';
+import { BomberArt } from '@/features/bomber/bomber-art';
 import { TrucoArt } from '@/features/truco/truco-art';
 import { UnoArt } from '@/features/uno/uno-art';
 import { BingoArt } from './bingo-art';
@@ -50,5 +51,15 @@ export const GAMES: readonly Game[] = [
     tags: ['2 a 6 jogadores', 'Salas públicas', 'Tempo real'],
     glow: '#ef4444',
     Art: UnoArt,
+  },
+  {
+    id: 'bomber',
+    name: 'Bomberman',
+    description: 'Batalha de 2 a 8 na arena: solte bombas, quebre blocos, pegue itens e seja o último de pé.',
+    href: '/bomber',
+    status: 'available',
+    tags: ['2 a 8 jogadores', 'Salas públicas', 'CPU', 'Tempo real'],
+    glow: '#f97316',
+    Art: BomberArt,
   },
 ];
