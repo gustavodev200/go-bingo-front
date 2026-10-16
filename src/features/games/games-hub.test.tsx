@@ -36,6 +36,13 @@ describe('GamesHub', () => {
     expect(card).toHaveAttribute('href', '/uno');
     expect(within(card).getByText('2 a 6 jogadores')).toBeInTheDocument();
   });
+
+  it('lists the Bomberman leading to its lobby', () => {
+    render(<GamesHub />);
+    const card = screen.getByRole('link', { name: 'Jogar Bomberman' });
+    expect(card).toHaveAttribute('href', '/bomber');
+    expect(within(card).getByText('2 a 8 jogadores')).toBeInTheDocument();
+  });
 });
 
 describe('GameCard', () => {

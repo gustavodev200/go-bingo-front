@@ -41,6 +41,12 @@ export class FakeSocket {
     return this;
   }
 
+  /** Fire-and-forget emit (no ack). */
+  emit(event: string, payload: unknown) {
+    this.emitted.push({ event, payload });
+    return this;
+  }
+
   async emitWithAck(event: string, payload: unknown) {
     this.emitted.push({ event, payload });
     if (!this.acks.has(event)) throw new Error('operation has timed out');
