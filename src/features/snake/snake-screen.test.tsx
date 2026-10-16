@@ -59,7 +59,15 @@ beforeEach(() => {
 
 describe('SnakeRoomScreen', () => {
   it('waits for a second player before anyone can play', () => {
-    useSnakeStore.getState().applyState(room({ version: 2, players: [{ userId: ME, nickname: 'Ana', character: null, connected: true, playing: false }, { userId: 'u2', nickname: 'Bia', character: null, connected: false, playing: false }] }));
+    useSnakeStore.getState().applyState(
+      room({
+        version: 2,
+        players: [
+          { userId: ME, nickname: 'Ana', character: null, connected: true, playing: false },
+          { userId: 'u2', nickname: 'Bia', character: null, connected: false, playing: false },
+        ],
+      }),
+    );
     render(<SnakeRoomScreen code="ABC234" />);
     expect(screen.getByRole('status')).toHaveTextContent('Aguardando jogadores (1/2)');
     expect(screen.getByRole('button', { name: 'Jogar' })).toBeDisabled();
@@ -86,10 +94,39 @@ describe('SnakeRoomScreen', () => {
     await user.click(screen.getByRole('button', { name: 'Próxima skin' }));
     await user.click(screen.getByRole('button', { name: 'Próxima skin' }));
     await user.click(screen.getByRole('button', { name: 'Skin anterior' }));
-    expect(screen.getByRole('img', { name: 'Skin 2 de 12' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Skin Fogo (2 de 32)' })).toBeInTheDocument();
     expect(localStorage.getItem('snake.skin')).toBe('1');
     await user.click(screen.getByRole('button', { name: 'Jogar' }));
     expect(actions.play).toHaveBeenCalledWith(1);
+  });
+
+  it('team skins: jump to the clubs and back to neon', async () => {
+    const user = userEvent.setup();
+    render(<SnakeRoomScreen code="ABC234" />);
+    await user.click(screen.getByRole('button', { name: '⚽ Times' }));
+    expect(screen.getByText('Atlético-MG')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '⚽ Times' })).toHaveAttribute('aria-pressed', 'true');
+    await user.click(screen.getByRole('button', { name: 'Skin anterior' }));
+    expect(screen.getByText('Doce')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '⚽ Times' }));
+    await user.click(screen.getByRole('button', { name: 'Neon' }));
+    expect(screen.getByText('Neon Verde')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Neon' }));
+    expect(localStorage.getItem('snake.skin')).toBe('0');
+  });
+
+  it('kill notices: at most 2 and they go away by themselves', () => {
+    vi.useFakeTimers();
+    useSnakeStore.getState().playing(7);
+    render(<SnakeRoomScreen code="ABC234" />);
+    act(() => {
+      useSnakeStore.getState().pushFeed('Gabi', 'Gustavo');
+      useSnakeStore.getState().pushFeed('Gabi', 'Gustavo');
+      useSnakeStore.getState().pushFeed('Gabi', 'Bia');
+    });
+    expect(screen.getAllByText('eliminou')).toHaveLength(2);
+    act(() => vi.advanceTimersByTime(3600));
+    expect(screen.queryByText('eliminou')).not.toBeInTheDocument();
   });
 
   it('host toggles visibility; everybody can leave the room', async () => {

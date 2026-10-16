@@ -247,7 +247,7 @@ export class SnakeRenderer {
       if (f.x < vx0 - 30 || f.x > vx0 + vw + 30 || f.y < vy0 - 30 || f.y > vy0 + vh + 30) continue;
       let r = pelletRadius(f.v) * 2.2;
       if (pulse) r *= 1 + 0.18 * Math.sin(time * 0.005 + f.id * 1.7);
-      ctx.drawImage(this.foodSprite(snakeFoodColor(f.c)), f.x - r, f.y - r, r * 2, r * 2);
+      ctx.drawImage(this.foodSprite(snakeFoodColor(f.c, f.id)), f.x - r, f.y - r, r * 2, r * 2);
     }
   }
 
@@ -341,7 +341,7 @@ export class SnakeRenderer {
     for (const b of bits) {
       const r = pelletRadius(b.v) * 2.2 * (1 - b.k * 0.7);
       ctx.globalAlpha = 1 - b.k;
-      ctx.drawImage(this.foodSprite(snakeFoodColor(b.c)), b.x - r, b.y - r, r * 2, r * 2);
+      ctx.drawImage(this.foodSprite(snakeFoodColor(b.c, b.id)), b.x - r, b.y - r, r * 2, r * 2);
     }
     ctx.globalAlpha = 1;
   }
