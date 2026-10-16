@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import { BomberArt } from '@/features/bomber/bomber-art';
+import { SnakeArt } from '@/features/snake/snake-art';
 import { TrucoArt } from '@/features/truco/truco-art';
 import { UnoArt } from '@/features/uno/uno-art';
 import { BingoArt } from './bingo-art';
@@ -61,5 +62,15 @@ export const GAMES: readonly Game[] = [
     tags: ['2 a 8 jogadores', 'Salas públicas', 'CPU', 'Tempo real'],
     glow: '#f97316',
     Art: BomberArt,
+  },
+  {
+    id: 'snake',
+    name: 'Snake.io',
+    description: 'Arena aberta ao vivo: coma, cresça, use o impulso e faça as outras cobras baterem no seu corpo.',
+    href: '/snake',
+    status: 'available',
+    tags: ['Multijogador', 'Arena aberta', 'Tempo real'],
+    glow: '#3cf27a',
+    Art: SnakeArt,
   },
 ];
