@@ -1,5 +1,5 @@
-import { SnakeScreen } from '@/features/snake/snake-screen';
+import { SnakeHome } from '@/features/snake/snake-home';
 
-export default function SnakePage() {
-  return <SnakeScreen />;
+export default function SnakeLobbyPage() {
+  return <SnakeHome />;
 }
