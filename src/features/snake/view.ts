@@ -27,6 +27,8 @@ export interface Ghost {
 
 /** A pellet flying into the head that ate it. */
 export interface Bit {
+  /** Pellet id (picks the stripe color of remains). */
+  id: number;
   x: number;
   y: number;
   x0: number;
@@ -52,8 +54,11 @@ interface TimedFrame {
   frame: SnakeFrame;
 }
 
-/** Others are shown this far in the past so there are always two frames to blend. */
+/** Shortest time in the past the arena is shown at (with a perfect network). */
 export const INTERP_DELAY_MS = SNAKE_TICK_MS * 2;
+const MAX_DELAY_MS = 350;
+/** When the next frame is late, keep moving along the last motion for at most this much of a tick. */
+const MAX_EXTRAPOLATION = 0.6;
 const MAX_FRAMES = 30;
 const GHOST_MS = 500;
 const BIT_MS = 180;
@@ -75,6 +80,10 @@ export function lerpAngle(a: number, b: number, t: number) {
 export class SnakeView {
   private frames: TimedFrame[] = [];
   private offset: number | null = null;
+  /** How late frames arrive compared to the best one (network jitter), smoothed. */
+  private jitter = 0;
+  /** Current interpolation delay: grows fast when frames come late, shrinks slowly. */
+  delay = INTERP_DELAY_MS;
   private meta = new Map<number, { name: string; skin: number }>();
   private ghosts: Ghost[] = [];
   private bits: Bit[] = [];
@@ -95,6 +104,8 @@ export class SnakeView {
   reset(): void {
     this.frames = [];
     this.offset = null;
+    this.jitter = 0;
+    this.delay = INTERP_DELAY_MS;
     this.ghosts = [];
     this.bits = [];
   }
@@ -112,7 +123,11 @@ export class SnakeView {
     // offset = local time - server time, tracking the earliest arrival (least delayed).
     const sample = now - frame.tick * SNAKE_TICK_MS;
     if (this.offset === null || sample < this.offset || sample - this.offset > 1000) this.offset = sample;
-    else this.offset += (sample - this.offset) * 0.02;
+    else this.offset += (sample - this.offset) * 0.002;
+    const late = sample - this.offset;
+    this.jitter += (late - this.jitter) * (late > this.jitter ? 0.3 : 0.01);
+    const target = Math.min(MAX_DELAY_MS, INTERP_DELAY_MS + this.jitter * 1.3);
+    this.delay += (target - this.delay) * (target > this.delay ? 0.2 : 0.02);
     const prev = this.latest;
     if (prev) this.detectEaten(prev, frame, now);
     this.myMass = frame.myMass;
@@ -145,6 +160,7 @@ export class SnakeView {
           y0: f.y,
           v: f.v,
           c: f.c,
+          id: f.id,
           snakeId: eater[0],
           k: 0,
           t0: now,
@@ -157,12 +173,14 @@ export class SnakeView {
   scene(now: number, look: number): Scene | null {
     const frames = this.frames;
     if (!frames.length || this.offset === null) return null;
-    const rt = now - this.offset - INTERP_DELAY_MS;
+    const rt = now - this.offset - this.delay;
     let i = frames.length - 1;
     while (i > 0 && frames[i].time > rt) i--;
+    // Past the newest frame: blend forward from the last two instead of freezing.
+    if (i === frames.length - 1 && i > 0) i--;
     const f0 = frames[i];
     const f1 = frames[i + 1] ?? f0;
-    const t = f1 === f0 ? 0 : Math.max(0, Math.min(1, (rt - f0.time) / (f1.time - f0.time)));
+    const t = f1 === f0 ? 0 : Math.max(0, Math.min(1 + MAX_EXTRAPOLATION, (rt - f0.time) / (f1.time - f0.time)));
     if (i > 2) frames.splice(0, i - 2);
     const a0 = f0.frame;
     const a1 = f1.frame;

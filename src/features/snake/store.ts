@@ -41,7 +41,9 @@ interface SnakeStore {
   setExit(exit: SnakeExit | null): void;
 }
 
-const FEED_MAX = 4;
+const FEED_MAX = 2;
+/** Kill notices disappear by themselves so they never sit on the arena. */
+const FEED_TTL_MS = 3500;
 let feedKey = 0;
 
 const initial = {
@@ -74,6 +76,10 @@ export const useSnakeStore = create<SnakeStore>((set) => ({
   died: (death) => set({ death, phase: 'dead', myId: 0 }),
   toMenu: () => set({ phase: 'menu', death: null }),
   setLeaderboard: (leaderboard) => set({ leaderboard }),
-  pushFeed: (killer, victim) => set((s) => ({ feed: [{ key: ++feedKey, killer, victim }, ...s.feed].slice(0, FEED_MAX) })),
+  pushFeed: (killer, victim) => {
+    const key = ++feedKey;
+    set((s) => ({ feed: [{ key, killer, victim }, ...s.feed].slice(0, FEED_MAX) }));
+    setTimeout(() => set((s) => ({ feed: s.feed.filter((f) => f.key !== key) })), FEED_TTL_MS);
+  },
   setExit: (exit) => set({ exit }),
 }));

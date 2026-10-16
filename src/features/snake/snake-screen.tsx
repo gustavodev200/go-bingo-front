@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight, Copy, Crown, DoorOpen, Globe, Loader2, Lock,
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from 'react';
-import { SNAKE_MAX_PLAYERS, SNAKE_MIN_PLAYERS, SNAKE_SKINS, snakeViewScaleFor, type SnakeRoomState } from '@/contracts';
+import { SNAKE_FIRST_TEAM_SKIN, SNAKE_MAX_PLAYERS, SNAKE_MIN_PLAYERS, SNAKE_SKIN_NAMES, SNAKE_SKINS, snakeViewScaleFor, type SnakeRoomState } from '@/contracts';
 import { Button } from '@/components/ui/button';
 import { ConnectionBanner } from '@/features/game/connection-banner';
 import { useProfile } from '@/features/profile/profile-context';
@@ -156,15 +156,37 @@ function SkinPicker({ skin, onChange }: { skin: number; onChange: (skin: number)
     return () => cancelAnimationFrame(raf);
   }, [skin]);
   const n = SNAKE_SKINS.length;
+  const isTeam = skin >= SNAKE_FIRST_TEAM_SKIN;
   return (
-    <div className="flex items-center justify-center gap-2">
-      <Button type="button" variant="secondary" size="icon" className="size-11 rounded-full" aria-label="Skin anterior" onClick={() => onChange((skin + n - 1) % n)}>
-        <ChevronLeft aria-hidden />
-      </Button>
-      <canvas ref={ref} width={260} height={80} aria-label={`Skin ${skin + 1} de ${n}`} role="img" className="h-17 w-55 rounded-2xl bg-black/30" />
-      <Button type="button" variant="secondary" size="icon" className="size-11 rounded-full" aria-label="Próxima skin" onClick={() => onChange((skin + 1) % n)}>
-        <ChevronRight aria-hidden />
-      </Button>
+    <div className="flex flex-col items-center gap-1.5">
+      <div role="group" aria-label="Tipo de skin" className="flex gap-1.5 text-xs font-bold">
+        {[
+          { label: 'Neon', active: !isTeam, to: 0 },
+          { label: '⚽ Times', active: isTeam, to: SNAKE_FIRST_TEAM_SKIN },
+        ].map((t) => (
+          <button
+            key={t.label}
+            type="button"
+            aria-pressed={t.active}
+            onClick={() => !t.active && onChange(t.to)}
+            className={cn('rounded-full px-3 py-1', t.active ? 'bg-green-400 text-green-950' : 'bg-white/10 text-white hover:bg-white/20')}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+      <div className="flex items-center justify-center gap-2">
+        <Button type="button" variant="secondary" size="icon" className="size-11 rounded-full" aria-label="Skin anterior" onClick={() => onChange((skin + n - 1) % n)}>
+          <ChevronLeft aria-hidden />
+        </Button>
+        <canvas ref={ref} width={260} height={80} aria-label={`Skin ${SNAKE_SKIN_NAMES[skin]} (${skin + 1} de ${n})`} role="img" className="h-17 w-55 rounded-2xl bg-black/30" />
+        <Button type="button" variant="secondary" size="icon" className="size-11 rounded-full" aria-label="Próxima skin" onClick={() => onChange((skin + 1) % n)}>
+          <ChevronRight aria-hidden />
+        </Button>
+      </div>
+      <span className="text-sm font-bold" aria-live="polite">
+        {SNAKE_SKIN_NAMES[skin]}
+      </span>
     </div>
   );
 }
@@ -347,7 +369,8 @@ function Hud({ scoreRef, touch, muted, onMute, onLeave }: { scoreRef: RefObject<
   const myId = useSnakeStore((s) => s.myId);
   const radius = useSnakeStore((s) => s.radius);
   const feed = useSnakeStore((s) => s.feed);
-  const feedPlace = touch ? 'top-[calc(12.75rem+env(safe-area-inset-top))] text-xs' : 'top-[calc(0.6rem+env(safe-area-inset-top))] text-sm';
+  // Touch: below the minimap in portrait; in landscape at the top, between the stats and the ranking (never over the snake).
+  const feedPlace = touch ? 'top-[calc(12.75rem+env(safe-area-inset-top))] text-xs landscape:top-[calc(0.6rem+env(safe-area-inset-top))]' : 'top-[calc(0.6rem+env(safe-area-inset-top))] text-sm';
   const mapRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -420,7 +443,7 @@ function Hud({ scoreRef, touch, muted, onMute, onLeave }: { scoreRef: RefObject<
       </div>
       <ul aria-live="polite" className={cn('absolute left-1/2 flex -translate-x-1/2 flex-col items-center gap-1 font-extrabold', feedPlace)}>
         {feed.map((f) => (
-          <li key={f.key} className="rounded-lg bg-black/45 px-3 py-0.5 whitespace-nowrap">
+          <li key={f.key} className="rounded-lg bg-black/35 px-2.5 py-0.5 whitespace-nowrap opacity-90">
             <span className="text-green-400">{f.killer}</span> eliminou <span className="text-rose-400">{f.victim}</span>
           </li>
         ))}

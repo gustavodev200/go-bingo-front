@@ -95,6 +95,34 @@ describe('SnakeView', () => {
   });
 });
 
+describe('SnakeView network smoothing', () => {
+  it('keeps moving past the newest frame for a moment instead of freezing', () => {
+    const v = new SnakeView();
+    v.push(frame(1, [snake(1, [0, 0])]), 0);
+    v.push(frame(2, [snake(1, [10, 0])]), SNAKE_TICK_MS);
+    // half a tick after the newest frame should be shown: extrapolated to x = 15
+    const head = v.scene(SNAKE_TICK_MS * 1.5 + INTERP_DELAY_MS, 0)!.snakes[0].pts.at(-1)!;
+    expect(head[1]).toBeCloseTo(15);
+    // never more than 0.6 of a tick ahead
+    const far = v.scene(10_000, 0)!.snakes[0].pts.at(-1)!;
+    expect(far[1]).toBeCloseTo(16);
+  });
+
+  it('shows the arena further in the past when frames arrive late, then recovers slowly', () => {
+    const v = new SnakeView();
+    let now = 0;
+    for (let tick = 1; tick <= 40; tick++) {
+      now = tick * SNAKE_TICK_MS + (tick % 2 ? 0 : 120); // every other frame 120 ms late
+      v.push(frame(tick, []), now);
+    }
+    expect(v.delay).toBeGreaterThan(INTERP_DELAY_MS + 60);
+    const high = v.delay;
+    for (let tick = 41; tick <= 80; tick++) v.push(frame(tick, []), tick * SNAKE_TICK_MS);
+    expect(v.delay).toBeLessThan(high);
+    expect(v.delay).toBeGreaterThan(INTERP_DELAY_MS);
+  });
+});
+
 describe('lerpAngle', () => {
   it('takes the short way around', () => {
     expect(lerpAngle(3, -3, 0.5)).toBeCloseTo(Math.PI, 1);
