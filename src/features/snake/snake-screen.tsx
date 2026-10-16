@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight, Copy, Crown, DoorOpen, Globe, Loader2, Lock,
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from 'react';
-import { SNAKE_MAX_PLAYERS, SNAKE_SKINS, snakeViewScaleFor, type SnakeRoomState } from '@/contracts';
+import { SNAKE_MAX_PLAYERS, SNAKE_MIN_PLAYERS, SNAKE_SKINS, snakeViewScaleFor, type SnakeRoomState } from '@/contracts';
 import { Button } from '@/components/ui/button';
 import { ConnectionBanner } from '@/features/game/connection-banner';
 import { useProfile } from '@/features/profile/profile-context';
@@ -53,14 +53,17 @@ function TouchControls({ input }: { input: SnakeInput }) {
   const [knob, setKnob] = useState({ x: 0, y: 0 });
   const [boosting, setBoosting] = useState(false);
   const R = 42;
+  /** Half the base (56 px) plus a margin: the base never sits against an edge. */
+  const EDGE = 76;
 
   const down = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (origin) return;
     e.currentTarget.setPointerCapture?.(e.pointerId);
     const box = e.currentTarget.getBoundingClientRect();
+    const clamp = (v: number, size: number) => Math.min(Math.max(v, EDGE), Math.max(EDGE, size - EDGE));
     setOrigin({
-      x: e.clientX - box.left,
-      y: e.clientY - box.top,
+      x: clamp(e.clientX - box.left, box.width),
+      y: clamp(e.clientY - box.top, box.height),
       id: e.pointerId,
     });
     setKnob({ x: 0, y: 0 });
@@ -105,10 +108,8 @@ function TouchControls({ input }: { input: SnakeInput }) {
             origin
               ? { left: origin.x, top: origin.y }
               : {
-                  left: 'calc(5.5rem + env(safe-area-inset-left))',
-                  bottom: 'calc(1rem + env(safe-area-inset-bottom))',
-                  top: 'auto',
-                  transform: 'translate(-50%, 0)',
+                  left: 'calc(7rem + env(safe-area-inset-left))',
+                  top: 'calc(100% - 5.25rem - env(safe-area-inset-bottom))',
                 }
           }
         >
@@ -130,7 +131,7 @@ function TouchControls({ input }: { input: SnakeInput }) {
           onPointerCancel={boost(false)}
           onPointerLeave={boost(false)}
           className={cn(
-            'absolute right-[calc(1.5rem+env(safe-area-inset-right))] bottom-[calc(2rem+env(safe-area-inset-bottom))] grid size-24 place-items-center rounded-full bg-[radial-gradient(circle_at_35%_30%,#fff4b8,#ffd23f_55%,#e09b00)] text-amber-950 shadow-[0_6px_0_#9a6a00] transition',
+            'absolute right-[calc(2rem+env(safe-area-inset-right))] bottom-[calc(1.75rem+env(safe-area-inset-bottom))] grid size-24 place-items-center rounded-full bg-[radial-gradient(circle_at_35%_30%,#fff4b8,#ffd23f_55%,#e09b00)] text-amber-950 shadow-[0_6px_0_#9a6a00] transition',
             boosting && 'translate-y-1 shadow-[0_2px_0_#9a6a00,0_0_30px_rgb(255_210_63/0.9)]',
           )}
         >
@@ -246,56 +247,72 @@ function Menu({
 }) {
   const { profile } = useProfile();
   const best = readNumber(BEST_KEY, 0);
+  const online = onlineOf(room);
+  const waiting = online < SNAKE_MIN_PLAYERS;
   return (
-    <div className="absolute inset-0 z-20 grid place-items-center overflow-y-auto bg-[radial-gradient(ellipse_at_center,rgb(13_18_36/0.35),rgb(13_18_36/0.85))] p-4">
-      <div className="glass flex w-full max-w-sm flex-col gap-4 p-5 text-center">
-        <h1 className="font-display text-5xl font-bold tracking-wide">
-          {['S', 'N', 'A', 'K', 'E'].map((c, i) => (
-            <span key={c} className={['text-green-400', 'text-yellow-300', 'text-rose-400', 'text-sky-400', 'text-purple-400'][i]}>
-              {c}
-            </span>
-          ))}
-          <small className="text-muted-foreground ml-1 text-2xl">.io</small>
-        </h1>
-        <p className="text-muted-foreground -mt-2 text-sm">
-          Jogando como <b className="text-white">{profile.nickname}</b>
-        </p>
-        <SkinPicker skin={skin} onChange={setSkin} />
-        <Button size="lg" className="h-14 rounded-2xl text-xl" disabled={busy} onClick={onPlay}>
-          {busy ? <Loader2 aria-hidden className="animate-spin" /> : null}
-          {busy ? 'Entrando…' : 'Jogar'}
-        </Button>
-        {error && (
-          <p role="alert" className="text-destructive text-sm">
-            {error}
+    <div className="absolute inset-0 z-20 flex overflow-y-auto bg-[radial-gradient(ellipse_at_center,rgb(13_18_36/0.35),rgb(13_18_36/0.85))] p-4 [@media(max-height:500px)]:p-2">
+      <div className="glass m-auto flex w-full max-w-sm flex-col gap-4 p-5 text-center [@media(max-height:500px)]:max-w-3xl [@media(max-height:500px)]:flex-row [@media(max-height:500px)]:p-3">
+        <div className="flex flex-1 flex-col gap-4 [@media(max-height:500px)]:gap-2">
+          <h1 className="font-display text-5xl font-bold tracking-wide [@media(max-height:500px)]:text-3xl">
+            {['S', 'N', 'A', 'K', 'E'].map((c, i) => (
+              <span key={c} className={['text-green-400', 'text-yellow-300', 'text-rose-400', 'text-sky-400', 'text-purple-400'][i]}>
+                {c}
+              </span>
+            ))}
+            <small className="text-muted-foreground ml-1 text-2xl">.io</small>
+          </h1>
+          <p className="text-muted-foreground -mt-2 text-sm">
+            Jogando como <b className="text-white">{profile.nickname}</b>
           </p>
-        )}
-        <RoomPanel room={room} actions={actions} />
-        {best > 0 && <p className="text-muted-foreground -mt-2 text-xs">🏆 Seu recorde: {best}</p>}
-        <ul className="text-muted-foreground flex flex-col gap-1 text-left text-xs leading-relaxed">
-          <li>
-            <b className="text-white">Computador:</b> a cobra segue o mouse; segure o clique ou Espaço para o impulso. WASD/setas e controle também.
-          </li>
-          <li>
-            <b className="text-white">Celular:</b> analógico à esquerda, ⚡ impulso à direita.
-          </li>
-          <li>Coma os pontos, faça os outros baterem no seu corpo e fuja da borda vermelha. O impulso gasta tamanho.</li>
-        </ul>
+          <SkinPicker skin={skin} onChange={setSkin} />
+          {waiting ? (
+            <div role="status" className="flex flex-col gap-1 rounded-2xl border border-dashed border-white/20 p-3">
+              <b className="font-display text-lg">
+                Aguardando jogadores ({online}/{SNAKE_MIN_PLAYERS})
+              </b>
+              <span className="text-muted-foreground text-xs">A partida começa com pelo menos {SNAKE_MIN_PLAYERS} pessoas. Compartilhe o código da sala!</span>
+            </div>
+          ) : null}
+          <Button size="lg" className="h-14 rounded-2xl text-xl [@media(max-height:500px)]:h-11" disabled={busy || waiting} onClick={onPlay}>
+            {busy ? <Loader2 aria-hidden className="animate-spin" /> : null}
+            {busy ? 'Entrando…' : 'Jogar'}
+          </Button>
+          {error && (
+            <p role="alert" className="text-destructive text-sm">
+              {error}
+            </p>
+          )}
+        </div>
+        <div className="flex flex-1 flex-col gap-4 [@media(max-height:500px)]:gap-2">
+          <RoomPanel room={room} actions={actions} />
+          {best > 0 && <p className="text-muted-foreground -mt-2 text-xs">🏆 Seu recorde: {best}</p>}
+          <ul className="text-muted-foreground flex flex-col gap-1 text-left text-xs leading-relaxed [@media(max-height:500px)]:hidden">
+            <li>
+              <b className="text-white">Computador:</b> a cobra segue o mouse; segure o clique ou Espaço para o impulso. WASD/setas e controle também.
+            </li>
+            <li>
+              <b className="text-white">Celular:</b> analógico à esquerda, ⚡ impulso à direita.
+            </li>
+            <li>Coma os pontos, faça os outros baterem no seu corpo e fuja da borda vermelha. O impulso gasta tamanho.</li>
+          </ul>
+        </div>
       </div>
     </div>
   );
 }
 
-function DeathCard({ death, bestBefore, onAgain, onMenu, busy }: { death: SnakeDeath; bestBefore: number; onAgain: () => void; onMenu: () => void; busy: boolean }) {
+const onlineOf = (room: SnakeRoomState) => room.players.filter((p) => p.connected).length;
+
+function DeathCard({ death, bestBefore, onAgain, onMenu, busy, waiting }: { death: SnakeDeath; bestBefore: number; onAgain: () => void; onMenu: () => void; busy: boolean; waiting: boolean }) {
   const record = death.score > bestBefore;
   const time = death.secs >= 60 ? `${Math.floor(death.secs / 60)}m ${death.secs % 60}s` : `${death.secs}s`;
   return (
-    <div role="dialog" aria-modal="true" aria-labelledby="snake-death-title" className="absolute inset-0 z-20 grid place-items-center bg-black/55 p-4">
-      <div className="glass flex w-full max-w-sm flex-col gap-3 p-5 text-center">
-        <h2 id="snake-death-title" className="font-display text-3xl font-bold text-rose-400">
+    <div role="dialog" aria-modal="true" aria-labelledby="snake-death-title" className="absolute inset-0 z-20 flex overflow-y-auto bg-black/55 p-4 [@media(max-height:500px)]:p-2">
+      <div className="glass m-auto flex w-full max-w-sm flex-col gap-3 p-5 text-center [@media(max-height:500px)]:max-w-xl [@media(max-height:500px)]:gap-2 [@media(max-height:500px)]:p-3">
+        <h2 id="snake-death-title" className="font-display text-3xl font-bold text-rose-400 [@media(max-height:500px)]:text-2xl">
           {death.killer ? `Eliminado por ${death.killer}!` : 'Você bateu na borda!'}
         </h2>
-        <dl className="grid grid-cols-2 gap-2">
+        <dl className="grid grid-cols-2 gap-2 [@media(max-height:500px)]:grid-cols-4">
           {[
             ['Tamanho', death.score],
             ['Abates', death.kills],
@@ -309,8 +326,8 @@ function DeathCard({ death, bestBefore, onAgain, onMenu, busy }: { death: SnakeD
           ))}
         </dl>
         <p className="text-muted-foreground text-sm">{record ? '🏆 Novo recorde pessoal!' : `Recorde: ${bestBefore}`}</p>
-        <Button size="lg" className="h-14 rounded-2xl text-xl" disabled={busy} onClick={onAgain}>
-          Jogar de novo
+        <Button size="lg" className="h-14 rounded-2xl text-xl [@media(max-height:500px)]:h-11" disabled={busy || waiting} onClick={onAgain}>
+          {waiting ? 'Aguardando jogadores…' : 'Jogar de novo'}
         </Button>
         <Button variant="secondary" className="rounded-xl" onClick={onMenu}>
           Menu
@@ -320,11 +337,17 @@ function DeathCard({ death, bestBefore, onAgain, onMenu, busy }: { death: SnakeD
   );
 }
 
-function Hud({ scoreRef }: { scoreRef: RefObject<HTMLElement | null> }) {
+/**
+ * Touch screens (portrait or landscape) keep the bottom corners for the stick
+ * and the boost button: minimap and buttons go top-left, under the stats.
+ * Desktop puts the minimap and buttons bottom-right.
+ */
+function Hud({ scoreRef, touch, muted, onMute, onLeave }: { scoreRef: RefObject<HTMLElement | null>; touch: boolean; muted: boolean; onMute: () => void; onLeave: () => void }) {
   const lb = useSnakeStore((s) => s.leaderboard);
   const myId = useSnakeStore((s) => s.myId);
   const radius = useSnakeStore((s) => s.radius);
   const feed = useSnakeStore((s) => s.feed);
+  const feedPlace = touch ? 'top-[calc(12.75rem+env(safe-area-inset-top))] text-xs' : 'top-[calc(0.6rem+env(safe-area-inset-top))] text-sm';
   const mapRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -353,7 +376,7 @@ function Hud({ scoreRef }: { scoreRef: RefObject<HTMLElement | null> }) {
         >
           <li className="mb-0.5 text-xs tracking-widest text-amber-300">RANKING</li>
           {lb.top.map((r, i) => (
-            <li key={r.id} className={cn('flex justify-between gap-2', i >= 5 && 'max-sm:hidden', r.id === myId && 'text-green-400')}>
+            <li key={r.id} className={cn('flex justify-between gap-2', i >= 5 && 'max-sm:hidden [@media(max-height:500px)]:hidden', r.id === myId && 'text-green-400')}>
               <span className="truncate">
                 {i + 1}. {r.name}
               </span>
@@ -373,12 +396,29 @@ function Hud({ scoreRef }: { scoreRef: RefObject<HTMLElement | null> }) {
         width={160}
         height={160}
         aria-hidden
-        className="absolute top-[calc(4.2rem+env(safe-area-inset-top))] left-[calc(0.75rem+env(safe-area-inset-left))] size-22 opacity-90 md:top-auto md:right-[calc(0.75rem+env(safe-area-inset-right))] md:bottom-[calc(0.75rem+env(safe-area-inset-bottom))] md:left-auto md:size-36"
+        className={cn(
+          'absolute opacity-90',
+          touch
+            ? 'top-[calc(3.9rem+env(safe-area-inset-top))] left-[calc(0.75rem+env(safe-area-inset-left))] size-22'
+            : 'right-[calc(0.75rem+env(safe-area-inset-right))] bottom-[calc(0.75rem+env(safe-area-inset-bottom))] size-36',
+        )}
       />
-      <ul
-        aria-live="polite"
-        className="absolute top-[calc(6.5rem+env(safe-area-inset-top))] left-1/2 flex -translate-x-1/2 flex-col items-center gap-1 text-xs font-extrabold sm:top-[calc(0.6rem+env(safe-area-inset-top))] sm:text-sm"
+      <div
+        className={cn(
+          'pointer-events-auto absolute flex gap-2',
+          touch
+            ? 'top-[calc(9.9rem+env(safe-area-inset-top))] left-[calc(0.75rem+env(safe-area-inset-left))]'
+            : 'right-[calc(10.5rem+env(safe-area-inset-right))] bottom-[calc(0.75rem+env(safe-area-inset-bottom))]',
+        )}
       >
+        <Button variant="secondary" size="icon" className="size-10 rounded-full bg-black/45" aria-label={muted ? 'Ligar som' : 'Desligar som'} onClick={onMute}>
+          {muted ? <VolumeX aria-hidden /> : <Volume2 aria-hidden />}
+        </Button>
+        <Button variant="secondary" size="icon" className="size-10 rounded-full bg-black/45" aria-label="Sair da sala" onClick={onLeave}>
+          <X aria-hidden />
+        </Button>
+      </div>
+      <ul aria-live="polite" className={cn('absolute left-1/2 flex -translate-x-1/2 flex-col items-center gap-1 font-extrabold', feedPlace)}>
         {feed.map((f) => (
           <li key={f.key} className="rounded-lg bg-black/45 px-3 py-0.5 whitespace-nowrap">
             <span className="text-green-400">{f.killer}</span> eliminou <span className="text-rose-400">{f.victim}</span>
@@ -584,16 +624,8 @@ export function SnakeRoomScreen({ code }: { code: string }) {
       <ConnectionBanner status={connection} />
       {phase === 'playing' && (
         <>
-          <Hud scoreRef={scoreRef} />
+          <Hud scoreRef={scoreRef} touch={touch} muted={muted} onMute={() => setMuted(toggleMute())} onLeave={() => void actions.leave()} />
           {touch && <TouchControls input={input} />}
-          <div className="absolute right-[calc(0.75rem+env(safe-area-inset-right))] bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-20 flex gap-2 max-md:top-[calc(13rem+env(safe-area-inset-top))] max-md:bottom-auto max-md:flex-col md:right-44">
-            <Button variant="secondary" size="icon" className="size-10 rounded-full bg-black/45" aria-label={muted ? 'Ligar som' : 'Desligar som'} onClick={() => setMuted(toggleMute())}>
-              {muted ? <VolumeX aria-hidden /> : <Volume2 aria-hidden />}
-            </Button>
-            <Button variant="secondary" size="icon" className="size-10 rounded-full bg-black/45" aria-label="Sair da sala" onClick={() => void actions.leave()}>
-              <X aria-hidden />
-            </Button>
-          </div>
         </>
       )}
       {!room && (
@@ -603,7 +635,14 @@ export function SnakeRoomScreen({ code }: { code: string }) {
       )}
       {phase === 'menu' && room && <Menu skin={skin} setSkin={setSkin} onPlay={() => void play()} busy={busy || connection !== 'online'} error={playError} room={room} actions={actions} />}
       {phase === 'dead' && death && shownDeath?.death === death && (
-        <DeathCard death={death} bestBefore={shownDeath.bestBefore} busy={busy} onAgain={() => void play()} onMenu={() => useSnakeStore.getState().toMenu()} />
+        <DeathCard
+          death={death}
+          bestBefore={shownDeath.bestBefore}
+          busy={busy}
+          waiting={!room || onlineOf(room) < SNAKE_MIN_PLAYERS}
+          onAgain={() => void play()}
+          onMenu={() => useSnakeStore.getState().toMenu()}
+        />
       )}
     </div>
   );

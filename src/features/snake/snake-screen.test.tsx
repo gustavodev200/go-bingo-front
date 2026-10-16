@@ -41,7 +41,7 @@ const room = (extra: Partial<SnakeRoomState> = {}): SnakeRoomState => ({
   hostId: ME,
   players: [
     { userId: ME, nickname: 'Ana', character: null, connected: true, playing: false },
-    { userId: 'u2', nickname: 'Bia', character: null, connected: false, playing: true },
+    { userId: 'u2', nickname: 'Bia', character: null, connected: true, playing: true },
   ],
   version: 1,
   ...extra,
@@ -58,6 +58,24 @@ beforeEach(() => {
 });
 
 describe('SnakeRoomScreen', () => {
+  it('waits for a second player before anyone can play', () => {
+    useSnakeStore.getState().applyState(room({ version: 2, players: [{ userId: ME, nickname: 'Ana', character: null, connected: true, playing: false }, { userId: 'u2', nickname: 'Bia', character: null, connected: false, playing: false }] }));
+    render(<SnakeRoomScreen code="ABC234" />);
+    expect(screen.getByRole('status')).toHaveTextContent('Aguardando jogadores (1/2)');
+    expect(screen.getByRole('button', { name: 'Jogar' })).toBeDisabled();
+  });
+
+  it('death card waits too when the room is down to one player', () => {
+    vi.useFakeTimers();
+    render(<SnakeRoomScreen code="ABC234" />);
+    act(() => {
+      useSnakeStore.getState().applyState(room({ version: 3, players: [{ userId: ME, nickname: 'Ana', character: null, connected: true, playing: false }] }));
+      useSnakeStore.getState().died(DEATH);
+    });
+    act(() => vi.advanceTimersByTime(1200));
+    expect(screen.getByRole('button', { name: 'Aguardando jogadores…' })).toBeDisabled();
+  });
+
   it('menu: room code, players, skin picker remembered, play with the chosen skin', async () => {
     const user = userEvent.setup();
     render(<SnakeRoomScreen code="ABC234" />);
