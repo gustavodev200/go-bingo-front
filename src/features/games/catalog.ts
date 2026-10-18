@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import { BomberArt } from '@/features/bomber/bomber-art';
+import { DominoArt } from '@/features/domino/domino-art';
 import { SnakeArt } from '@/features/snake/snake-art';
 import { TrucoArt } from '@/features/truco/truco-art';
 import { UnoArt } from '@/features/uno/uno-art';
@@ -52,6 +53,16 @@ export const GAMES: readonly Game[] = [
     tags: ['2 a 6 jogadores', 'Salas públicas', 'Tempo real'],
     glow: '#ef4444',
     Art: UnoArt,
+  },
+  {
+    id: 'domino',
+    name: 'Dominó',
+    description: 'Duplo-6 clássico de 2 a 4, sozinho ou em duplas: encaixe nas pontas, compre do monte e bata primeiro.',
+    href: '/domino',
+    status: 'available',
+    tags: ['2 a 4 jogadores', 'Duplas', 'Salas públicas'],
+    glow: '#10b981',
+    Art: DominoArt,
   },
   {
     id: 'bomber',
