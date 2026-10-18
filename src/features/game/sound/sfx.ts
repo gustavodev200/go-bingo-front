@@ -1,10 +1,14 @@
-export type Sfx = 'draw' | 'one-away' | 'bingo-me' | 'bingo-other' | 'ended' | TrucoSfx | UnoOnlySfx;
+export type Sfx = 'draw' | 'one-away' | 'bingo-me' | 'bingo-other' | 'ended' | TrucoSfx | UnoOnlySfx | DominoOnlySfx;
 /** Truco Mineiro effects share the same synthesizer. */
 export type TrucoSfx = 'card' | 'truco' | 'accept' | 'run' | 'hand-won' | 'hand-lost' | 'signal' | 'match-won' | 'match-lost' | 'error';
 
 /** UNO effects: its own plus the shared card/result sounds of the truco. */
 type UnoOnlySfx = 'uno-call' | 'uno-draw' | 'uno-skip' | 'uno-wild' | 'uno-turn' | 'uno-caught';
 export type UnoSfx = UnoOnlySfx | 'card' | 'run' | 'hand-won' | 'hand-lost' | 'match-won' | 'match-lost' | 'error';
+
+/** Dominó effects: the clack of a tile, buying, passing, plus the shared result sounds. */
+type DominoOnlySfx = 'domino-clack' | 'domino-buy' | 'domino-pass' | 'domino-turn';
+export type DominoSfx = DominoOnlySfx | 'hand-won' | 'hand-lost' | 'match-won' | 'match-lost' | 'error';
 
 export interface Note {
   freq: number;
@@ -47,6 +51,16 @@ export const SFX_NOTES: Record<Sfx, Note[]> = {
   'uno-skip': arpeggio([880, 587], 0.08, 0.12, 'sawtooth', 0.08),
   'uno-wild': arpeggio([392, 523, 659, 784, 1047], 0.05, 0.12, 'sine', 0.13),
   'uno-turn': arpeggio([988, 1319], 0.09, 0.12, 'sine', 0.12),
+  'domino-clack': [
+    { freq: 1250, at: 0, dur: 0.03, wave: 'square', gain: 0.07 },
+    { freq: 420, at: 0.012, dur: 0.06, wave: 'triangle', gain: 0.2 },
+  ],
+  'domino-buy': [
+    { freq: 600, at: 0, dur: 0.04, wave: 'triangle', gain: 0.12 },
+    { freq: 760, at: 0.06, dur: 0.04, wave: 'triangle', gain: 0.1 },
+  ],
+  'domino-pass': arpeggio([440, 349], 0.1, 0.14, 'sine', 0.1),
+  'domino-turn': arpeggio([784, 1047], 0.09, 0.12, 'sine', 0.12),
   'uno-caught': [...arpeggio([784, 622, 494], 0.08, 0.14, 'square', 0.09), { freq: 330, at: 0.26, dur: 0.3, wave: 'sawtooth', gain: 0.08 }],
 };
 
