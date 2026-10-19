@@ -4,6 +4,7 @@ import { LogOut, RotateCcw, Trophy } from 'lucide-react';
 import type { UnoRoomState } from '@/contracts';
 import { Avatar } from '@/components/stage/avatar';
 import { Button } from '@/components/ui/button';
+import { MatchRewardPanel } from '@/features/arena/reward-panel';
 import { useBusy } from '@/features/truco/action-bar';
 import { cn } from '@/lib/utils';
 
@@ -33,6 +34,7 @@ export function ResultPanel({ state, mySeat, onRematch, onLeave }: { state: UnoR
             ))}
           </ol>
         )}
+        <MatchRewardPanel />
         <div className="flex w-full flex-col gap-2">
           <Button size="lg" className="h-12 gap-2 rounded-xl text-base" disabled={busy} onClick={run(onRematch)}>
             <RotateCcw aria-hidden /> Jogar de novo

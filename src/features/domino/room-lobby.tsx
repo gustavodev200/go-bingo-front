@@ -1,5 +1,6 @@
 'use client';
 
+import { StakeNote } from '@/features/arena/stake-note';
 import { Check, ChevronLeft, Copy, Crown, Globe, Loader2, Lock, Share2, WifiOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { DOMINO_MIN_PLAYERS, DOMINO_SEATS, DOMINO_TARGETS, dominoTeamOf, type DominoRoomState, type DominoRules } from '@/contracts';
@@ -127,6 +128,8 @@ export function RoomLobby({ state, mySeat, actions }: { state: DominoRoomState; 
           {seated}/{DOMINO_SEATS} na mesa
         </span>
       </header>
+
+      <StakeNote game="DOMINO" />
 
       <section className="flex items-center justify-between gap-3 rounded-2xl bg-white/5 px-4 py-2 ring-1 ring-white/10" aria-label="Visibilidade">
         <span className="flex items-center gap-2 text-sm">

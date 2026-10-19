@@ -12,7 +12,7 @@ interface ProfileContextValue {
   refresh(): Promise<void>;
 }
 
-const ProfileContext = createContext<ProfileContextValue | null>(null);
+export const ProfileContext = createContext<ProfileContextValue | null>(null);
 
 export function useProfile(): ProfileContextValue {
   const ctx = useContext(ProfileContext);

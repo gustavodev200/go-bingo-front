@@ -94,7 +94,7 @@ export function CreateRoomForm() {
             </span>
             <span className="text-muted-foreground text-xs">{PATTERN_HINTS[pattern]}</span>
             <span className="mt-1 flex items-center gap-1 text-xs text-amber-200">
-              <Coin className="size-3.5" /> prêmio {WIN_COINS[pattern]}
+              <Coin className="size-3.5" /> bônus {WIN_COINS[pattern]} + pote
             </span>
           </label>
         ))}

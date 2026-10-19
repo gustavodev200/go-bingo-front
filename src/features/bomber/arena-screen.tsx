@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } f
 import { toast } from 'sonner';
 import { BOMBER_COLORS, BOMBER_CURSE_LABEL, BOMBER_SUDDEN_DEATH_AT, BOMBER_TICK_MS, type BomberCurse, type BomberFrame, type BomberRoomState } from '@/contracts';
 import { Button } from '@/components/ui/button';
+import { MatchRewardPanel } from '@/features/arena/reward-panel';
 import { cn } from '@/lib/utils';
 import type { ArenaBus } from './bus';
 import type { BomberActions } from './connection';
@@ -103,6 +104,8 @@ function Results({ state, mySeat, actions }: { state: BomberRoomState; mySeat: n
   const result = state.result!;
   const champ = state.seats[result.winner];
   const standings = state.seats.flatMap((s, seat) => (s ? [{ ...s, wins: result.wins[seat] }] : [])).sort((a, b) => b.wins - a.wins);
+  // Contra CPU não vale nada: a Arena só liquida mesas com 2+ jogadores de verdade.
+  const humans = state.seats.filter((s) => s && !s.bot).length;
   return (
     <div role="dialog" aria-modal="true" aria-labelledby="bomber-result-title" className="absolute inset-0 z-30 flex items-center justify-center bg-black/70 p-4">
       <div className="glass flex w-full max-w-md flex-col items-center gap-3 p-5 text-center">
@@ -122,6 +125,7 @@ function Results({ state, mySeat, actions }: { state: BomberRoomState; mySeat: n
             </li>
           ))}
         </ol>
+        {humans >= 2 && <MatchRewardPanel />}
         <div className="flex w-full gap-2">
           <Button variant="secondary" className="h-12 flex-1 gap-2 rounded-xl" onClick={() => void actions.leave()}>
             <DoorOpen aria-hidden /> Sair

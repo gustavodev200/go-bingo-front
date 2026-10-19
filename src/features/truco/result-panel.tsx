@@ -3,6 +3,7 @@
 import { Home, RotateCcw } from 'lucide-react';
 import type { Team, TrucoMatchResult } from '@/contracts';
 import { Button } from '@/components/ui/button';
+import { MatchRewardPanel } from '@/features/arena/reward-panel';
 import { cn } from '@/lib/utils';
 import { useBusy } from './action-bar';
 import styles from './truco.module.css';
@@ -38,6 +39,7 @@ export function ResultPanel({ result, myTeam, targetScore, onRematch, onLeave }:
           <span className="mx-2 text-violet-300">×</span>
           <span className="text-rose-300">{result.scores[1 - myTeam]}</span>
         </p>
+        <MatchRewardPanel />
         <div className="flex w-full flex-col gap-2 pt-2">
           <Button size="lg" className="h-12 gap-2 rounded-xl text-base" disabled={busy} onClick={run(onRematch)}>
             <RotateCcw aria-hidden /> Jogar de novo
