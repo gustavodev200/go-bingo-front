@@ -1,8 +1,7 @@
 'use client';
 
-import { LogOut, Sparkles } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { DedeGamesLogo } from '@/components/brand/dede-games-logo';
-import { Avatar } from '@/components/stage/avatar';
 import { Button } from '@/components/ui/button';
 import { useLogout } from '@/features/auth/use-logout';
 import { useProfile } from '@/features/profile/profile-context';
@@ -22,22 +21,18 @@ export function GamesHub() {
         <ProfilePill />
       </header>
 
-      <section className="glass animate-in fade-in slide-in-from-bottom-2 relative flex items-center gap-4 overflow-hidden p-5 duration-500 motion-reduce:animate-none sm:gap-6 sm:p-7">
-        {/* spotlight behind the player's character */}
-        <span aria-hidden className="absolute -top-16 -left-10 size-56 rounded-full bg-amber-300/20 blur-3xl" />
-        <Avatar id={profile.id} character={profile.character} className="relative w-20 shrink-0 sm:w-28" />
-        <div className="relative flex min-w-0 flex-col gap-1.5">
+      <section className="animate-in fade-in slide-in-from-bottom-2 flex flex-wrap items-end justify-between gap-x-4 gap-y-1 duration-500 motion-reduce:animate-none">
+        <div className="flex min-w-0 flex-col">
           <p className="truncate text-xs font-semibold tracking-[0.25em] text-pink-300 uppercase">Bem-vindo, {profile.nickname}</p>
-          <h1 className="font-display text-marquee text-3xl font-bold sm:text-4xl">Escolha seu jogo</h1>
-          <p className="text-muted-foreground text-sm sm:text-base">Um salão, vários jogos. Escolha uma mesa, chame a galera e boa sorte!</p>
+          <h1 className="font-display text-marquee text-2xl font-bold sm:text-3xl">Escolha seu jogo</h1>
         </div>
+        <p className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-violet-100">
+          <span aria-hidden className="size-2 rounded-full bg-emerald-400" />
+          {GAMES.length} jogos no salão
+        </p>
       </section>
 
-      <section aria-labelledby="games-title" className="flex flex-col gap-3">
-        <h2 id="games-title" className="font-display flex items-center gap-2 text-lg font-semibold">
-          <Sparkles aria-hidden className="size-5 text-amber-300" />
-          Jogos
-        </h2>
+      <section aria-label="Jogos" className="flex flex-col gap-3">
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {GAMES.map((game, i) => (
             <li key={game.id} className="animate-in fade-in slide-in-from-bottom-4 fill-mode-both duration-500 motion-reduce:animate-none" style={{ animationDelay: `${120 + i * 80}ms` }}>
