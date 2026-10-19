@@ -13,6 +13,7 @@ let points = 20;
 vi.mock('@/features/profile/profile-context', () => ({
   useProfile: () => ({ profile: { id: ME, nickname: 'Eu', isGuest, points: 0, coins: 100 }, refresh: vi.fn() }),
 }));
+vi.mock('@/features/arena/reward-panel', () => ({ MatchRewardPanel: () => <div>recompensas da partida</div> }));
 vi.mock('@/features/auth/upgrade-button', () => ({ UpgradeButton: () => <button>upgrade</button> }));
 
 function setup(hostId: string, winnerId: string | null, drawn: number[] = [], { spectator = false, reason = 'exhausted' as 'exhausted' | 'no_players' } = {}) {
@@ -44,17 +45,21 @@ describe('ResultDialog', () => {
     points = 0;
     setup(ME, ME);
     render(<ResultDialog onReplay={vi.fn()} onLeave={vi.fn()} />);
-    expect(screen.getByText(/só vitória contra outro jogador logado pontua/i)).toBeInTheDocument();
+    expect(screen.getByText(/só partida completa contra outro jogador logado pontua/i)).toBeInTheDocument();
   });
 
-  it('winner sees the coins won; others see the coins lost', () => {
+  it('shows the reward breakdown to the winner and to whoever had a card, but not to spectators', () => {
     setup(ME, ME);
     const { unmount } = render(<ResultDialog onReplay={vi.fn()} onLeave={vi.fn()} />);
-    expect(screen.getByRole('dialog')).toHaveTextContent('+100 moedas');
+    expect(screen.getByText('recompensas da partida')).toBeInTheDocument();
     unmount();
     setup(ANA, ANA);
+    const second = render(<ResultDialog onReplay={vi.fn()} onLeave={vi.fn()} />);
+    expect(screen.getByText('recompensas da partida')).toBeInTheDocument();
+    second.unmount();
+    setup(ANA, ANA, [], { spectator: true });
     render(<ResultDialog onReplay={vi.fn()} onLeave={vi.fn()} />);
-    expect(screen.getByRole('dialog')).toHaveTextContent('−20 moedas');
+    expect(screen.queryByText('recompensas da partida')).not.toBeInTheDocument();
   });
 
   it('guest winner sees the upgrade CTA', () => {

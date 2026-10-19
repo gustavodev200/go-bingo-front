@@ -44,8 +44,8 @@ describe('CreateRoomForm', () => {
   it('lets the host pick Quina, showing each mode prize', async () => {
     apiFetch.mockResolvedValue({ code: 'ZZZ234' });
     render(<CreateRoomForm />);
-    expect(screen.getByText(/prêmio 200/i)).toBeInTheDocument();
-    expect(screen.getByText(/prêmio 100/i)).toBeInTheDocument();
+    expect(screen.getByText(/bônus 60 \+ pote/i)).toBeInTheDocument();
+    expect(screen.getByText(/bônus 30 \+ pote/i)).toBeInTheDocument();
     await userEvent.type(screen.getByLabelText(/nome da sala/i), 'Rapidinha');
     await userEvent.click(screen.getByLabelText(/quina/i));
     await userEvent.click(screen.getByRole('button', { name: /criar sala/i }));

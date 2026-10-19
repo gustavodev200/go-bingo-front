@@ -8,6 +8,12 @@ const REASON_LABELS: Record<CoinReason, string> = {
   CARD: 'Cartela',
   WIN: 'Vitória',
   LOSS: 'Derrota',
+  STAKE: 'Entrada',
+  PRIZE: 'Prêmio do pote',
+  BONUS: 'Bônus',
+  PENALTY: 'Multa por abandono',
+  TIER: 'Subiu de liga',
+  SEASON: 'Prêmio semanal',
 };
 
 const when = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });

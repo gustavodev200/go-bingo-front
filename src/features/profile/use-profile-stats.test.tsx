@@ -4,7 +4,7 @@ import { useProfileStats } from './use-profile-stats';
 const apiFetch = vi.fn();
 vi.mock('@/lib/api', async (orig) => ({ ...(await orig<typeof import('@/lib/api')>()), apiFetch: (...a: unknown[]) => apiFetch(...a) }));
 
-const stats = { gamesPlayed: 1, wins: 0, points: 0, rank: null, coinHistory: [] };
+const stats = { gamesPlayed: 1, wins: 0, points: 0, rank: null, streak: 0, bestStreak: 0, perGame: [], coinHistory: [] };
 
 describe('useProfileStats', () => {
   beforeEach(() => apiFetch.mockReset());

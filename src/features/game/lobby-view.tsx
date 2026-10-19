@@ -2,6 +2,7 @@
 
 import { Coin, Coins } from '@/components/stage/coin';
 import { Button } from '@/components/ui/button';
+import { StakeNote } from '@/features/arena/stake-note';
 import { CARD_COST, DAILY_COINS, MAX_CARD_REGENS, WIN_COINS, WIN_PATTERN_LABELS } from '@/contracts';
 import { CardGrid } from './card-grid';
 import { EmotePicker } from './emotes/emote-picker';
@@ -30,8 +31,9 @@ export function LobbyView({ actions, onLeave, coins }: { actions: GameActions; o
           {snapshot.members.length}/{snapshot.maxPlayers} jogadores · {ready} prontos
         </p>
         <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-300/15 px-3 py-1 text-sm text-amber-200 ring-1 ring-amber-300/30">
-          Modo: <strong>{WIN_PATTERN_LABELS[snapshot.winPattern]}</strong> · prêmio <Coins amount={WIN_COINS[snapshot.winPattern]} />
+          Modo: <strong>{WIN_PATTERN_LABELS[snapshot.winPattern]}</strong> · pote + bônus <Coins amount={WIN_COINS[snapshot.winPattern]} />
         </p>
+        <StakeNote game="BINGO" className="mt-2 rounded-2xl bg-amber-300/10 px-3 py-2 text-center text-xs text-amber-100 ring-1 ring-amber-300/25" />
       </header>
       <ShareCode code={snapshot.code} />
 

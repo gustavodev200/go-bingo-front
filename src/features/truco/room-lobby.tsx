@@ -1,5 +1,6 @@
 'use client';
 
+import { StakeNote } from '@/features/arena/stake-note';
 import { Check, ChevronLeft, Copy, Crown, Globe, Loader2, Lock, Share2, UserPlus, WifiOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { teamOf, TRUCO_MODES, TRUCO_RULES, TRUCO_SEATS, type Seat, type TrucoRoomState } from '@/contracts';
@@ -84,6 +85,8 @@ export function RoomLobby({ state, mySeat, actions, conventions, setConventions 
           {seated}/{TRUCO_SEATS} na mesa
         </span>
       </header>
+
+      <StakeNote game="TRUCO" />
 
       <section className="flex flex-col gap-2 rounded-2xl bg-white/5 px-4 py-3 ring-1 ring-white/10" aria-label="Modo">
         <div role="radiogroup" aria-label="Modo de jogo" className="grid grid-cols-2 gap-2">

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ProfilePill } from '@/features/profile/profile-pill';
+import { StakeNote } from '@/features/arena/stake-note';
 import { createSnakeRoom } from './connection';
 import { PublicRooms } from './public-rooms';
 import { SnakeArt } from './snake-art';
@@ -58,6 +59,7 @@ export function SnakeHome() {
           <div>
             <h2 className="font-display text-marquee text-2xl font-bold">Arena ao vivo, até {SNAKE_MAX_PLAYERS}</h2>
             <p className="text-muted-foreground text-sm">Crie uma sala, chame a galera pelo código e entre e saia quando quiser. Só gente de verdade, online.</p>
+            <StakeNote game="SNAKE" className="mt-2 rounded-2xl bg-amber-300/10 px-3 py-2 text-xs text-amber-100 ring-1 ring-amber-300/25" />
           </div>
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-2 text-sm font-medium">Quem pode entrar</legend>

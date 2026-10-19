@@ -2,6 +2,7 @@
 
 import { ChevronLeft, Trophy } from 'lucide-react';
 import Link from 'next/link';
+import { ArenaRules } from '@/features/arena/arena-rules';
 import { useProfile } from '@/features/profile/profile-context';
 import { RankingList } from '@/features/ranking/ranking-list';
 
@@ -19,6 +20,7 @@ export default function RankingPage() {
         <h1 className="font-display text-marquee text-3xl font-bold">Ranking</h1>
       </header>
       <RankingList myUserId={profile.id} />
+      <ArenaRules />
     </main>
   );
 }

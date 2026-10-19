@@ -17,6 +17,7 @@ vi.mock('sonner', () => ({ toast: Object.assign((msg: string) => toast(msg), { e
 vi.mock('@/features/profile/profile-context', () => ({
   useProfile: () => ({ profile: { id: ME, nickname: 'Eu', isGuest: false, points: 0, coins: 100 }, refresh: vi.fn() }),
 }));
+vi.mock('@/features/arena/reward-panel', () => ({ MatchRewardPanel: () => <div>recompensas da partida</div> }));
 const hooks = vi.hoisted(() => ({ onDrawLatency: undefined as ((ms: number) => void) | undefined, onContextLoss: undefined as (() => void) | undefined }));
 vi.mock('./use-game-connection', () => ({
   useGameConnection: (_code: string, onDrawLatency?: (ms: number) => void) => {

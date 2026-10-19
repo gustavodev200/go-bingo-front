@@ -22,6 +22,9 @@ const stats: ProfileStats = {
   wins: 3,
   points: 60,
   rank: 7,
+  streak: 0,
+  bestStreak: 0,
+  perGame: [],
   coinHistory: [
     { id: '00000000-0000-4000-8000-0000000000c1', amount: 200, reason: 'WIN', createdAt: '2026-10-07T15:00:00.000Z' },
     { id: '00000000-0000-4000-8000-0000000000c2', amount: -5, reason: 'CARD', createdAt: '2026-10-07T14:00:00.000Z' },

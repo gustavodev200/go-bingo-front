@@ -1,9 +1,9 @@
 'use client';
 
-import { Coins } from '@/components/stage/coin';
 import { Button } from '@/components/ui/button';
-import { FREE_CELL, LOSS_COINS } from '@/contracts';
+import { FREE_CELL } from '@/contracts';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { MatchRewardPanel } from '@/features/arena/reward-panel';
 import { UpgradeButton } from '@/features/auth/upgrade-button';
 import { useProfile } from '@/features/profile/profile-context';
 import { CardGrid } from './card-grid';
@@ -14,8 +14,8 @@ const NO_DRAWS: readonly number[] = [];
 function myWinText(isGuest: boolean, points: number): string {
   if (isGuest) return 'Convidados não pontuam no ranking.';
   if (points > 0) return `+${points} pontos no ranking.`;
-  // O back só pontua vitória sobre outro jogador logado (evita inflar o ranking contra convidados).
-  return 'Só vitória contra outro jogador logado pontua no ranking.';
+  // O back só pontua partida completa contra outro jogador logado (evita inflar o ranking).
+  return 'Só partida completa contra outro jogador logado pontua no ranking.';
 }
 
 export function ResultDialog({ onReplay, onLeave }: { onReplay: () => void; onLeave: () => void }) {
@@ -46,16 +46,7 @@ export function ResultDialog({ onReplay, onLeave }: { onReplay: () => void; onLe
           <DialogTitle className="text-marquee text-2xl">{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        {winner && (iWon || hadCard) && (
-          <p className="flex items-center justify-center gap-2 rounded-2xl bg-white/5 py-3 text-lg">
-            {iWon ? (
-              <Coins amount={winner.coinsAwarded} signed className="text-amber-300" />
-            ) : (
-              // perda limitada ao saldo: nunca fica negativo
-              <Coins amount={-LOSS_COINS} signed className="text-rose-300" />
-            )}
-          </p>
-        )}
+        {winner && (iWon || hadCard) && <MatchRewardPanel />}
         {winner && <WinnerCard grid={winner.grid} nickname={winner.nickname} drawn={drawn} />}
         {iWon && profile.isGuest && <UpgradeButton />}
         <div className="flex flex-col gap-2">

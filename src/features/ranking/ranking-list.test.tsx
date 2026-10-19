@@ -17,10 +17,10 @@ describe('RankingList', () => {
       .mockResolvedValueOnce({ entries: [{ rank: 2, userId: ME, nickname: 'Eu', points: 20 }], me: { rank: 2, points: 20 }, nextCursor: null });
     render(<RankingList myUserId={ME} />);
     expect(await screen.findByText('Sua posição: 2º · 20 pts')).toBeInTheDocument();
-    expect(apiFetch).toHaveBeenCalledWith('/ranking?cursor=0', expect.anything());
+    expect(apiFetch).toHaveBeenCalledWith('/ranking?cursor=0&scope=all', expect.anything());
 
     await userEvent.click(screen.getByRole('button', { name: /carregar mais/i }));
-    expect(apiFetch).toHaveBeenLastCalledWith('/ranking?cursor=1', expect.anything());
+    expect(apiFetch).toHaveBeenLastCalledWith('/ranking?cursor=1&scope=all', expect.anything());
     expect(await screen.findByText('2º Eu')).toBeInTheDocument();
     expect(screen.getByText('2º Eu').closest('li')).toHaveClass('font-semibold');
     expect(screen.queryByRole('button', { name: /carregar mais/i })).not.toBeInTheDocument();
@@ -43,5 +43,33 @@ describe('RankingList', () => {
     render(<RankingList myUserId={ME} />);
     await userEvent.click(await screen.findByRole('button', { name: /carregar mais/i }));
     expect(await screen.findByRole('alert')).toBeInTheDocument();
+  });
+
+  it('switches to the weekly board, which shows prizes and the matches still missing to qualify', async () => {
+    apiFetch
+      .mockResolvedValueOnce({ entries: [], me: null, nextCursor: null, scope: 'all' })
+      .mockResolvedValueOnce({
+        entries: [{ rank: 1, userId: ANA, nickname: 'Ana', points: 30, matches: 2 }],
+        me: { rank: 1, points: 30, matches: 2 },
+        nextCursor: null,
+        scope: 'week',
+      });
+    render(<RankingList myUserId={ME} />);
+    await screen.findByText(/entre com google e jogue/i);
+
+    await userEvent.click(screen.getByRole('tab', { name: 'Semana' }));
+
+    expect(apiFetch).toHaveBeenLastCalledWith('/ranking?cursor=0&scope=week', expect.anything());
+    expect(await screen.findByText('Sua posição: 1º · 30 pts')).toBeInTheDocument();
+    expect(screen.getByText('+30 pts')).toBeInTheDocument();
+    expect(screen.getByText('2/5')).toBeInTheDocument();
+    expect(screen.getByText(/top 3 leva/i)).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Semana' })).toHaveAttribute('aria-selected', 'true');
+  });
+
+  it('shows the league and how far the next one is', async () => {
+    apiFetch.mockResolvedValueOnce({ entries: [{ rank: 1, userId: ME, nickname: 'Eu', points: 160 }], me: { rank: 1, points: 160 }, nextCursor: null });
+    render(<RankingList myUserId={ME} />);
+    expect(await screen.findByText(/Liga Prata · faltam 240 pts para Ouro \(\+250 moedas\)/)).toBeInTheDocument();
   });
 });
