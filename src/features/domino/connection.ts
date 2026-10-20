@@ -116,6 +116,7 @@ export interface DominoActions {
   ready(ready: boolean): Promise<boolean>;
   setRules(rules: DominoRules): Promise<boolean>;
   setVisibility(isPublic: boolean): Promise<boolean>;
+  setStake(stake: number): Promise<boolean>;
   start(): Promise<boolean>;
   rematch(): Promise<boolean>;
   play(tileId: string, side?: DominoSide): Promise<boolean>;
@@ -259,6 +260,7 @@ export function useDominoRoom(code: string, listeners: DominoListeners): DominoA
       ready: (ready) => call('domino:ready', { ready }),
       setRules: (rules) => call('domino:set_rules', { rules }),
       setVisibility: (isPublic) => call('domino:set_visibility', { isPublic }),
+      setStake: (stake) => call('domino:set_stake', { stake }),
       start: () => call('domino:start'),
       rematch: () => call('domino:rematch'),
       play: (tileId, side) => call('domino:play', { actionId: newActionId(), tileId, ...(side ? { side } : {}) }),

@@ -10,6 +10,7 @@ export function roomState(over: Partial<InfRoomState> = {}, players = 4): InfRoo
     version: 1,
     hostId: 'u0',
     isPublic: true,
+    stake: 30,
     rules: { ...DEFAULT_INF_RULES },
     phase: 'LOBBY',
     lobbyStatus: 'WAITING_PLAYERS',

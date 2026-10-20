@@ -38,7 +38,7 @@ vi.mock('./media/audio', () => ({
 
 function fakeActions(): BomberActions {
   const ok = () => vi.fn().mockResolvedValue(true);
-  return { leave: ok(), ready: ok(), setRules: ok(), setVisibility: ok(), setColor: ok(), addBot: ok(), removeBot: ok(), start: ok(), rematch: ok(), input: vi.fn() };
+  return { leave: ok(), ready: ok(), setRules: ok(), setVisibility: ok(), setStake: ok(), setColor: ok(), addBot: ok(), removeBot: ok(), start: ok(), rematch: ok(), input: vi.fn() };
 }
 
 beforeEach(() => {

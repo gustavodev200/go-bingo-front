@@ -43,6 +43,7 @@ export function roomState(over: Partial<DominoRoomState> = {}): DominoRoomState 
     version: 1,
     hostId: userId(0),
     isPublic: true,
+    stake: 30,
     rules: { target: 0, teams: false },
     phase: 'PLAYING',
     lobbyStatus: null,

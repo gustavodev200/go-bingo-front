@@ -7,6 +7,7 @@ export function unoActions(): UnoActions {
     leave: ok(),
     ready: ok(),
     setVisibility: ok(),
+    setStake: ok(),
     setRules: ok(),
     start: ok(),
     rematch: ok(),

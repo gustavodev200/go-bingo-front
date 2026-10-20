@@ -6,6 +6,7 @@ import { UNO_SEATS } from '@/contracts';
 import { Avatar } from '@/components/stage/avatar';
 import { usePublicUnoTables } from './connection';
 import { TARGET_LABEL } from './rules-view';
+import { Coins } from '@/components/stage/coin';
 
 /** Live list of public UNO tables that still have a free seat. */
 export function PublicTables() {
@@ -35,6 +36,7 @@ export function PublicTables() {
                 {room.rules.sevenZero && <span className="rounded-full bg-amber-300/20 px-2 text-amber-100">7-0</span>}
               </span>
             </span>
+            {room.stake > 0 && <Coins amount={room.stake} className="rounded-full bg-amber-300/15 px-2 py-0.5 text-xs text-amber-200" />}
             <span className="text-sm font-bold text-amber-200 tabular-nums">
               {room.players}/{UNO_SEATS}
             </span>

@@ -10,7 +10,7 @@ vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
 function actions(): TrucoActions {
   const ok = () => vi.fn(async () => true);
-  return { leave: ok(), ready: ok(), takeSeat: ok(), setVisibility: ok(), setMode: ok(), start: ok(), rematch: ok(), playCard: ok(), requestBet: ok(), respondBet: ok(), decideTen: ok(), signal: ok() };
+  return { leave: ok(), ready: ok(), takeSeat: ok(), setVisibility: ok(), setStake: ok(), setMode: ok(), start: ok(), rematch: ok(), playCard: ok(), requestBet: ok(), respondBet: ok(), decideTen: ok(), signal: ok() };
 }
 
 const lobby = (seats: TrucoRoomState['seats'], over = {}) => roomState({ phase: 'LOBBY', lobbyStatus: 'WAITING_PLAYERS', match: null, seats, ...over });

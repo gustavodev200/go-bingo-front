@@ -13,6 +13,7 @@ export function roomState(over: Partial<BomberRoomState> = {}): BomberRoomState 
     version: 1,
     hostId: userId(0),
     isPublic: true,
+    stake: 30,
     rules: { winsToWin: 3 },
     phase: 'PLAYING',
     lobbyStatus: null,

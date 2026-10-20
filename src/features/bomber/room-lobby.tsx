@@ -5,7 +5,7 @@ import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { BOMBER_COLORS, BOMBER_SEATS, type BomberRoomState, type BomberSeatPlayer } from '@/contracts';
 import { Button } from '@/components/ui/button';
-import { StakeNote } from '@/features/arena/stake-note';
+import { StakePicker } from '@/features/arena/stake-picker';
 import { useBusy } from '@/features/truco/action-bar';
 import { useSecondsLeft } from '@/features/truco/seat-badge';
 import { cn } from '@/lib/utils';
@@ -158,7 +158,7 @@ export function RoomLobby({ state, mySeat, actions }: { state: BomberRoomState; 
         </div>
       </header>
 
-      <StakeNote game="BOMBER" className="mx-3 mt-3 rounded-2xl border-2 border-black bg-white/90 px-3 py-2 text-center text-xs font-semibold text-slate-900" />
+      <StakePicker game="BOMBER" stake={state.stake} players={state.seats.filter((s) => s && !s.bot).length} editable={isHost} onChange={actions.setStake} variant="light" className="mx-3 mt-3" />
 
       <ul className="grid flex-1 grid-cols-2 content-start gap-2.5 p-3 sm:grid-cols-4 sm:gap-4 sm:p-5" aria-label="Jogadores">
         {Array.from({ length: BOMBER_SEATS }, (_, seat) => (

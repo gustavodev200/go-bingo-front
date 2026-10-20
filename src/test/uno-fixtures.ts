@@ -44,6 +44,7 @@ export function roomState(over: Partial<UnoRoomState> = {}): UnoRoomState {
     version: 1,
     hostId: userId(0),
     isPublic: true,
+    stake: 30,
     rules: { target: 0, stacking: false, sevenZero: false },
     phase: 'PLAYING',
     lobbyStatus: null,

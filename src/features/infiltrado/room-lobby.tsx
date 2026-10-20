@@ -4,7 +4,7 @@ import { Bot, Check, ChevronLeft, ChevronRight, Copy, Crown, Globe, Lock, Play, 
 import { toast } from 'sonner';
 import { INF_COLORS, INF_MIN_PLAYERS, INF_SEATS, infMaxImpostors, type InfRoomState, type InfRules, type InfSeatPlayer } from '@/contracts';
 import { Button } from '@/components/ui/button';
-import { StakeNote } from '@/features/arena/stake-note';
+import { StakePicker } from '@/features/arena/stake-picker';
 import { useBusy } from '@/features/truco/action-bar';
 import { useSecondsLeft } from '@/features/truco/seat-badge';
 import { cn } from '@/lib/utils';
@@ -179,7 +179,7 @@ export function RoomLobby({ state, mySeat, actions }: { state: InfRoomState; myS
         </div>
       </header>
 
-      <StakeNote game="INFILTRADO" className="mx-3 rounded-2xl bg-cyan-300/10 px-3 py-2 text-center text-xs text-cyan-100 ring-1 ring-cyan-300/25" />
+      <StakePicker game="INFILTRADO" stake={state.stake} players={state.seats.filter((s) => s && !s.bot).length} editable={isHost} onChange={actions.setStake} className="mx-3" />
 
       <div className="flex flex-1 flex-col gap-3 p-3 lg:flex-row">
         <ul className="grid flex-1 grid-cols-3 content-start gap-2 sm:grid-cols-5" aria-label={`Jogadores: ${players} de ${INF_SEATS}`}>

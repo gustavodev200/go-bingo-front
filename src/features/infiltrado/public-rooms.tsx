@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { INF_SEATS } from '@/contracts';
 import { Avatar } from '@/components/stage/avatar';
 import { usePublicInfRooms } from './connection';
+import { Coins } from '@/components/stage/coin';
 
 /** Live list of public Infiltrado rooms that still have a free seat. */
 export function PublicRooms() {
@@ -35,6 +36,7 @@ export function PublicRooms() {
                 <span className="rounded-full bg-white/10 px-2">{room.rules.tasks} tarefas</span>
               </span>
             </span>
+            {room.stake > 0 && <Coins amount={room.stake} className="rounded-full bg-amber-300/15 px-2 py-0.5 text-xs text-amber-200" />}
             <span className="text-sm font-bold text-cyan-200 tabular-nums">
               {room.players}/{INF_SEATS}
             </span>

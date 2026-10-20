@@ -6,6 +6,7 @@ import { TRUCO_SEATS } from '@/contracts';
 import { Avatar } from '@/components/stage/avatar';
 import { usePublicTables } from './connection';
 import { rulesOf } from './rules-view';
+import { Coins } from '@/components/stage/coin';
 
 /** Live list of public truco tables that still have a free seat. */
 export function PublicTables() {
@@ -39,6 +40,7 @@ export function PublicTables() {
                 <span key={i} className={i < room.players ? 'size-2.5 rounded-full bg-emerald-400' : 'size-2.5 rounded-full bg-white/15'} />
               ))}
             </span>
+            {room.stake > 0 && <Coins amount={room.stake} className="rounded-full bg-amber-300/15 px-2 py-0.5 text-xs text-amber-200" />}
             <span className="text-sm font-bold text-emerald-200 tabular-nums">
               {room.players}/{TRUCO_SEATS}
             </span>
