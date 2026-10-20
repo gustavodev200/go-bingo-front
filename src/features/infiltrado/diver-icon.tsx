@@ -13,7 +13,10 @@ export function DiverIcon({ color, className, animate = false, ghost, dead }: { 
     const draw = () => drawPortrait(cv, color, performance.now() / 1000, { ghost, dead });
     draw();
     if (!animate) return;
-    const id = setInterval(draw, 120);
+    // A gentle idle bob is enough: 5 redraws a second, none while the tab is hidden.
+    const id = setInterval(() => {
+      if (!document.hidden) draw();
+    }, 200);
     return () => clearInterval(id);
   }, [color, animate, ghost, dead]);
   return <canvas ref={ref} width={96} height={96} aria-hidden className={cn('block', className)} />;

@@ -41,6 +41,39 @@ interface Hud {
   pos: { x: number; y: number } | null;
 }
 
+/**
+ * Everything the HUD shows, as a string: React only re-renders when it changes
+ * (positions alone change every frame but are drawn by the canvas).
+ */
+export function hudKey(frame: InfFrame, reach: Reach, pos: { x: number; y: number } | null, withPos: boolean): string {
+  const m = frame.me;
+  const sab = frame.sabotage;
+  const mt = frame.meeting;
+  return [
+    frame.phase,
+    Math.ceil(frame.phaseLeft),
+    m.alive ? 1 : 0,
+    m.role,
+    m.vent,
+    m.meetingsLeft,
+    m.holding,
+    Math.ceil(m.killCd),
+    Math.ceil(m.sabotageCd),
+    m.tasks.map((t) => t[1]).join(''),
+    m.mates.join(','),
+    frame.taskBar,
+    sab ? `${sab.kind}${sab.left === null ? '' : Math.ceil(sab.left)}${sab.fixed.join('')}` : '-',
+    Math.ceil(frame.buttonCd),
+    mt ? `${mt.stage}${Math.ceil(mt.left)}/${mt.voted.join(',')}/${mt.voters.length}/${mt.votes?.length ?? '-'}` : '-',
+    frame.eject ? `${frame.eject.seat}` : '-',
+    reach.use ? JSON.stringify(reach.use) : '-',
+    reach.report ?? '-',
+    reach.kill ?? '-',
+    pos ? (infRoomAt(pos.x, pos.y)?.id ?? 'hall') : '-',
+    withPos && pos ? `${Math.round(pos.x * 2)},${Math.round(pos.y * 2)}` : '',
+  ].join('|');
+}
+
 const roomName = (pos: { x: number; y: number } | null) => (pos ? (infRoomAt(pos.x, pos.y)?.name ?? 'Corredor') : '');
 
 /** Floating joystick on the left half of the screen (touch devices). */
@@ -142,6 +175,7 @@ export function GameScreen({ state, mySeat, actions, bus }: { state: InfRoomStat
   const [open, setOpen] = useState<Open | null>(null);
   const openRef = useRef<Open | null>(null);
   const [showMap, setShowMap] = useState(false);
+  const showMapRef = useRef(false);
   const [death, setDeath] = useState<number | null>(null);
   const [tasksOpen, setTasksOpen] = useState(true);
   const [muted, setMuted] = useState(isMuted);
@@ -152,8 +186,9 @@ export function GameScreen({ state, mySeat, actions, bus }: { state: InfRoomStat
   }, [state]);
   useEffect(() => {
     openRef.current = open;
+    showMapRef.current = showMap;
     input.setLocked(open !== null);
-  }, [open, input]);
+  }, [open, showMap, input]);
 
   useEffect(() => {
     const onTouch = (e: PointerEvent) => {
@@ -258,6 +293,7 @@ export function GameScreen({ state, mySeat, actions, bus }: { state: InfRoomStat
     let last = performance.now();
     let acc = 0;
     let hudAt = 0;
+    let lastKey = '';
     const seatInfo = (seat: number) => stateRef.current.seats[seat];
     const loop = (now: number) => {
       acc += Math.min(250, now - last);
@@ -308,7 +344,12 @@ export function GameScreen({ state, mySeat, actions, bus }: { state: InfRoomStat
         });
         if (now - hudAt > 100) {
           hudAt = now;
-          setHud({ frame, reach: reachFrom(frame, pos), pos });
+          const reach = reachFrom(frame, pos);
+          const key = hudKey(frame, reach, pos, showMapRef.current);
+          if (key !== lastKey) {
+            lastKey = key;
+            setHud({ frame, reach, pos });
+          }
           // Walked away from an open console: close it.
           const o = openRef.current;
           if (o) {

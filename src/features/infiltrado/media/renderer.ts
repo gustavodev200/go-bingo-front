@@ -1,6 +1,6 @@
 import { INF_BUTTON, INF_COLS, INF_ROWS, infRayLength } from '@/contracts';
 import { renderMap, TS } from './map-art';
-import { drawBody, drawDiver } from './sprites';
+import { SpriteCache } from './sprites';
 
 export interface RenderDiver {
   seat: number;
@@ -32,7 +32,9 @@ export interface RenderView {
   t: number;
 }
 
-const RAYS = 200;
+const RAYS = 144;
+/** The fog is drawn at this fraction of the screen and scaled up (soft edges for free). */
+const FOG_SCALE = 0.25;
 const FOG = 'rgba(1,6,14,0.93)';
 
 /**
@@ -48,6 +50,11 @@ export class InfRenderer {
   private w = 0;
   private h = 0;
   private dpr = 1;
+  private readonly sprites = new SpriteCache();
+  private readonly rayCos = Float32Array.from({ length: RAYS }, (_, i) => Math.cos((i / RAYS) * Math.PI * 2));
+  private readonly raySin = Float32Array.from({ length: RAYS }, (_, i) => Math.sin((i / RAYS) * Math.PI * 2));
+  private readonly rayLen = new Float32Array(RAYS);
+  private rayFrom = { x: NaN, y: NaN, r: NaN };
   /** Screen pixels per tile. */
   ppt = 48;
 
@@ -59,17 +66,20 @@ export class InfRenderer {
   }
 
   resize(cssW: number, cssH: number): void {
-    this.dpr = Math.min(2, window.devicePixelRatio || 1);
+    // Touch devices get a lower cap: phones have 3x screens but small GPUs.
+    const coarse = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
+    this.dpr = Math.min(coarse ? 1.5 : 2, window.devicePixelRatio || 1);
     this.w = Math.max(1, Math.floor(cssW * this.dpr));
     this.h = Math.max(1, Math.floor(cssH * this.dpr));
     this.canvas.width = this.w;
     this.canvas.height = this.h;
     this.canvas.style.width = `${cssW}px`;
     this.canvas.style.height = `${cssH}px`;
-    this.fog.width = this.w;
-    this.fog.height = this.h;
+    this.fog.width = Math.max(1, Math.ceil(this.w * FOG_SCALE));
+    this.fog.height = Math.max(1, Math.ceil(this.h * FOG_SCALE));
     // About 10 tiles across the short side: the vision circle fills a phone screen.
     this.ppt = Math.max(30 * this.dpr, Math.min(64 * this.dpr, Math.min(this.w, this.h) / 10));
+    this.sprites.setSize(this.ppt * 0.95);
   }
 
   draw(v: RenderView): void {
@@ -114,58 +124,94 @@ export class InfRenderer {
       ctx.globalAlpha = 1;
     }
 
-    // Bodies under the living, everybody sorted by depth.
-    for (const b of v.bodies) drawBody(ctx, sx(b.x), sy(b.y), ppt * 0.95, b.color, v.t);
-    const divers = [...v.others];
-    if (v.me) divers.push(v.me);
+    // Bodies under the living, everybody sorted by depth. All blits from the sprite cache.
+    const sp = this.sprites;
+    const S = sp.s;
+    const ax = S * SpriteCache.AX;
+    const ay = S * SpriteCache.AY;
+    for (const b of v.bodies) {
+      const bx = sx(b.x);
+      const by = sy(b.y) + S * 0.15;
+      ctx.drawImage(sp.body(b.color), Math.round(bx - ax), Math.round(by - ay));
+      // Three bubbles rising from the cracked dome.
+      ctx.strokeStyle = 'rgba(190,240,255,0.7)';
+      ctx.lineWidth = Math.max(1, S * 0.03);
+      for (let i = 0; i < 3; i++) {
+        const p = (v.t * 0.6 + i / 3) % 1;
+        ctx.globalAlpha = 1 - p;
+        ctx.beginPath();
+        ctx.arc(bx - S * 0.3 + Math.sin((v.t + i) * 3) * S * 0.06, by - S * 0.2 - p * S * 0.7, S * (0.03 + i * 0.012), 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
+    const divers = v.me ? [...v.others, v.me] : [...v.others];
     divers.sort((a, b) => a.y - b.y);
-    for (const d of divers) drawDiver(ctx, sx(d.x), sy(d.y) - ppt * 0.12, ppt * 0.95, { color: d.color, facing: d.facing, t: v.t + d.seat, moving: d.moving, ghost: d.ghost });
+    for (const d of divers) {
+      const img = sp.diver(d.color, d.ghost, SpriteCache.frameAt(v.t + d.seat * 0.37, d.moving));
+      const dx = sx(d.x);
+      const dy = sy(d.y) - ppt * 0.12;
+      if (d.ghost) ctx.globalAlpha = 0.5;
+      if (d.facing === 1) ctx.drawImage(img, Math.round(dx - ax), Math.round(dy - ay));
+      else {
+        ctx.save();
+        ctx.translate(Math.round(dx), 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(img, Math.round(-ax), Math.round(dy - ay));
+        ctx.restore();
+      }
+      ctx.globalAlpha = 1;
+    }
 
-    // Fog of war.
+    // Fog of war at a quarter of the resolution, cut by the walls.
     if (v.vision !== null && v.me) {
       const fc = this.fogCtx;
+      const fw = this.fog.width;
+      const fh = this.fog.height;
       fc.globalCompositeOperation = 'source-over';
-      fc.clearRect(0, 0, w, h);
+      fc.clearRect(0, 0, fw, fh);
       fc.fillStyle = FOG;
-      fc.fillRect(0, 0, w, h);
+      fc.fillRect(0, 0, fw, fh);
       fc.globalCompositeOperation = 'destination-out';
-      const mx = sx(v.me.x);
-      const my = sy(v.me.y);
-      const r = v.vision * ppt;
+      const mx = sx(v.me.x) * FOG_SCALE;
+      const my = sy(v.me.y) * FOG_SCALE;
+      const r = v.vision * ppt * FOG_SCALE;
       const g = fc.createRadialGradient(mx, my, r * 0.55, mx, my, r);
       g.addColorStop(0, 'rgba(0,0,0,1)');
       g.addColorStop(1, 'rgba(0,0,0,0)');
       fc.fillStyle = g;
+      // Rays are only cast again when I moved (standing still costs nothing).
+      const rf = this.rayFrom;
+      if (Math.abs(rf.x - v.me.x) > 0.01 || Math.abs(rf.y - v.me.y) > 0.01 || rf.r !== v.vision) {
+        for (let i = 0; i < RAYS; i++) {
+          // A bit past the wall face so the walls themselves are lit.
+          this.rayLen[i] = Math.min(v.vision, infRayLength(v.me.x, v.me.y, (i / RAYS) * Math.PI * 2, v.vision) + 0.45);
+        }
+        this.rayFrom = { x: v.me.x, y: v.me.y, r: v.vision };
+      }
+      const pk = ppt * FOG_SCALE;
       fc.beginPath();
       for (let i = 0; i < RAYS; i++) {
-        const a = (i / RAYS) * Math.PI * 2;
-        // A bit past the wall face so the walls themselves are lit.
-        const len = Math.min(v.vision, infRayLength(v.me.x, v.me.y, a, v.vision) + 0.45);
-        const px = mx + Math.cos(a) * len * ppt;
-        const py = my + Math.sin(a) * len * ppt;
+        const px = mx + this.rayCos[i] * this.rayLen[i] * pk;
+        const py = my + this.raySin[i] * this.rayLen[i] * pk;
         if (i === 0) fc.moveTo(px, py);
         else fc.lineTo(px, py);
       }
       fc.closePath();
       fc.fill();
-      ctx.drawImage(this.fog, 0, 0);
+      ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(this.fog, 0, 0, fw, fh, 0, 0, w, h);
     }
 
-    // Names on top of the fog (only for who is visible anyway).
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'bottom';
-    ctx.font = `700 ${Math.round(Math.max(11 * this.dpr, ppt * 0.26))}px system-ui, sans-serif`;
-    ctx.lineWidth = Math.max(2, ppt * 0.07);
-    ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+    // Name tags on top of the fog (pre-rendered per name).
+    const px = Math.round(Math.max(11 * this.dpr, ppt * 0.26));
+    const outline = Math.max(2, Math.round(ppt * 0.07));
     for (const d of divers) {
-      const x = sx(d.x);
-      const y = sy(d.y) - ppt * 0.78;
-      ctx.globalAlpha = d.ghost ? 0.6 : 1;
-      ctx.strokeText(d.name, x, y);
-      ctx.fillStyle = d.mate ? '#f87171' : '#f8fafc';
-      ctx.fillText(d.name, x, y);
+      const tag = sp.label(d.name, d.mate ? '#f87171' : '#f8fafc', px, outline);
+      if (d.ghost) ctx.globalAlpha = 0.6;
+      ctx.drawImage(tag, Math.round(sx(d.x) - tag.width / 2), Math.round(sy(d.y) - ppt * 0.78 - px * 0.55 - tag.height / 2));
+      ctx.globalAlpha = 1;
     }
-    ctx.globalAlpha = 1;
 
     if (v.critical) {
       ctx.fillStyle = `rgba(220,38,38,${0.04 + pulse * 0.1})`;
