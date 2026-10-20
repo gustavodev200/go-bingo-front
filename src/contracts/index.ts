@@ -1,6 +1,7 @@
 // GERADO por go-bingo-back/scripts/sync-contracts.mjs — NÃO EDITAR. Edite no back e rode `npm run contracts:sync`.
 export * from './arena';
 export * from './bingo';
+export * from './blackjack';
 export * from './bomber';
 export * from './coins';
 export * from './damas';
