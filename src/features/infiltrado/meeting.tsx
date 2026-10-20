@@ -6,6 +6,7 @@ import { INF_CHAT_MAX, INF_COLORS, type InfFrame, type InfRoomState } from '@/co
 import { cn } from '@/lib/utils';
 import type { InfActions } from './connection';
 import { DiverIcon } from './diver-icon';
+import { MeetingVoiceBar, speakingUsers, useMeetingVoice } from './meeting-voice';
 import { sfx } from './media/audio';
 import { useInfStore } from './store';
 
@@ -82,6 +83,9 @@ export function MeetingOverlay({ state, mySeat, frame, actions }: { state: InfRo
   const [pickedRaw, setPicked] = useState<number | null>(null);
   const [tab, setTab] = useState<'vote' | 'chat'>('vote');
   const unread = useInfStore((s) => s.unread);
+  const canTalk = m.voters.includes(mySeat);
+  const voice = useMeetingVoice(state.code, canTalk);
+  const speaking = speakingUsers(voice, state.seats[mySeat]?.userId);
   const canVote = m.stage === 'vote' && m.voters.includes(mySeat) && !m.voted.includes(mySeat);
   const name = (seat: number) => state.seats[seat]?.nickname ?? 'Alguém';
   const players = state.seats.flatMap((s, seat) => (s ? [{ ...s, seat }] : []));
@@ -109,10 +113,10 @@ export function MeetingOverlay({ state, mySeat, frame, actions }: { state: InfRo
                 type="button"
                 disabled={disabled}
                 onClick={() => setPicked(p.seat)}
-                aria-label={`${p.nickname}${dead ? ', fora' : ''}${voted ? ', já votou' : ''}`}
+                aria-label={`${p.nickname}${dead ? ', fora' : ''}${voted ? ', já votou' : ''}${speaking.has(p.userId) ? ', falando' : ''}`}
                 className={cn(
                   'flex w-full items-center gap-2 rounded-xl border-2 bg-slate-800 px-2 py-1.5 text-left transition',
-                  isPicked ? 'border-cyan-300 ring-2 ring-cyan-300' : 'border-slate-950',
+                  isPicked ? 'border-cyan-300 ring-2 ring-cyan-300' : speaking.has(p.userId) ? 'border-emerald-300 shadow-[0_0_12px_2px_rgb(110_231_183/0.6)]' : 'border-slate-950',
                   dead && 'opacity-45',
                   !disabled && 'hover:border-cyan-400',
                 )}
@@ -186,7 +190,9 @@ export function MeetingOverlay({ state, mySeat, frame, actions }: { state: InfRo
         <p role="timer" className={cn('font-display mt-1 rounded-full px-3 text-lg tabular-nums', m.stage === 'vote' ? 'bg-rose-500 text-white' : 'bg-white/10')}>
           {STAGE_LABEL[m.stage]} {m.stage !== 'result' && `· ${Math.ceil(m.left)}s`}
         </p>
-        {!frame.me.alive && <p className="text-xs text-violet-300">Você é um fantasma: não vota e só fala com fantasmas.</p>}
+        <div className="mt-1.5">
+          <MeetingVoiceBar voice={voice} canTalk={canTalk} />
+        </div>
       </header>
 
       <div className="flex shrink-0 gap-1 px-3 md:hidden" role="tablist">
