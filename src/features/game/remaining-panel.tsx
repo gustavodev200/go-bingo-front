@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import type { Member } from '@/contracts';
+import { bingoCpuName, type Member } from '@/contracts';
 import { cn } from '@/lib/utils';
 
 function badge(left: number): string {
@@ -54,7 +54,7 @@ export function RemainingPanel({ remaining, members, myUserId }: { remaining: Re
               )}
             >
               <span>
-                {names.get(userId) ?? 'Jogador que saiu'}
+                {names.get(userId) ?? bingoCpuName(userId) ?? 'Jogador que saiu'}
                 {userId === myUserId && ' (você)'}
               </span>
               <span>{left === 1 ? 'por 1!' : left}</span>

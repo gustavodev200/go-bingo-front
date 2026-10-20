@@ -6,6 +6,7 @@ import { stakeOptions, TIERS, tierIndexFor, type ArenaGame } from '@/contracts';
 import { Coins } from '@/components/stage/coin';
 import { ProfileContext } from '@/features/profile/profile-context';
 import { cn } from '@/lib/utils';
+import { CpuNote } from './cpu';
 
 interface StakePickerProps {
   game: ArenaGame;
@@ -17,13 +18,20 @@ interface StakePickerProps {
   players?: number;
   variant?: 'dark' | 'light';
   className?: string;
+  /** CPUs na mesa: partida de treino, a aposta não vale (mostra o aviso no lugar). */
+  cpu?: number;
 }
 
 /**
  * Quanto a mesa vale: o anfitrião escolhe entre os níveis do jogo (mesas altas pedem liga e a casa
  * fica com uma taxa do pote). Bônus e pontos não mudam com a aposta.
  */
-export function StakePicker({ game, stake, editable, onChange, players, variant = 'dark', className }: StakePickerProps) {
+export function StakePicker({ cpu = 0, ...props }: StakePickerProps) {
+  if (cpu > 0) return <CpuNote variant={props.variant} className={props.className} />;
+  return <StakeLevels {...props} />;
+}
+
+function StakeLevels({ game, stake, editable, onChange, players, variant = 'dark', className }: Omit<StakePickerProps, 'cpu'>) {
   const ctx = useContext(ProfileContext);
   const myTier = ctx ? tierIndexFor(ctx.profile.points) : 0;
   const [pending, setPending] = useState(false);

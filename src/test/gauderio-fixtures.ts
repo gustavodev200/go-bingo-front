@@ -5,7 +5,7 @@ export const NAMES = ['Ana', 'Bia', 'Caio', 'Duda'];
 export const userId = (seat: number) => `00000000-0000-4000-8000-00000000000${seat + 1}`;
 
 export function seatPlayer(seat: GaudSeat, over: Partial<GaudSeatPlayer> = {}): GaudSeatPlayer {
-  return { seat, team: (seat % 2) as 0 | 1, userId: userId(seat), nickname: NAMES[seat], character: null, ready: false, connected: true, reconnectDeadline: null, ...over };
+  return { seat, team: (seat % 2) as 0 | 1, userId: userId(seat), nickname: NAMES[seat], character: null, bot: false, ready: false, connected: true, reconnectDeadline: null, ...over };
 }
 
 export function matchView(over: Partial<GaudMatchView> = {}): GaudMatchView {
@@ -67,5 +67,5 @@ export function privateHand(over: Partial<GaudPrivateHand> = {}): GaudPrivateHan
 
 export function gaudActions(): GaudActionsApi {
   const ok = () => vi.fn(async () => true);
-  return { leave: ok(), ready: ok(), takeSeat: ok(), setVisibility: ok(), setStake: ok(), setSettings: ok(), start: ok(), rematch: ok(), playCard: ok(), call: ok(), respond: ok(), fold: ok() };
+  return { leave: ok(), ready: ok(), addBot: ok(), removeBot: ok(), takeSeat: ok(), setVisibility: ok(), setStake: ok(), setSettings: ok(), start: ok(), rematch: ok(), playCard: ok(), call: ok(), respond: ok(), fold: ok() };
 }

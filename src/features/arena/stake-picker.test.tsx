@@ -22,4 +22,10 @@ describe('StakePicker', () => {
     expect(screen.getByRole('radio', { name: /Valendo/ })).toBeChecked();
     expect(screen.getByRole('radio', { name: /Amistosa/ })).toBeDisabled();
   });
+
+  it('a table with the CPU does not bet: shows the CPU rewards instead', () => {
+    render(<StakePicker game="UNO" stake={30} editable onChange={vi.fn()} cpu={1} />);
+    expect(screen.queryByLabelText('Aposta da mesa')).not.toBeInTheDocument();
+    expect(screen.getByRole('note')).toHaveTextContent('não vale ranking nem aposta');
+  });
 });

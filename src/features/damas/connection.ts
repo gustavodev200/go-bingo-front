@@ -113,6 +113,9 @@ const EXIT_BY_CODE: Partial<Record<ErrorCode, DamasExit['reason']>> = {
 export interface DamasActions {
   leave(): Promise<boolean>;
   ready(ready: boolean): Promise<boolean>;
+  /** Anfitrião, no lobby: uma CPU senta no primeiro lugar vago. */
+  addBot(): Promise<boolean>;
+  removeBot(seat: number): Promise<boolean>;
   setRules(rules: DamasRules): Promise<boolean>;
   setVisibility(isPublic: boolean): Promise<boolean>;
   setStake(stake: number): Promise<boolean>;
@@ -257,6 +260,8 @@ export function useDamasRoom(code: string, listeners: DamasListeners): DamasActi
         return ok;
       },
       ready: (ready) => call('damas:ready', { ready }),
+      addBot: () => call('damas:add_bot'),
+      removeBot: (seat) => call('damas:remove_bot', { seat }),
       setRules: (rules) => call('damas:set_rules', { rules }),
       setVisibility: (isPublic) => call('damas:set_visibility', { isPublic }),
       setStake: (stake) => call('damas:set_stake', { stake }),

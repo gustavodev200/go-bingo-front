@@ -9,7 +9,7 @@ const grid = Array.from({ length: 25 }, (_, i) => (i === 12 ? 0 : i + 1));
 
 function load(marked: number[], left = 0) {
   const snapshot: RoomSnapshot = {
-    code: 'ABC234', name: 'Sala', hostId: ME, maxPlayers: 10, isPublic: true, status: 'IN_GAME', winPattern: 'FULL_CARD', stake: 20,
+    code: 'ABC234', name: 'Sala', hostId: ME, maxPlayers: 10, isPublic: true, status: 'IN_GAME', winPattern: 'FULL_CARD', stake: 20, cpuPlayers: 0,
     members: [{ userId: ME, nickname: 'Eu', character: null, slot: 0, isGuest: false, connected: true, hasCard: true }],
     myCard: { id: '00000000-0000-4000-8000-0000000000aa', grid, marked },
     game: { id: '00000000-0000-4000-8000-0000000000bb', drawn: grid.filter((n) => n !== 0), drawIntervalMs: 5000, remaining: { [ME]: left } },
@@ -17,7 +17,7 @@ function load(marked: number[], left = 0) {
   useGameStore.setState(reduce(initialGameState(ME), { event: 'room:state', payload: snapshot }));
 }
 
-const actions = { generateCard: vi.fn(), start: vi.fn(), cancel: vi.fn(), leave: vi.fn(), kick: vi.fn(), mark: vi.fn(), claim: vi.fn(), replay: vi.fn(), emote: vi.fn() };
+const actions = { generateCard: vi.fn(), start: vi.fn(), cancel: vi.fn(), leave: vi.fn(), kick: vi.fn(), mark: vi.fn(), claim: vi.fn(), replay: vi.fn(), emote: vi.fn(), setCpus: vi.fn() };
 
 describe('GameView', () => {
   beforeEach(() => vi.clearAllMocks());

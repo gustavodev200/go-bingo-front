@@ -5,13 +5,29 @@ import { toast } from 'sonner';
 import { GAUD_SIZES, GAUD_TARGETS, gaudTeamOf, type GaudRoomState, type GaudSeat, type GaudSettings } from '@/contracts';
 import { Avatar } from '@/components/stage/avatar';
 import { Button } from '@/components/ui/button';
+import { AddCpuButton, CpuTag, RemoveCpuButton } from '@/features/arena/cpu';
 import { StakePicker } from '@/features/arena/stake-picker';
 import { useBusy } from '@/features/truco/action-bar';
 import { TEAM_TONE, useSecondsLeft } from '@/features/truco/seat-badge';
 import { cn } from '@/lib/utils';
 import type { GaudActionsApi } from './connection';
 
-function SeatCard({ state, seat, mySeat, onTake }: { state: GaudRoomState; seat: GaudSeat; mySeat: GaudSeat; onTake(seat: GaudSeat): void }) {
+function SeatCard({
+  state,
+  seat,
+  mySeat,
+  onTake,
+  onAddBot,
+  onRemoveBot,
+}: {
+  state: GaudRoomState;
+  seat: GaudSeat;
+  mySeat: GaudSeat;
+  onTake(seat: GaudSeat): void;
+  onAddBot(seat: GaudSeat): unknown;
+  onRemoveBot(seat: GaudSeat): unknown;
+}) {
+  const isHost = state.hostId === state.seats[mySeat]?.userId;
   const player = state.seats[seat];
   const ours = gaudTeamOf(seat) === gaudTeamOf(mySeat);
   const tone = TEAM_TONE[ours ? 'us' : 'them'];
@@ -23,6 +39,7 @@ function SeatCard({ state, seat, mySeat, onTake }: { state: GaudRoomState; seat:
         <Button variant="ghost" size="sm" className="h-9 gap-1 rounded-xl text-amber-200" onClick={() => onTake(seat)} aria-label={`Sentar no lugar ${seat + 1}`}>
           <UserPlus aria-hidden className="size-4" /> Sentar aqui
         </Button>
+        {isHost && <AddCpuButton onAdd={() => onAddBot(seat)} />}
       </li>
     );
   return (
@@ -31,6 +48,8 @@ function SeatCard({ state, seat, mySeat, onTake }: { state: GaudRoomState; seat:
       aria-label={`${player.nickname}${player.ready ? ', pronto' : ''}`}
     >
       {player.userId === state.hostId && <Crown aria-label="Anfitrião" className="absolute top-2 left-2 size-4 fill-amber-300 text-amber-500" />}
+      {player.bot && <CpuTag className="absolute top-2 left-2" />}
+      {player.bot && isHost && <RemoveCpuButton name={player.nickname} onRemove={() => onRemoveBot(seat)} className="absolute top-1.5 right-1.5" />}
       <Avatar id={player.userId} character={player.character} className="w-12" />
       <span className="max-w-full truncate text-sm font-bold">
         {player.nickname}
@@ -126,7 +145,7 @@ export function RoomLobby({ state, mySeat, actions }: { state: GaudRoomState; my
         </span>
       </header>
 
-      <StakePicker game="GAUDERIO" stake={state.stake} players={seated} editable={isHost} onChange={actions.setStake} />
+      <StakePicker game="GAUDERIO" stake={state.stake} players={seated} editable={isHost} onChange={actions.setStake} cpu={state.seats.filter((s) => s?.bot).length} />
 
       <section className="flex flex-col gap-3 rounded-2xl bg-white/5 px-4 py-3 ring-1 ring-white/10" aria-label="Regras da mesa">
         <Choice
@@ -190,7 +209,7 @@ export function RoomLobby({ state, mySeat, actions }: { state: GaudRoomState; my
         </div>
         <ul className="grid grid-cols-2 gap-3">
           {order.map((seat) => (
-            <SeatCard key={seat} state={state} seat={seat} mySeat={mySeat} onTake={(s) => void actions.takeSeat(s)} />
+            <SeatCard key={seat} state={state} seat={seat} mySeat={mySeat} onTake={(s) => void actions.takeSeat(s)} onAddBot={actions.addBot} onRemoveBot={actions.removeBot} />
           ))}
         </ul>
         {settings.size === 4 && <p className="text-center text-xs text-violet-200/80">Parceiros sentam frente a frente. Troque de lugar para escolher sua dupla.</p>}

@@ -107,6 +107,9 @@ const EXIT_BY_CODE: Partial<Record<ErrorCode, GaudExit['reason']>> = {
 export interface GaudActionsApi {
   leave(): Promise<boolean>;
   ready(ready: boolean): Promise<boolean>;
+  /** Anfitrião, no lobby: uma CPU senta no primeiro lugar vago. */
+  addBot(seat?: number): Promise<boolean>;
+  removeBot(seat: number): Promise<boolean>;
   takeSeat(seat: GaudSeat): Promise<boolean>;
   setVisibility(isPublic: boolean): Promise<boolean>;
   setStake(stake: number): Promise<boolean>;
@@ -236,6 +239,8 @@ export function useGaudRoom(code: string, listeners: GaudListeners): GaudActions
         return ok;
       },
       ready: (ready) => call('gauderio:ready', { ready }),
+      addBot: (seat) => call('gauderio:add_bot', seat === undefined ? {} : { seat }),
+      removeBot: (seat) => call('gauderio:remove_bot', { seat }),
       takeSeat: (seat) => call('gauderio:take_seat', { seat }),
       setVisibility: (isPublic) => call('gauderio:set_visibility', { isPublic }),
       setStake: (stake) => call('gauderio:set_stake', { stake }),

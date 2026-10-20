@@ -58,7 +58,7 @@ beforeEach(() => {
 });
 
 describe('SnakeRoomScreen', () => {
-  it('waits for a second player before anyone can play', () => {
+  it('alone in the room: CPU snakes keep company and the player can play', () => {
     useSnakeStore.getState().applyState(
       room({
         version: 2,
@@ -69,11 +69,12 @@ describe('SnakeRoomScreen', () => {
       }),
     );
     render(<SnakeRoomScreen code="ABC234" />);
-    expect(screen.getByRole('status')).toHaveTextContent('Aguardando jogadores (1/2)');
-    expect(screen.getByRole('button', { name: 'Jogar' })).toBeDisabled();
+    expect(screen.queryByText(/Aguardando jogadores/)).not.toBeInTheDocument();
+    expect(screen.getByText(/cobras da CPU completam a arena/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Jogar' })).toBeEnabled();
   });
 
-  it('death card waits too when the room is down to one player', () => {
+  it('death card lets a lone player go again', () => {
     vi.useFakeTimers();
     render(<SnakeRoomScreen code="ABC234" />);
     act(() => {
@@ -81,7 +82,7 @@ describe('SnakeRoomScreen', () => {
       useSnakeStore.getState().died(DEATH);
     });
     act(() => vi.advanceTimersByTime(1200));
-    expect(screen.getByRole('button', { name: 'Aguardando jogadores…' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Aguardando jogadores…' })).not.toBeInTheDocument();
   });
 
   it('menu: room code, players, skin picker remembered, play with the chosen skin', async () => {

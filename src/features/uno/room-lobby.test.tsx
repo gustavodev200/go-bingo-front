@@ -51,4 +51,19 @@ describe('RoomLobby', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Começar partida' }));
     expect(a.start).toHaveBeenCalled();
   });
+
+  it('the host calls a CPU to an empty seat and can send it away', async () => {
+    const bot = seatPlayer(2, { userId: 'cpu:1', nickname: 'CPU 1', bot: true, ready: true });
+    const a = renderLobby(lobby({ seats: [seatPlayer(0), null, bot, null, null, null] }));
+    await userEvent.click(screen.getAllByRole('button', { name: /CPU/ })[0]);
+    expect(a.addBot).toHaveBeenCalled();
+    await userEvent.click(screen.getByRole('button', { name: 'Tirar CPU 1' }));
+    expect(a.removeBot).toHaveBeenCalledWith(2);
+    expect(screen.getByRole('note')).toHaveTextContent('Mesa com CPU');
+  });
+
+  it('only the host sees the CPU buttons', () => {
+    renderLobby(lobby(), 1);
+    expect(screen.queryByRole('button', { name: /\+ CPU/ })).not.toBeInTheDocument();
+  });
 });
