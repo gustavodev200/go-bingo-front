@@ -2,6 +2,7 @@ import type { ComponentType } from 'react';
 import { BlackjackArt } from '@/features/blackjack/blackjack-art';
 import { BomberArt } from '@/features/bomber/bomber-art';
 import { DamasArt } from '@/features/damas/damas-art';
+import { TacadaArt } from '@/features/tacada/tacada-art';
 import { DominoArt } from '@/features/domino/domino-art';
 import { InfiltradoArt } from '@/features/infiltrado/infiltrado-art';
 import { SnakeArt } from '@/features/snake/snake-art';
@@ -76,6 +77,16 @@ export const GAMES: readonly Game[] = [
     tags: ['2 jogadores', 'Estratégia', 'Salas públicas'],
     glow: '#d97706',
     Art: DamasArt,
+  },
+  {
+    id: 'tacada',
+    name: 'Tacada',
+    description: 'Bilhar bola 8 1 contra 1 com física de verdade: mire, dose a força, coloque efeito e cante a caçapa da 8.',
+    href: '/tacada',
+    status: 'available',
+    tags: ['2 jogadores', 'Bilhar', 'Salas públicas'],
+    glow: '#10b981',
+    Art: TacadaArt,
   },
   {
     id: 'blackjack',

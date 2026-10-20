@@ -20,7 +20,7 @@ import {
   WEEKLY_PRIZES,
 } from '@/contracts';
 
-const LUCK: Record<string, string> = { BINGO: 'sorte', UNO: 'sorte e tática', DOMINO: 'sorte e tática', TRUCO: 'habilidade', SNAKE: 'habilidade', BOMBER: 'habilidade', INFILTRADO: 'dedução', DAMAS: 'habilidade', BLACKJACK: 'sorte e gestão de fichas' };
+const LUCK: Record<string, string> = { BINGO: 'sorte', UNO: 'sorte e tática', DOMINO: 'sorte e tática', TRUCO: 'habilidade', SNAKE: 'habilidade', BOMBER: 'habilidade', INFILTRADO: 'dedução', DAMAS: 'habilidade', BLACKJACK: 'sorte e gestão de fichas', TACADA: 'habilidade' };
 
 /** Como funcionam moedas e ranking, igual para todos os jogos. */
 export function ArenaRules() {

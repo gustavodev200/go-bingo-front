@@ -22,6 +22,7 @@ export const ARENA_GAMES = [
   'INFILTRADO',
   'DAMAS',
   'BLACKJACK',
+  'TACADA',
 ] as const;
 export type ArenaGame = (typeof ARENA_GAMES)[number];
 
@@ -35,6 +36,7 @@ export const ARENA_GAME_LABELS: Record<ArenaGame, string> = {
   INFILTRADO: 'Infiltrado',
   DAMAS: 'Damas',
   BLACKJACK: 'Blackjack',
+  TACADA: 'Tacada',
 };
 
 export interface ArenaRules {
@@ -126,6 +128,15 @@ export const ARENA_RULES: Record<ArenaGame, ArenaRules> = {
     winBonus: 40,
     ratingWeight: 0.5,
     minRatedMs: 60_000,
+    finishBonus: 5,
+    countsStreak: true,
+  },
+  // Tacada: bilhar 1x1; mira e controle de força decidem, com um tico de sorte na saída.
+  TACADA: {
+    ante: 30,
+    winBonus: 50,
+    ratingWeight: 0.9,
+    minRatedMs: 90_000,
     finishBonus: 5,
     countsStreak: true,
   },
