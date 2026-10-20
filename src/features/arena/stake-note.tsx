@@ -10,6 +10,10 @@ export function StakeNote({ game, className }: { game: ArenaGame; className?: st
         <>
           Cada abate vale <Coins amount={rules.ante} className="align-middle" /> do abatido + pontos no ranking.
         </>
+      ) : game === 'INFILTRADO' ? (
+        <>
+          Entrada <Coins amount={rules.ante} className="align-middle" /> por jogador · o time vencedor divide o pote + bônus e sobe no ranking.
+        </>
       ) : (
         <>
           Entrada <Coins amount={rules.ante} className="align-middle" /> por jogador · o vencedor leva o pote + bônus e sobe no ranking.

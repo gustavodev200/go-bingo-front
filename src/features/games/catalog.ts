@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react';
 import { BomberArt } from '@/features/bomber/bomber-art';
 import { DominoArt } from '@/features/domino/domino-art';
+import { InfiltradoArt } from '@/features/infiltrado/infiltrado-art';
 import { SnakeArt } from '@/features/snake/snake-art';
 import { TrucoArt } from '@/features/truco/truco-art';
 import { UnoArt } from '@/features/uno/uno-art';
@@ -83,5 +84,15 @@ export const GAMES: readonly Game[] = [
     tags: ['Até 20 jogadores', 'Salas públicas', 'Tempo real'],
     glow: '#3cf27a',
     Art: SnakeArt,
+  },
+  {
+    id: 'infiltrado',
+    name: 'Infiltrado',
+    description: 'Até 15 na Estação Abissal: faça tarefas, descubra quem está sabotando a base e vote para ejetar o infiltrado.',
+    href: '/infiltrado',
+    status: 'available',
+    tags: ['4 a 15 jogadores', 'Dedução', 'Salas públicas', 'Tempo real'],
+    glow: '#22d3ee',
+    Art: InfiltradoArt,
   },
 ];
