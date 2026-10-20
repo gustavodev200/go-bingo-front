@@ -41,7 +41,7 @@ vi.mock('./media/audio', () => ({ unlockAudio: vi.fn(), sfx: vi.fn(), isMuted: (
 
 function fakeActions(): InfActions {
   const ok = () => vi.fn().mockResolvedValue(true);
-  return { leave: ok(), ready: ok(), setRules: ok(), setVisibility: ok(), setColor: ok(), addBot: ok(), removeBot: ok(), start: ok(), rematch: ok(), act: ok(), chat: ok(), input: vi.fn() };
+  return { leave: ok(), ready: ok(), setRules: ok(), setVisibility: ok(), setStake: ok(), setColor: ok(), addBot: ok(), removeBot: ok(), start: ok(), rematch: ok(), act: ok(), chat: ok(), input: vi.fn() };
 }
 
 beforeEach(() => {

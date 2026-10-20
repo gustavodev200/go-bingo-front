@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Coin } from '@/components/stage/coin';
-import { createRoomResponseSchema, createRoomSchema, DEFAULT_WIN_PATTERN, WIN_COINS, WIN_PATTERN_LABELS, WIN_PATTERNS, type WinPattern } from '@/contracts';
+import { StakePicker } from '@/features/arena/stake-picker';
+import { createRoomResponseSchema, createRoomSchema, DEFAULT_WIN_PATTERN, minStake, WIN_COINS, WIN_PATTERN_LABELS, WIN_PATTERNS, type WinPattern } from '@/contracts';
 import { ApiError, apiFetch } from '@/lib/api';
 
 const PATTERN_HINTS: Record<WinPattern, string> = {
@@ -28,12 +29,13 @@ export function CreateRoomForm() {
   const [isPublic, setIsPublic] = useState(true);
   const [drawIntervalMs, setDrawIntervalMs] = useState<number | undefined>(undefined);
   const [winPattern, setWinPattern] = useState<WinPattern>(DEFAULT_WIN_PATTERN);
+  const [stake, setStake] = useState(minStake('BINGO'));
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    const parsed = createRoomSchema.safeParse({ name, maxPlayers: Number(maxPlayers), isPublic, drawIntervalMs, winPattern });
+    const parsed = createRoomSchema.safeParse({ name, maxPlayers: Number(maxPlayers), isPublic, drawIntervalMs, winPattern, stake });
     if (!parsed.success) return setError(parsed.error.issues[0].message);
     setSaving(true);
     try {
@@ -114,6 +116,11 @@ export function CreateRoomForm() {
           </label>
         ))}
       </fieldset>
+
+      <div className="mt-1 flex flex-col gap-2">
+        <span className="text-sm font-medium">Aposta por cartela</span>
+        <StakePicker game="BINGO" stake={stake} editable onChange={setStake} />
+      </div>
 
       {error && (
         <p role="alert" className="text-destructive text-sm">

@@ -31,6 +31,7 @@ export function roomState(over: Partial<TrucoRoomState> = {}): TrucoRoomState {
     version: 1,
     hostId: userId(0),
     isPublic: true,
+    stake: 40,
     mode: 'mineiro',
     phase: 'PLAYING',
     lobbyStatus: null,

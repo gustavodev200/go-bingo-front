@@ -2,13 +2,20 @@ import {
   ARENA_GAMES,
   ARENA_GAME_LABELS,
   ARENA_RULES,
+  COINS_PER_DIAMOND,
   COMEBACK_COINS,
   COMEBACK_LOSSES,
+  DIAMOND_PACKS,
+  DIAMOND_STREAK_BONUS,
+  DIAMOND_STREAK_DAYS,
+  DIAMONDS_DAILY,
   FIRST_WIN_OF_DAY_COINS,
+  STAKE_LEVELS,
   STREAK_CAP,
   STREAK_COINS_STEP,
   TIERS,
   UNDERDOG_COINS,
+  WEEKLY_DIAMONDS,
   WEEKLY_MIN_MATCHES,
   WEEKLY_PRIZES,
 } from '@/contracts';
@@ -32,6 +39,26 @@ export function ArenaRules() {
             ))}
           </ul>
           <p>Mesas de 4 ou mais jogadores dividem o pote 60% / 30% / 10% entre os três primeiros.</p>
+        </section>
+
+        <section className="flex flex-col gap-1">
+          <h3 className="font-semibold text-amber-200">🎲 Mesas com aposta</h3>
+          <p>O anfitrião escolhe quanto a mesa vale, a partir da entrada mínima do jogo. Para sentar, cada um precisa ter o valor. Bônus e pontos não mudam com a aposta: o ranking mede habilidade, não saldo.</p>
+          <ul className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-xs">
+            {STAKE_LEVELS.map((l) => (
+              <li key={l.id}>
+                <strong>{l.label}</strong>: {l.multiplier}× {l.minTier > 0 && `· liga ${TIERS[l.minTier].label}`} {l.rake > 0 && `· casa ${Math.round(l.rake * 100)}%`}
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="flex flex-col gap-1">
+          <h3 className="font-semibold text-cyan-200">💎 Diamantes</h3>
+          <p>
+            Contas logadas resgatam {DIAMONDS_DAILY} diamantes por dia; {DIAMOND_STREAK_DAYS} dias seguidos dão +{DIAMOND_STREAK_BONUS}. Cada diamante vale {COINS_PER_DIAMOND} moedas, e pacotes maiores rendem mais:{' '}
+            {DIAMOND_PACKS.map((p) => `${p.diamonds} → ${p.coins}`).join(' · ')}.
+          </p>
         </section>
 
         <section className="flex flex-col gap-1">
@@ -60,7 +87,7 @@ export function ArenaRules() {
         <section className="flex flex-col gap-1">
           <h3 className="font-semibold text-amber-200">📅 Ranking da semana</h3>
           <p>
-            Soma os pontos ganhos em todos os jogos de segunda a domingo. Com {WEEKLY_MIN_MATCHES} partidas pontuadas, o top 3 ganha {WEEKLY_PRIZES.join(' / ')} moedas quando a semana fecha.
+            Soma os pontos ganhos em todos os jogos de segunda a domingo. Com {WEEKLY_MIN_MATCHES} partidas pontuadas, o top 3 ganha {WEEKLY_PRIZES.join(' / ')} moedas e {WEEKLY_DIAMONDS.join(' / ')} diamantes quando a semana fecha.
           </p>
         </section>
 

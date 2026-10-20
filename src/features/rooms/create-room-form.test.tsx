@@ -17,7 +17,7 @@ describe('CreateRoomForm', () => {
     await userEvent.click(screen.getByRole('button', { name: /criar sala/i }));
     expect(apiFetch).toHaveBeenCalledWith('/rooms', expect.anything(), {
       method: 'POST',
-      body: JSON.stringify({ name: 'Amigos', maxPlayers: 15, isPublic: true, winPattern: 'FULL_CARD' }),
+      body: JSON.stringify({ name: 'Amigos', maxPlayers: 15, isPublic: true, winPattern: 'FULL_CARD', stake: 20 }),
     });
     expect(push).toHaveBeenCalledWith('/ABC234');
   });
@@ -29,7 +29,7 @@ describe('CreateRoomForm', () => {
     await userEvent.selectOptions(screen.getByLabelText(/máximo de jogadores/i), '25');
     await userEvent.click(screen.getByLabelText(/privada/i));
     await userEvent.click(screen.getByRole('button', { name: /criar sala/i }));
-    expect(apiFetch.mock.calls[0][2].body).toBe(JSON.stringify({ name: 'Família', maxPlayers: 25, isPublic: false, winPattern: 'FULL_CARD' }));
+    expect(apiFetch.mock.calls[0][2].body).toBe(JSON.stringify({ name: 'Família', maxPlayers: 25, isPublic: false, winPattern: 'FULL_CARD', stake: 20 }));
   });
 
   it('lets the host pick the pace of the balls (Normal = server default, not sent)', async () => {
@@ -58,5 +58,14 @@ describe('CreateRoomForm', () => {
     await userEvent.click(screen.getByRole('button', { name: /criar sala/i }));
     expect(screen.getByRole('alert')).toHaveTextContent(/mínimo 3/i);
     expect(apiFetch).not.toHaveBeenCalled();
+  });
+
+  it('sends the chosen stake (bet per card)', async () => {
+    apiFetch.mockResolvedValue({ code: 'ABC234' });
+    render(<CreateRoomForm />);
+    await userEvent.type(screen.getByLabelText('Nome da sala'), 'Alta');
+    await userEvent.click(screen.getByRole('radio', { name: /Valendo/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'Criar sala' }));
+    expect(JSON.parse(apiFetch.mock.calls[0][2].body as string)).toMatchObject({ stake: 40 });
   });
 });

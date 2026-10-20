@@ -116,6 +116,7 @@ export interface UnoActions {
   ready(ready: boolean): Promise<boolean>;
   setRules(rules: UnoRules): Promise<boolean>;
   setVisibility(isPublic: boolean): Promise<boolean>;
+  setStake(stake: number): Promise<boolean>;
   start(): Promise<boolean>;
   rematch(): Promise<boolean>;
   playCard(cardId: string, opts?: UnoPlayOptions): Promise<boolean>;
@@ -263,6 +264,7 @@ export function useUnoRoom(code: string, listeners: UnoListeners): UnoActions {
       ready: (ready) => call('uno:ready', { ready }),
       setRules: (rules) => call('uno:set_rules', { rules }),
       setVisibility: (isPublic) => call('uno:set_visibility', { isPublic }),
+      setStake: (stake) => call('uno:set_stake', { stake }),
       start: () => call('uno:start'),
       rematch: () => call('uno:rematch'),
       playCard: (cardId, opts = {}) => call('uno:play_card', { actionId: newActionId(), cardId, ...opts }),

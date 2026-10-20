@@ -4,6 +4,7 @@ import { LogOut } from 'lucide-react';
 import { DedeGamesLogo } from '@/components/brand/dede-games-logo';
 import { Button } from '@/components/ui/button';
 import { useLogout } from '@/features/auth/use-logout';
+import { DiamondVault } from '@/features/diamonds/diamond-vault';
 import { useProfile } from '@/features/profile/profile-context';
 import { ProfilePill } from '@/features/profile/profile-pill';
 import { GAMES } from './catalog';
@@ -31,6 +32,8 @@ export function GamesHub() {
           {GAMES.length} jogos no salão
         </p>
       </section>
+
+      <DiamondVault />
 
       <section aria-label="Jogos" className="flex flex-col gap-3">
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

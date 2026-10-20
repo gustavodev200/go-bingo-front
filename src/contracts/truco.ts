@@ -210,6 +210,8 @@ export interface TrucoRoomState {
   hostId: string;
   /** Public tables are listed in the truco lobby; private ones are joined by code only. */
   isPublic: boolean;
+  /** Aposta de cada jogador nesta mesa (Arena). */
+  stake: number;
   mode: TrucoMode;
   phase: TrucoRoomPhase;
   lobbyStatus: TrucoLobbyStatus | null;
@@ -240,6 +242,7 @@ export interface TrucoPublicRoom {
   code: string;
   hostNickname: string;
   hostCharacter: string | null;
+  stake: number;
   players: number;
   mode: TrucoMode;
 }
@@ -279,6 +282,8 @@ export const TrucoClientEvents = {
   WATCH_ROOMS: 'truco:watch_rooms',
   UNWATCH_ROOMS: 'truco:unwatch_rooms',
   SET_VISIBILITY: 'truco:set_visibility',
+  /** Host only, lobby only: how much each player bets. */
+  SET_STAKE: 'truco:set_stake',
   SET_MODE: 'truco:set_mode',
   JOIN: 'truco:join',
   LEAVE: 'truco:leave',
@@ -424,6 +429,7 @@ export interface TrucoClientAckData {
   'truco:watch_rooms': TrucoPublicRoom[];
   'truco:unwatch_rooms': null;
   'truco:set_visibility': null;
+  'truco:set_stake': null;
   'truco:set_mode': null;
   'truco:join': TrucoSnapshot;
   'truco:leave': null;

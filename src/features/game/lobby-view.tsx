@@ -21,7 +21,8 @@ export function LobbyView({ actions, onLeave, coins }: { actions: GameActions; o
   const isHost = useGameStore(selectIsHost);
   const ready = useGameStore(selectReadyCount);
   const canStart = snapshot.members.length >= 2 && ready >= 2;
-  const canBuyCard = coins >= CARD_COST;
+  // A primeira cartela é o "sentar na mesa": cobre a aposta da sala + a cartela.
+  const canBuyCard = coins >= CARD_COST + (snapshot.myCard ? 0 : snapshot.stake);
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-col gap-5 px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
@@ -33,7 +34,7 @@ export function LobbyView({ actions, onLeave, coins }: { actions: GameActions; o
         <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-300/15 px-3 py-1 text-sm text-amber-200 ring-1 ring-amber-300/30">
           Modo: <strong>{WIN_PATTERN_LABELS[snapshot.winPattern]}</strong> · pote + bônus <Coins amount={WIN_COINS[snapshot.winPattern]} />
         </p>
-        <StakeNote game="BINGO" className="mt-2 rounded-2xl bg-amber-300/10 px-3 py-2 text-center text-xs text-amber-100 ring-1 ring-amber-300/25" />
+        <StakeNote game="BINGO" stake={snapshot.stake} className="mt-2 rounded-2xl bg-amber-300/10 px-3 py-2 text-center text-xs text-amber-100 ring-1 ring-amber-300/25" />
       </header>
       <ShareCode code={snapshot.code} />
 

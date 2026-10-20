@@ -3,6 +3,7 @@ export * from './arena';
 export * from './bingo';
 export * from './bomber';
 export * from './coins';
+export * from './diamonds';
 export * from './domino';
 export * from './infiltrado';
 export * from './profile';

@@ -107,6 +107,7 @@ export interface BomberActions {
   ready(ready: boolean): Promise<boolean>;
   setRules(rules: BomberRules): Promise<boolean>;
   setVisibility(isPublic: boolean): Promise<boolean>;
+  setStake(stake: number): Promise<boolean>;
   setColor(color: number): Promise<boolean>;
   addBot(): Promise<boolean>;
   removeBot(seat: number): Promise<boolean>;
@@ -235,6 +236,7 @@ export function useBomberRoom(code: string, listeners: BomberListeners): BomberA
       ready: (ready) => call('bomber:ready', { ready }),
       setRules: (rules) => call('bomber:set_rules', { rules }),
       setVisibility: (isPublic) => call('bomber:set_visibility', { isPublic }),
+      setStake: (stake) => call('bomber:set_stake', { stake }),
       setColor: (color) => call('bomber:set_color', { color }),
       addBot: () => call('bomber:add_bot'),
       removeBot: (seat) => call('bomber:remove_bot', { seat }),

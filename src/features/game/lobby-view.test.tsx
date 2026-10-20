@@ -15,7 +15,7 @@ function member(userId: string, nickname: string, slot: number, extra: Partial<M
 
 function load(overrides: Partial<RoomSnapshot>) {
   const snapshot: RoomSnapshot = {
-    code: 'ABC234', name: 'Amigos', hostId: ME, maxPlayers: 10, isPublic: true, status: 'WAITING', winPattern: 'FULL_CARD',
+    code: 'ABC234', name: 'Amigos', hostId: ME, maxPlayers: 10, isPublic: true, status: 'WAITING', winPattern: 'FULL_CARD', stake: 20,
     members: [member(ME, 'Eu', 0), member(ANA, 'Ana', 1)], myCard: null, game: null,
     ...overrides,
   };

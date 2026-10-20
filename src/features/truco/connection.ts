@@ -110,6 +110,7 @@ export interface TrucoActions {
   ready(ready: boolean): Promise<boolean>;
   takeSeat(seat: Seat): Promise<boolean>;
   setVisibility(isPublic: boolean): Promise<boolean>;
+  setStake(stake: number): Promise<boolean>;
   setMode(mode: TrucoMode): Promise<boolean>;
   start(): Promise<boolean>;
   rematch(): Promise<boolean>;
@@ -245,6 +246,7 @@ export function useTrucoRoom(code: string, listeners: TrucoListeners): TrucoActi
       ready: (ready) => call('truco:ready', { ready }),
       takeSeat: (seat) => call('truco:take_seat', { seat }),
       setVisibility: (isPublic) => call('truco:set_visibility', { isPublic }),
+      setStake: (stake) => call('truco:set_stake', { stake }),
       setMode: (mode) => call('truco:set_mode', { mode }),
       start: () => call('truco:start'),
       rematch: () => call('truco:rematch'),

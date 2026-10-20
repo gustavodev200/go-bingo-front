@@ -107,6 +107,7 @@ export interface InfActions {
   ready(ready: boolean): Promise<boolean>;
   setRules(rules: InfRules): Promise<boolean>;
   setVisibility(isPublic: boolean): Promise<boolean>;
+  setStake(stake: number): Promise<boolean>;
   setColor(color: number): Promise<boolean>;
   addBot(): Promise<boolean>;
   removeBot(seat: number): Promise<boolean>;
@@ -237,6 +238,7 @@ export function useInfRoom(code: string, listeners: InfListeners): InfActions {
       ready: (ready) => call('inf:ready', { ready }),
       setRules: (rules) => call('inf:set_rules', { rules }),
       setVisibility: (isPublic) => call('inf:set_visibility', { isPublic }),
+      setStake: (stake) => call('inf:set_stake', { stake }),
       setColor: (color) => call('inf:set_color', { color }),
       addBot: () => call('inf:add_bot'),
       removeBot: (seat) => call('inf:remove_bot', { seat }),

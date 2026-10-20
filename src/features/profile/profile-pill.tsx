@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Avatar } from '@/components/stage/avatar';
 import { Coins } from '@/components/stage/coin';
+import { Diamonds } from '@/components/stage/diamond';
 import { useProfile } from './profile-context';
 
 /** Player chip (character, nickname, coins, points) linking to the profile page. */
@@ -17,6 +18,8 @@ export function ProfilePill() {
           <Coins amount={profile.coins} className="shrink-0" />
           {!profile.isGuest && (
             <>
+              <span className="text-violet-200/70">·</span>
+              <Diamonds amount={profile.diamonds} className="shrink-0 text-cyan-200" />
               <span className="text-violet-200/70">·</span>
               <span>{profile.points} pts</span>
             </>

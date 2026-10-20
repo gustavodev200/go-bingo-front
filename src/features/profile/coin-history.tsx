@@ -14,6 +14,7 @@ const REASON_LABELS: Record<CoinReason, string> = {
   PENALTY: 'Multa por abandono',
   TIER: 'Subiu de liga',
   SEASON: 'Prêmio semanal',
+  EXCHANGE: 'Troca de diamantes',
 };
 
 const when = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });

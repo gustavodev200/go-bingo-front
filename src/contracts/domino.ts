@@ -117,6 +117,8 @@ export interface DominoRoomState {
   version: number;
   hostId: string;
   isPublic: boolean;
+  /** Aposta de cada jogador nesta mesa (Arena). */
+  stake: number;
   rules: DominoRules;
   phase: DominoRoomPhase;
   lobbyStatus: DominoLobbyStatus | null;
@@ -151,6 +153,7 @@ export interface DominoPublicRoom {
   code: string;
   hostNickname: string;
   hostCharacter: string | null;
+  stake: number;
   players: number;
   rules: DominoRules;
 }
@@ -184,6 +187,8 @@ export const DominoClientEvents = {
   WATCH_ROOMS: 'domino:watch_rooms',
   UNWATCH_ROOMS: 'domino:unwatch_rooms',
   SET_VISIBILITY: 'domino:set_visibility',
+  /** Host only, lobby only: how much each player bets. */
+  SET_STAKE: 'domino:set_stake',
   SET_RULES: 'domino:set_rules',
   JOIN: 'domino:join',
   SYNC: 'domino:sync',
@@ -279,6 +284,7 @@ export interface DominoClientAckData {
   'domino:watch_rooms': DominoPublicRoom[];
   'domino:unwatch_rooms': null;
   'domino:set_visibility': null;
+  'domino:set_stake': null;
   'domino:set_rules': null;
   'domino:join': DominoSnapshot;
   'domino:sync': DominoSnapshot;
