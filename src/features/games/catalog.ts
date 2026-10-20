@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import { BomberArt } from '@/features/bomber/bomber-art';
+import { DamasArt } from '@/features/damas/damas-art';
 import { DominoArt } from '@/features/domino/domino-art';
 import { InfiltradoArt } from '@/features/infiltrado/infiltrado-art';
 import { SnakeArt } from '@/features/snake/snake-art';
@@ -64,6 +65,16 @@ export const GAMES: readonly Game[] = [
     tags: ['2 a 4 jogadores', 'Duplas', 'Salas públicas'],
     glow: '#10b981',
     Art: DominoArt,
+  },
+  {
+    id: 'damas',
+    name: 'Damas',
+    description: 'Damas brasileiras 1 contra 1 ao vivo: captura obrigatória, lei da maioria e dama que voa pelo tabuleiro.',
+    href: '/damas',
+    status: 'available',
+    tags: ['2 jogadores', 'Estratégia', 'Salas públicas'],
+    glow: '#d97706',
+    Art: DamasArt,
   },
   {
     id: 'bomber',
