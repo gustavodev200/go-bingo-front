@@ -128,3 +128,17 @@ describe('reachFrom', () => {
     expect(marksFor(f, { x: 0, y: 0 }).some((m) => m.x === p1.x)).toBe(true);
   });
 });
+
+describe('hudKey', () => {
+  it('ignores small moves but notices what the HUD shows', async () => {
+    const { hudKey } = await import('./game-screen');
+    const reach = { use: null, report: null, kill: null };
+    const f = frame();
+    const base = hudKey(f, reach, { x: 30, y: 18 }, false);
+    expect(hudKey(frame(), reach, { x: 30.4, y: 18.2 }, false)).toBe(base);
+    expect(hudKey(frame({ me: me({ killCd: 3 }) }), reach, { x: 30, y: 18 }, false)).not.toBe(base);
+    expect(hudKey(f, { ...reach, report: 4 }, { x: 30, y: 18 }, false)).not.toBe(base);
+    // With the map open my dot moves, so position counts.
+    expect(hudKey(f, reach, { x: 31, y: 18 }, true)).not.toBe(hudKey(f, reach, { x: 30, y: 18 }, true));
+  });
+});

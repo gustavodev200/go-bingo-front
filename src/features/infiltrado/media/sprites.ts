@@ -147,18 +147,23 @@ export function drawDiver(ctx: CanvasRenderingContext2D, cx: number, cy: number,
   ctx.moveTo(hx, hy - hr);
   ctx.lineTo(hx + f * s * 0.04, hy - hr - s * 0.1);
   ctx.stroke();
-  const glow = 0.75 + Math.sin(look.t * 3) * 0.25;
-  ctx.fillStyle = `rgba(253,230,138,${glow})`;
-  ctx.shadowColor = '#fde68a';
-  ctx.shadowBlur = s * 0.25;
+  // Lamp halo as a plain radial gradient: shadowBlur is very slow on phones.
+  const lx = hx + f * s * 0.04;
+  const ly = hy - hr - s * 0.12;
+  const halo = ctx.createRadialGradient(lx, ly, 0, lx, ly, s * 0.16);
+  halo.addColorStop(0, 'rgba(253,230,138,0.65)');
+  halo.addColorStop(1, 'rgba(253,230,138,0)');
+  ctx.fillStyle = halo;
+  ctx.fillRect(lx - s * 0.16, ly - s * 0.16, s * 0.32, s * 0.32);
+  ctx.fillStyle = '#fde68a';
   ctx.beginPath();
-  ctx.arc(hx + f * s * 0.04, hy - hr - s * 0.12, s * 0.05, 0, Math.PI * 2);
+  ctx.arc(lx, ly, s * 0.05, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 }
 
 /** A fallen diver: lying on its side, cracked dome, bubbles rising. */
-export function drawBody(ctx: CanvasRenderingContext2D, cx: number, cy: number, s: number, color: number, t: number): void {
+export function drawBody(ctx: CanvasRenderingContext2D, cx: number, cy: number, s: number, color: number, t: number, bubbles = true): void {
   const c = colorOf(color);
   ctx.save();
   ctx.translate(cx, cy + s * 0.15);
@@ -203,6 +208,10 @@ export function drawBody(ctx: CanvasRenderingContext2D, cx: number, cy: number, 
     ctx.lineTo(ex * s - s * 0.03, s * 0.01);
     ctx.stroke();
   }
+  if (!bubbles) {
+    ctx.restore();
+    return;
+  }
   // Bubbles.
   ctx.strokeStyle = 'rgba(190,240,255,0.7)';
   for (let i = 0; i < 3; i++) {
@@ -223,4 +232,102 @@ export function drawPortrait(cv: HTMLCanvasElement, color: number, t: number, op
   const s = Math.min(cv.width, cv.height) * 0.78;
   if (opts.dead) drawBody(ctx, cv.width / 2, cv.height * 0.55, s, color, t);
   else drawDiver(ctx, cv.width / 2, cv.height * 0.56, s, { color, facing: 1, t, moving: false, ghost: opts.ghost });
+}
+
+/** Walk cycle frames kept per sprite (idle is frame 0). */
+export const WALK_FRAMES = 6;
+const WALK_PERIOD = (Math.PI * 2) / 11;
+
+/**
+ * Pre-rendered divers and bodies at the current zoom. Each pose is drawn with
+ * paths once and then only blitted, which is far cheaper per frame than
+ * re-tracing ~40 paths per diver (15 divers at 60 fps on a phone).
+ */
+export class SpriteCache {
+  private size = 0;
+  private readonly divers = new Map<string, HTMLCanvasElement>();
+  private readonly bodies = new Map<number, HTMLCanvasElement>();
+  private readonly labels = new Map<string, HTMLCanvasElement>();
+
+  /** Sprite box relative to the diver size `s`; the anchor is the body center. */
+  static readonly W = 1.3;
+  static readonly H = 1.45;
+  static readonly AX = 0.65;
+  static readonly AY = 0.85;
+
+  setSize(s: number): void {
+    const next = Math.max(8, Math.round(s));
+    if (next === this.size) return;
+    this.size = next;
+    this.divers.clear();
+    this.bodies.clear();
+    this.labels.clear();
+  }
+
+  get s(): number {
+    return this.size;
+  }
+
+  /** Walk frame for time `t` (0 = standing). */
+  static frameAt(t: number, moving: boolean): number {
+    if (!moving) return 0;
+    return 1 + (Math.floor((t / WALK_PERIOD) * WALK_FRAMES) % WALK_FRAMES);
+  }
+
+  diver(color: number, ghost: boolean, frame: number): HTMLCanvasElement {
+    const key = `${color}:${ghost ? 1 : 0}:${frame}`;
+    let cv = this.divers.get(key);
+    if (cv) return cv;
+    const s = this.size;
+    cv = document.createElement('canvas');
+    cv.width = Math.ceil(s * SpriteCache.W);
+    cv.height = Math.ceil(s * SpriteCache.H);
+    const ctx = cv.getContext('2d')!;
+    const moving = frame > 0;
+    // Frame k samples the walk cycle at k/WALK_FRAMES of a period; idle uses a fixed pose.
+    const t = moving ? ((frame - 1) / WALK_FRAMES) * WALK_PERIOD + 0.0001 : 0.6;
+    drawDiver(ctx, s * SpriteCache.AX, s * SpriteCache.AY, s, { color, facing: 1, t, moving, ghost });
+    this.divers.set(key, cv);
+    return cv;
+  }
+
+  body(color: number): HTMLCanvasElement {
+    let cv = this.bodies.get(color);
+    if (cv) return cv;
+    const s = this.size;
+    cv = document.createElement('canvas');
+    cv.width = Math.ceil(s * SpriteCache.W);
+    cv.height = Math.ceil(s * SpriteCache.H);
+    const ctx = cv.getContext('2d')!;
+    // t chosen so no bubble is drawn: bubbles are animated live by the renderer.
+    drawBody(ctx, s * SpriteCache.AX, s * SpriteCache.AY, s, color, 0, false);
+    this.bodies.set(color, cv);
+    return cv;
+  }
+
+  /** A name tag rendered once (outlined text is expensive to redraw every frame). */
+  label(text: string, color: string, px: number, outline: number): HTMLCanvasElement {
+    const key = `${text}|${color}|${px}|${outline}`;
+    const font = `700 ${px}px system-ui, sans-serif`;
+    let cv = this.labels.get(key);
+    if (cv) return cv;
+    cv = document.createElement('canvas');
+    const ctx = cv.getContext('2d')!;
+    ctx.font = font;
+    const w = Math.ceil(ctx.measureText(text).width + outline * 2 + 2);
+    const h = Math.ceil(px * 1.4 + outline * 2);
+    cv.width = Math.max(1, w);
+    cv.height = Math.max(1, h);
+    ctx.font = font;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = outline;
+    ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+    ctx.strokeText(text, w / 2, h / 2);
+    ctx.fillStyle = color;
+    ctx.fillText(text, w / 2, h / 2);
+    this.labels.set(key, cv);
+    return cv;
+  }
 }
