@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 /** Telas com o dock; dentro da sala (/CODIGO) a tela é do jogo e ele some. */
-const DOCK_PATHS = new Set(['/', '/bingo', '/create', '/ranking', '/perfil', '/truco', '/truco/sinais', '/uno', '/bomber', '/snake', '/infiltrado', '/damas']);
+const DOCK_PATHS = new Set(['/', '/bingo', '/create', '/ranking', '/perfil', '/truco', '/truco/sinais', '/uno', '/bomber', '/snake', '/infiltrado', '/damas', '/blackjack']);
 
 /** Toque curtinho no Android (iOS ignora `vibrate`). */
 function tick() {

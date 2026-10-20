@@ -51,6 +51,13 @@ describe('GamesHub', () => {
     expect(within(card).getByText('2 jogadores')).toBeInTheDocument();
   });
 
+  it('lists the Blackjack leading to its lobby', () => {
+    render(<GamesHub />);
+    const card = screen.getByRole('link', { name: 'Jogar Blackjack' });
+    expect(card).toHaveAttribute('href', '/blackjack');
+    expect(within(card).getByText('1 a 5 jogadores')).toBeInTheDocument();
+  });
+
   it('lists the Bomberman leading to its lobby', () => {
     render(<GamesHub />);
     const card = screen.getByRole('link', { name: 'Jogar Bomberman' });

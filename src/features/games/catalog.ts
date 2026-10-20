@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react';
+import { BlackjackArt } from '@/features/blackjack/blackjack-art';
 import { BomberArt } from '@/features/bomber/bomber-art';
 import { DamasArt } from '@/features/damas/damas-art';
 import { DominoArt } from '@/features/domino/domino-art';
@@ -75,6 +76,16 @@ export const GAMES: readonly Game[] = [
     tags: ['2 jogadores', 'Estratégia', 'Salas públicas'],
     glow: '#d97706',
     Art: DamasArt,
+  },
+  {
+    id: 'blackjack',
+    name: 'Blackjack',
+    description: 'Torneio de 21 contra o dealer, até 5 na mesa: peça, pare, dobre, divida ou faça seguro. Vence quem terminar com mais fichas.',
+    href: '/blackjack',
+    status: 'available',
+    tags: ['1 a 5 jogadores', 'Cartas', 'Salas públicas'],
+    glow: '#059669',
+    Art: BlackjackArt,
   },
   {
     id: 'bomber',
