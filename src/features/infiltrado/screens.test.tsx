@@ -4,6 +4,7 @@ import { frame, me, roomState } from '@/test/infiltrado-fixtures';
 import type { InfActions, InfListeners } from './connection';
 import { InfiltradoHome } from './infiltrado-home';
 import { MeetingOverlay } from './meeting';
+import { LightsFix, TaskGame } from './minigames';
 import { EjectOverlay, IntroOverlay, ResultsOverlay } from './overlays';
 import { PublicRooms } from './public-rooms';
 import { nextFreeColor, RoomLobby } from './room-lobby';
@@ -144,5 +145,37 @@ describe('InfRoomScreen', () => {
     act(() => useInfStore.getState().applySnapshot({ state: roomState(), mySeat: 0, frame: null, chat: [] }));
     expect(screen.getByRole('heading', { name: 'INFILTRADO' })).toBeInTheDocument();
     expect(listeners).toBeDefined();
+  });
+});
+
+describe('mini-games', () => {
+  it('keypad: pressing 1 to 9 in order finishes the task', async () => {
+    const onDone = vi.fn();
+    render(<TaskGame type="keypad" onDone={onDone} />);
+    for (let n = 1; n <= 9; n++) await userEvent.click(screen.getByRole('button', { name: String(n) }));
+    expect(onDone).toHaveBeenCalledTimes(1);
+  });
+
+  it('lights: every breaker on fixes them', async () => {
+    const onDone = vi.fn();
+    render(<LightsFix onDone={onDone} />);
+    for (const b of screen.getAllByRole('button', { name: /Disjuntor/ })) if (b.getAttribute('aria-pressed') === 'false') await userEvent.click(b);
+    expect(onDone).toHaveBeenCalled();
+  });
+
+  it('wires: matching every color finishes', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const onDone = vi.fn();
+    render(<TaskGame type="wires" onDone={onDone} />);
+    const plugs = screen.getAllByRole('button', { name: /Tomada/ });
+    for (let c = 0; c < 4; c++) {
+      await userEvent.click(screen.getByRole('button', { name: `Cabo ${c + 1}` }));
+      // Find the plug with the same color.
+      const color = screen.getByRole('button', { name: `Cabo ${c + 1}` }).style.background;
+      await userEvent.click(plugs.find((p) => p.style.background === color)!);
+    }
+    act(() => vi.advanceTimersByTime(400));
+    expect(onDone).toHaveBeenCalled();
+    vi.useRealTimers();
   });
 });

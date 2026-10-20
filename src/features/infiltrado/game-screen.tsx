@@ -382,22 +382,12 @@ export function GameScreen({ state, mySeat, actions, bus }: { state: InfRoomStat
   useEffect(() => {
     done.current = false;
   }, [open]);
-  const finishTask = useCallback(
-    (station: number) => {
-      if (done.current) return;
-      done.current = true;
-      void actions.act({ t: 'task_done', station }).then(() => setOpen(null));
-    },
-    [actions],
-  );
-  const finishFix = useCallback(
-    (panel: number) => {
-      if (done.current) return;
-      done.current = true;
-      void actions.act({ t: 'fix', panel }).then(() => setOpen(null));
-    },
-    [actions],
-  );
+  // Stable while the same console is open, so the mini-games' timers are not restarted by the HUD.
+  const finishOpen = useCallback(() => {
+    if (done.current || !open || open.kind === 'reactor') return;
+    done.current = true;
+    void actions.act(open.kind === 'task' ? { t: 'task_done', station: open.station } : { t: 'fix', panel: open.panel }).then(() => setOpen(null));
+  }, [open, actions]);
 
   const me = frame?.me;
   const imp = me?.role === 'impostor';
@@ -581,9 +571,9 @@ export function GameScreen({ state, mySeat, actions, bus }: { state: InfRoomStat
             <p className="mb-2 text-center font-display text-lg font-bold">
               {open.kind === 'task' ? INF_TASK_INFO[INF_STATIONS[open.station].type].name : sab ? INF_SABOTAGE_INFO[sab.kind].name : ''}
             </p>
-            {open.kind === 'task' && <TaskGame type={INF_STATIONS[open.station].type} onDone={() => finishTask(open.station)} />}
-            {open.kind === 'fix' && sab?.kind === 'lights' && <LightsFix onDone={() => finishFix(open.panel)} />}
-            {open.kind === 'fix' && sab?.kind === 'oxygen' && <OxygenFix onDone={() => finishFix(open.panel)} />}
+            {open.kind === 'task' && <TaskGame type={INF_STATIONS[open.station].type} onDone={finishOpen} />}
+            {open.kind === 'fix' && sab?.kind === 'lights' && <LightsFix onDone={finishOpen} />}
+            {open.kind === 'fix' && sab?.kind === 'oxygen' && <OxygenFix onDone={finishOpen} />}
             {open.kind === 'reactor' && sab?.kind === 'reactor' && (
               <ReactorFix holding={frame.me.holding === open.panel} otherHeld={sab.fixed[1 - open.panel] === 1} onHold={(on) => void actions.act({ t: 'hold', panel: open.panel, on }, !on)} />
             )}
