@@ -17,6 +17,7 @@ export const VOICE_GAMES = [
   'infiltrado',
   'damas',
   'blackjack',
+  'tacada',
 ] as const;
 export type VoiceGame = (typeof VOICE_GAMES)[number];
 
