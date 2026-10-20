@@ -23,6 +23,7 @@ export const ARENA_GAMES = [
   'DAMAS',
   'BLACKJACK',
   'TACADA',
+  'GAUDERIO',
 ] as const;
 export type ArenaGame = (typeof ARENA_GAMES)[number];
 
@@ -37,6 +38,7 @@ export const ARENA_GAME_LABELS: Record<ArenaGame, string> = {
   DAMAS: 'Damas',
   BLACKJACK: 'Blackjack',
   TACADA: 'Tacada',
+  GAUDERIO: 'Truco Gaudério',
 };
 
 export interface ArenaRules {
@@ -136,6 +138,15 @@ export const ARENA_RULES: Record<ArenaGame, ArenaRules> = {
     ante: 30,
     winBonus: 50,
     ratingWeight: 0.9,
+    minRatedMs: 90_000,
+    finishBonus: 5,
+    countsStreak: true,
+  },
+  // Truco Gaudério: mano a mano ou em duplas; leitura, blefe e envido pesam mais que as cartas.
+  GAUDERIO: {
+    ante: 40,
+    winBonus: 60,
+    ratingWeight: 1,
     minRatedMs: 90_000,
     finishBonus: 5,
     countsStreak: true,
