@@ -2,8 +2,10 @@
 
 import { Coin, Coins } from '@/components/stage/coin';
 import { Button } from '@/components/ui/button';
+import { CpuNote } from '@/features/arena/cpu';
 import { StakeNote } from '@/features/arena/stake-note';
-import { CARD_COST, DAILY_COINS, MAX_CARD_REGENS, WIN_COINS, WIN_PATTERN_LABELS } from '@/contracts';
+import { BINGO_MAX_CPUS, CARD_COST, DAILY_COINS, MAX_CARD_REGENS, WIN_COINS, WIN_PATTERN_LABELS } from '@/contracts';
+import { Bot, Minus, Plus } from 'lucide-react';
 import { CardGrid } from './card-grid';
 import { EmotePicker } from './emotes/emote-picker';
 import { ReactionFeed } from './emotes/reaction-feed';
@@ -20,7 +22,9 @@ export function LobbyView({ actions, onLeave, coins }: { actions: GameActions; o
   const myUserId = useGameStore((s) => s.myUserId)!;
   const isHost = useGameStore(selectIsHost);
   const ready = useGameStore(selectReadyCount);
-  const canStart = snapshot.members.length >= 2 && ready >= 2;
+  const cpus = snapshot.cpuPlayers;
+  // Com CPU basta uma pessoa (quem não gerou cartela recebe a automática).
+  const canStart = cpus > 0 ? snapshot.members.length + cpus >= 2 : snapshot.members.length >= 2 && ready >= 2;
   // A primeira cartela é o "sentar na mesa": cobre a aposta da sala + a cartela.
   const canBuyCard = coins >= CARD_COST + (snapshot.myCard ? 0 : snapshot.stake);
 
@@ -34,7 +38,11 @@ export function LobbyView({ actions, onLeave, coins }: { actions: GameActions; o
         <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-300/15 px-3 py-1 text-sm text-amber-200 ring-1 ring-amber-300/30">
           Modo: <strong>{WIN_PATTERN_LABELS[snapshot.winPattern]}</strong> · pote + bônus <Coins amount={WIN_COINS[snapshot.winPattern]} />
         </p>
-        <StakeNote game="BINGO" stake={snapshot.stake} className="mt-2 rounded-2xl bg-amber-300/10 px-3 py-2 text-center text-xs text-amber-100 ring-1 ring-amber-300/25" />
+        {cpus > 0 ? (
+          <CpuNote className="mt-2" />
+        ) : (
+          <StakeNote game="BINGO" stake={snapshot.stake} className="mt-2 rounded-2xl bg-amber-300/10 px-3 py-2 text-center text-xs text-amber-100 ring-1 ring-amber-300/25" />
+        )}
       </header>
       <ShareCode code={snapshot.code} />
 
@@ -44,6 +52,31 @@ export function LobbyView({ actions, onLeave, coins }: { actions: GameActions; o
           <EmotePicker onEmote={(emote) => void actions.emote(emote)} />
         </div>
         <MembersList members={snapshot.members} hostId={snapshot.hostId} myUserId={myUserId} onKick={isHost ? (id) => void actions.kick(id) : undefined} />
+      </section>
+
+      <section className="glass flex items-center justify-between gap-3 p-4" aria-label="CPU">
+        <div className="flex items-center gap-2">
+          <Bot aria-hidden className="size-5 text-sky-300" />
+          <div className="leading-tight">
+            <h2 className="font-display text-lg font-semibold">CPU</h2>
+            <p className="text-muted-foreground text-xs">{cpus === 0 ? 'Sozinho? Chame a CPU para jogar contra você.' : `${cpus} ${cpus === 1 ? 'cartela' : 'cartelas'} da CPU na partida`}</p>
+          </div>
+        </div>
+        {isHost ? (
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" className="size-10 rounded-xl" aria-label="Menos uma CPU" disabled={cpus === 0} onClick={() => void actions.setCpus(cpus - 1)}>
+              <Minus aria-hidden />
+            </Button>
+            <span className="w-5 text-center text-lg font-bold tabular-nums" aria-live="polite">
+              {cpus}
+            </span>
+            <Button variant="outline" size="icon" className="size-10 rounded-xl" aria-label="Mais uma CPU" disabled={cpus >= BINGO_MAX_CPUS} onClick={() => void actions.setCpus(cpus + 1)}>
+              <Plus aria-hidden />
+            </Button>
+          </div>
+        ) : (
+          <span className="text-lg font-bold tabular-nums">{cpus}</span>
+        )}
       </section>
 
       <section className="glass flex flex-col gap-3 p-4">
@@ -76,7 +109,7 @@ export function LobbyView({ actions, onLeave, coins }: { actions: GameActions; o
       {isHost ? (
         <div className="flex flex-col gap-2">
           <Button size="lg" className="font-display h-14 rounded-2xl text-xl" disabled={!canStart} onClick={() => void actions.start()}>
-            {canStart ? 'Iniciar partida' : 'Aguardando 2 jogadores prontos'}
+            {canStart ? 'Iniciar partida' : 'Aguardando 2 jogadores prontos (ou chame a CPU)'}
           </Button>
           <Button variant="ghost" className="text-destructive h-11" onClick={() => void actions.cancel()}>
             Cancelar sala

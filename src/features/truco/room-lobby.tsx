@@ -1,5 +1,6 @@
 'use client';
 
+import { AddCpuButton, CpuTag, RemoveCpuButton } from '@/features/arena/cpu';
 import { StakePicker } from '@/features/arena/stake-picker';
 import { Check, ChevronLeft, Copy, Crown, Globe, Loader2, Lock, Share2, UserPlus, WifiOff } from 'lucide-react';
 import { toast } from 'sonner';
@@ -14,7 +15,22 @@ import { TEAM_TONE, useSecondsLeft } from './seat-badge';
 import type { Conventions } from './signals';
 import { SignalsDialog } from './signals-settings';
 
-function SeatCard({ state, seat, mySeat, onTake }: { state: TrucoRoomState; seat: Seat; mySeat: Seat; onTake(seat: Seat): void }) {
+function SeatCard({
+  state,
+  seat,
+  mySeat,
+  onTake,
+  onAddBot,
+  onRemoveBot,
+}: {
+  state: TrucoRoomState;
+  seat: Seat;
+  mySeat: Seat;
+  onTake(seat: Seat): void;
+  onAddBot(seat: Seat): unknown;
+  onRemoveBot(seat: Seat): unknown;
+}) {
+  const isHost = state.hostId === state.seats[mySeat]?.userId;
   const player = state.seats[seat];
   const ours = teamOf(seat) === teamOf(mySeat);
   const tone = TEAM_TONE[ours ? 'us' : 'them'];
@@ -26,12 +42,15 @@ function SeatCard({ state, seat, mySeat, onTake }: { state: TrucoRoomState; seat
         <Button variant="ghost" size="sm" className="h-9 gap-1 rounded-xl text-amber-200" onClick={() => onTake(seat)} aria-label={`Sentar no lugar ${seat + 1}`}>
           <UserPlus aria-hidden className="size-4" /> Sentar aqui
         </Button>
+        {isHost && <AddCpuButton onAdd={() => onAddBot(seat)} />}
       </li>
     );
   }
   return (
     <li className={cn('relative flex min-h-32 flex-col items-center gap-1.5 rounded-3xl p-3 ring-2', tone.bg, tone.ring, !player.connected && 'opacity-60')} aria-label={`${player.nickname}${player.ready ? ', pronto' : ''}`}>
       {player.userId === state.hostId && <Crown aria-label="Anfitrião" className="absolute top-2 left-2 size-4 fill-amber-300 text-amber-500" />}
+      {player.bot && <CpuTag className="absolute top-2 left-2" />}
+      {player.bot && isHost && <RemoveCpuButton name={player.nickname} onRemove={() => onRemoveBot(seat)} className="absolute top-1.5 right-1.5" />}
       <Avatar id={player.userId} character={player.character} className="w-12" />
       <span className="max-w-full truncate text-sm font-bold">
         {player.nickname}
@@ -86,7 +105,7 @@ export function RoomLobby({ state, mySeat, actions, conventions, setConventions 
         </span>
       </header>
 
-      <StakePicker game="TRUCO" stake={state.stake} players={seated} editable={isHost} onChange={actions.setStake} />
+      <StakePicker game="TRUCO" stake={state.stake} players={seated} editable={isHost} onChange={actions.setStake} cpu={state.seats.filter((s) => s?.bot).length} />
 
       <section className="flex flex-col gap-2 rounded-2xl bg-white/5 px-4 py-3 ring-1 ring-white/10" aria-label="Modo">
         <div role="radiogroup" aria-label="Modo de jogo" className="grid grid-cols-2 gap-2">
@@ -149,7 +168,7 @@ export function RoomLobby({ state, mySeat, actions, conventions, setConventions 
         </div>
         <ul className="grid grid-cols-2 gap-3">
           {order.map((seat) => (
-            <SeatCard key={seat} state={state} seat={seat} mySeat={mySeat} onTake={(s) => void actions.takeSeat(s)} />
+            <SeatCard key={seat} state={state} seat={seat} mySeat={mySeat} onTake={(s) => void actions.takeSeat(s)} onAddBot={actions.addBot} onRemoveBot={actions.removeBot} />
           ))}
         </ul>
         <p className="text-center text-xs text-violet-200/80">Parceiros sentam frente a frente. Troque de lugar para escolher sua dupla.</p>

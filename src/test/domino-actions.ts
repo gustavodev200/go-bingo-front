@@ -6,6 +6,8 @@ export function dominoActions(): DominoActions {
   return {
     leave: ok(),
     ready: ok(),
+    addBot: ok(),
+    removeBot: ok(),
     setVisibility: ok(),
     setStake: ok(),
     setRules: ok(),

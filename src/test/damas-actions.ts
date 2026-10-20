@@ -6,6 +6,8 @@ export function damasActions(): DamasActions {
   return {
     leave: ok(),
     ready: ok(),
+    addBot: ok(),
+    removeBot: ok(),
     setVisibility: ok(),
     setStake: ok(),
     setRules: ok(),

@@ -179,7 +179,7 @@ export function RoomLobby({ state, mySeat, actions }: { state: InfRoomState; myS
         </div>
       </header>
 
-      <StakePicker game="INFILTRADO" stake={state.stake} players={state.seats.filter((s) => s && !s.bot).length} editable={isHost} onChange={actions.setStake} className="mx-3" />
+      <StakePicker game="INFILTRADO" stake={state.stake} players={state.seats.filter((s) => s && !s.bot).length} editable={isHost} onChange={actions.setStake} className="mx-3" cpu={state.seats.filter((s) => s?.bot).length} />
 
       <div className="flex flex-1 flex-col gap-3 p-3 lg:flex-row">
         <ul className="grid flex-1 grid-cols-3 content-start gap-2 sm:grid-cols-5" aria-label={`Jogadores: ${players} de ${INF_SEATS}`}>

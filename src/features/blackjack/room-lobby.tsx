@@ -1,5 +1,6 @@
 'use client';
 
+import { AddCpuButton, CpuTag, RemoveCpuButton } from '@/features/arena/cpu';
 import { StakePicker } from '@/features/arena/stake-picker';
 import { Check, ChevronLeft, Copy, Crown, Globe, Loader2, Lock, Share2, WifiOff } from 'lucide-react';
 import { toast } from 'sonner';
@@ -12,14 +13,16 @@ import { cn } from '@/lib/utils';
 import type { BjActions } from './connection';
 import { fmtChips } from './rules-view';
 
-function SeatCard({ state, seat, mySeat }: { state: BjRoomState; seat: number; mySeat: number }) {
+function SeatCard({ state, seat, mySeat, actions }: { state: BjRoomState; seat: number; mySeat: number; actions: BjActions }) {
   const player = state.seats[seat];
   const seconds = useSecondsLeft(player?.reconnectDeadline ?? null);
+  const isHost = state.hostId === state.seats[mySeat]?.userId;
   if (!player)
     return (
-      <li className="flex min-h-28 flex-col items-center justify-center rounded-3xl border-2 border-dashed border-white/20 p-3 text-center">
+      <li className="flex min-h-28 flex-col items-center justify-center gap-1 rounded-3xl border-2 border-dashed border-white/20 p-3 text-center">
         <span className="text-xs font-semibold text-white/60">Lugar livre</span>
         <span className="text-[11px] text-white/50">Mande o código ou o link</span>
+        {isHost && <AddCpuButton onAdd={actions.addBot} />}
       </li>
     );
   return (
@@ -28,6 +31,8 @@ function SeatCard({ state, seat, mySeat }: { state: BjRoomState; seat: number; m
       aria-label={`${player.nickname}${player.ready ? ', pronto' : ''}`}
     >
       {player.userId === state.hostId && <Crown aria-label="Anfitrião" className="absolute top-2 left-2 size-4 fill-amber-300 text-amber-500" />}
+      {player.bot && <CpuTag className="absolute top-2 left-2" />}
+      {player.bot && isHost && <RemoveCpuButton name={player.nickname} onRemove={() => actions.removeBot(seat)} className="absolute right-1.5 bottom-1.5" />}
       <Avatar id={player.userId} character={player.character} className="w-11" />
       <span className="max-w-full truncate text-sm font-bold">
         {player.nickname}
@@ -158,7 +163,7 @@ export function RoomLobby({ state, mySeat, actions }: { state: BjRoomState; mySe
         </span>
       </header>
 
-      <StakePicker game="BLACKJACK" stake={state.stake} players={seated} editable={isHost} onChange={actions.setStake} />
+      <StakePicker game="BLACKJACK" stake={state.stake} players={seated} editable={isHost} onChange={actions.setStake} cpu={state.seats.filter((s) => s?.bot).length} />
 
       <section className="flex items-center justify-between gap-3 rounded-2xl bg-white/5 px-4 py-2 ring-1 ring-white/10" aria-label="Visibilidade">
         <span className="flex items-center gap-2 text-sm">
@@ -190,7 +195,7 @@ export function RoomLobby({ state, mySeat, actions }: { state: BjRoomState; mySe
       <section aria-label="Lugares">
         <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5">
           {state.seats.map((_, seat) => (
-            <SeatCard key={seat} state={state} seat={seat} mySeat={mySeat} />
+            <SeatCard key={seat} state={state} seat={seat} mySeat={mySeat} actions={actions} />
           ))}
         </ul>
       </section>

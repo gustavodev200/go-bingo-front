@@ -17,6 +17,7 @@ function Line({ label, children, tone }: { label: string; children: React.ReactN
 
 function ratingNote(r: MatchResultDto): string | null {
   if (r.rated) return null;
+  if (r.vsCpu) return 'Partida contra a CPU: não vale ranking, só o agrado em moedas.';
   if (r.abandoned) return 'Quem sai no meio perde pontos e paga multa.';
   return 'Sem pontos: precisa de uma partida completa contra outro jogador logado.';
 }

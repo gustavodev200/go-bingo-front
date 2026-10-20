@@ -114,6 +114,9 @@ const EXIT_BY_CODE: Partial<Record<ErrorCode, DominoExit['reason']>> = {
 export interface DominoActions {
   leave(): Promise<boolean>;
   ready(ready: boolean): Promise<boolean>;
+  /** Anfitrião, no lobby: uma CPU senta no primeiro lugar vago. */
+  addBot(seat?: number): Promise<boolean>;
+  removeBot(seat: number): Promise<boolean>;
   setRules(rules: DominoRules): Promise<boolean>;
   setVisibility(isPublic: boolean): Promise<boolean>;
   setStake(stake: number): Promise<boolean>;
@@ -258,6 +261,8 @@ export function useDominoRoom(code: string, listeners: DominoListeners): DominoA
         return ok;
       },
       ready: (ready) => call('domino:ready', { ready }),
+      addBot: (seat) => call('domino:add_bot', seat === undefined ? {} : { seat }),
+      removeBot: (seat) => call('domino:remove_bot', { seat }),
       setRules: (rules) => call('domino:set_rules', { rules }),
       setVisibility: (isPublic) => call('domino:set_visibility', { isPublic }),
       setStake: (stake) => call('domino:set_stake', { stake }),

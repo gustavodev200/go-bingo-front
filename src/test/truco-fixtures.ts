@@ -4,7 +4,7 @@ export const NAMES = ['Ana', 'Bia', 'Caio', 'Duda'];
 export const userId = (seat: number) => `00000000-0000-4000-8000-00000000000${seat + 1}`;
 
 export function seatPlayer(seat: Seat, over: Partial<TrucoSeatPlayer> = {}): TrucoSeatPlayer {
-  return { seat, team: (seat % 2) as 0 | 1, userId: userId(seat), nickname: NAMES[seat], character: null, ready: false, connected: true, reconnectDeadline: null, ...over };
+  return { seat, team: (seat % 2) as 0 | 1, userId: userId(seat), nickname: NAMES[seat], character: null, bot: false, ready: false, connected: true, reconnectDeadline: null, ...over };
 }
 
 export function matchView(over: Partial<TrucoMatchView> = {}): TrucoMatchView {

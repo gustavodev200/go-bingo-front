@@ -9,6 +9,7 @@ export function seatPlayer(seat: number, over: Partial<BjSeatPlayer> = {}): BjSe
     userId: userId(seat),
     nickname: NAMES[seat],
     character: null,
+    bot: false,
     ready: false,
     connected: true,
     reconnectDeadline: null,

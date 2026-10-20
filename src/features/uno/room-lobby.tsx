@@ -1,5 +1,6 @@
 'use client';
 
+import { AddCpuButton, CpuTag, RemoveCpuButton } from '@/features/arena/cpu';
 import { StakePicker } from '@/features/arena/stake-picker';
 import { Check, ChevronLeft, Copy, Crown, Globe, Loader2, Lock, Share2, WifiOff } from 'lucide-react';
 import { toast } from 'sonner';
@@ -14,18 +15,22 @@ import { TARGET_LABEL } from './rules-view';
 
 const TARGET_HINT: Record<number, string> = { 0: 'Quem bater primeiro vence', 200: 'Soma pontos a cada rodada', 500: 'A regra oficial, mais longa' };
 
-function SeatCard({ state, seat, mySeat }: { state: UnoRoomState; seat: number; mySeat: number }) {
+function SeatCard({ state, seat, mySeat, actions }: { state: UnoRoomState; seat: number; mySeat: number; actions: UnoActions }) {
   const player = state.seats[seat];
   const seconds = useSecondsLeft(player?.reconnectDeadline ?? null);
+  const isHost = state.hostId === state.seats[mySeat]?.userId;
   if (!player)
     return (
-      <li className="flex min-h-28 flex-col items-center justify-center rounded-3xl border-2 border-dashed border-white/20 p-3 text-center">
+      <li className="flex min-h-28 flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-white/20 p-3 text-center">
         <span className="text-xs font-semibold text-white/60">Lugar vago</span>
+        {isHost && <AddCpuButton onAdd={actions.addBot} />}
       </li>
     );
   return (
     <li className={cn('relative flex min-h-28 flex-col items-center gap-1.5 rounded-3xl bg-white/10 p-3 ring-2', seat === mySeat ? 'ring-amber-300' : 'ring-white/20', !player.connected && 'opacity-60')} aria-label={`${player.nickname}${player.ready ? ', pronto' : ''}`}>
       {player.userId === state.hostId && <Crown aria-label="Anfitrião" className="absolute top-2 left-2 size-4 fill-amber-300 text-amber-500" />}
+      {player.bot && <CpuTag className="absolute top-2 left-2" />}
+      {player.bot && isHost && <RemoveCpuButton name={player.nickname} onRemove={() => actions.removeBot(seat)} className="absolute top-1.5 right-1.5" />}
       <Avatar id={player.userId} character={player.character} className="w-11" />
       <span className="max-w-full truncate text-sm font-bold">
         {player.nickname}
@@ -116,7 +121,7 @@ export function RoomLobby({ state, mySeat, actions }: { state: UnoRoomState; myS
         </span>
       </header>
 
-      <StakePicker game="UNO" stake={state.stake} players={seated} editable={isHost} onChange={actions.setStake} />
+      <StakePicker game="UNO" stake={state.stake} players={seated} editable={isHost} onChange={actions.setStake} cpu={state.seats.filter((s) => s?.bot).length} />
 
       <section className="flex items-center justify-between gap-3 rounded-2xl bg-white/5 px-4 py-2 ring-1 ring-white/10" aria-label="Visibilidade">
         <span className="flex items-center gap-2 text-sm">
@@ -148,7 +153,7 @@ export function RoomLobby({ state, mySeat, actions }: { state: UnoRoomState; myS
       <section aria-label="Lugares">
         <ul className="grid grid-cols-3 gap-2">
           {state.seats.map((_, seat) => (
-            <SeatCard key={seat} state={state} seat={seat} mySeat={mySeat} />
+            <SeatCard key={seat} state={state} seat={seat} mySeat={mySeat} actions={actions} />
           ))}
         </ul>
       </section>
@@ -168,7 +173,7 @@ export function RoomLobby({ state, mySeat, actions }: { state: UnoRoomState; myS
             {state.lobbyStatus === 'READY_TO_START' ? 'Tudo pronto! Esperando o anfitrião começar.' : 'Esperando todo mundo ficar pronto…'}
           </p>
         )}
-        {isHost && !canStart && <p className="text-center text-xs text-violet-200/80">A partida começa com {UNO_MIN_PLAYERS} a {UNO_SEATS} jogadores conectados e prontos.</p>}
+        {isHost && !canStart && <p className="text-center text-xs text-violet-200/80">A partida começa com {UNO_MIN_PLAYERS} a {UNO_SEATS} jogadores conectados e prontos. Sozinho? Chame a CPU num lugar vago.</p>}
       </section>
 
       <nav className="flex items-center text-sm">

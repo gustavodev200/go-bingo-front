@@ -7,7 +7,7 @@ import { initialGameState, reduce, useGameStore } from './store';
 const ME = '00000000-0000-4000-8000-000000000001';
 const ANA = '00000000-0000-4000-8000-000000000002';
 const grid = Array.from({ length: 25 }, (_, i) => (i === 12 ? 0 : i + 1));
-const actions = { generateCard: vi.fn(), start: vi.fn(), cancel: vi.fn(), leave: vi.fn(), kick: vi.fn(), mark: vi.fn(), claim: vi.fn(), replay: vi.fn(), emote: vi.fn() };
+const actions = { generateCard: vi.fn(), start: vi.fn(), cancel: vi.fn(), leave: vi.fn(), kick: vi.fn(), mark: vi.fn(), claim: vi.fn(), replay: vi.fn(), emote: vi.fn(), setCpus: vi.fn() };
 
 function member(userId: string, nickname: string, slot: number, extra: Partial<Member> = {}): Member {
   return { userId, nickname, character: null, slot, isGuest: false, connected: true, hasCard: false, ...extra };
@@ -15,7 +15,7 @@ function member(userId: string, nickname: string, slot: number, extra: Partial<M
 
 function load(overrides: Partial<RoomSnapshot>) {
   const snapshot: RoomSnapshot = {
-    code: 'ABC234', name: 'Amigos', hostId: ME, maxPlayers: 10, isPublic: true, status: 'WAITING', winPattern: 'FULL_CARD', stake: 20,
+    code: 'ABC234', name: 'Amigos', hostId: ME, maxPlayers: 10, isPublic: true, status: 'WAITING', winPattern: 'FULL_CARD', stake: 20, cpuPlayers: 0,
     members: [member(ME, 'Eu', 0), member(ANA, 'Ana', 1)], myCard: null, game: null,
     ...overrides,
   };
@@ -79,5 +79,16 @@ describe('LobbyView', () => {
     render(<LobbyView actions={actions} coins={0} onLeave={vi.fn()} />);
     expect(screen.getByRole('status')).toHaveTextContent(/você ainda joga/i);
     expect(screen.getByRole('status')).toHaveTextContent(/de graça/i);
+  });
+
+  it('alone with the CPU the host can start; the CPU count goes up and down', async () => {
+    load({ members: [member(ME, 'Eu', 0)], cpuPlayers: 1 });
+    render(<LobbyView actions={actions} coins={100} onLeave={vi.fn()} />);
+    expect(screen.getByRole('button', { name: 'Iniciar partida' })).toBeEnabled();
+    expect(screen.getByRole('note')).toHaveTextContent('Mesa com CPU');
+    await userEvent.click(screen.getByRole('button', { name: 'Mais uma CPU' }));
+    expect(actions.setCpus).toHaveBeenCalledWith(2);
+    await userEvent.click(screen.getByRole('button', { name: 'Menos uma CPU' }));
+    expect(actions.setCpus).toHaveBeenCalledWith(0);
   });
 });

@@ -18,7 +18,7 @@ vi.mock('@/features/auth/upgrade-button', () => ({ UpgradeButton: () => <button>
 
 function setup(hostId: string, winnerId: string | null, drawn: number[] = [], { spectator = false, reason = 'exhausted' as 'exhausted' | 'no_players' } = {}) {
   const snapshot: RoomSnapshot = {
-    code: 'ABC234', name: 'Sala', hostId, maxPlayers: 10, isPublic: true, status: 'IN_GAME', winPattern: 'FULL_CARD', stake: 20,
+    code: 'ABC234', name: 'Sala', hostId, maxPlayers: 10, isPublic: true, status: 'IN_GAME', winPattern: 'FULL_CARD', stake: 20, cpuPlayers: 0,
     members: [], myCard: spectator ? null : { id: '00000000-0000-4000-8000-0000000000aa', grid, marked: [] }, game: { id: '00000000-0000-4000-8000-0000000000bb', drawn, drawIntervalMs: 5000, remaining: {} },
   };
   let state = reduce(initialGameState(ME), { event: 'room:state', payload: snapshot });

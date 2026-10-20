@@ -4,7 +4,8 @@ import { ChevronLeft, ChevronRight, Copy, Crown, DoorOpen, Globe, Loader2, Lock,
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from 'react';
-import { SNAKE_FIRST_TEAM_SKIN, SNAKE_MAX_PLAYERS, SNAKE_MIN_PLAYERS, SNAKE_SKIN_NAMES, SNAKE_SKINS, snakeViewScaleFor, type SnakeRoomState } from '@/contracts';
+import { CPU_WIN_COINS, SNAKE_CPU_FILL, SNAKE_FIRST_TEAM_SKIN, SNAKE_MAX_PLAYERS, SNAKE_MIN_PLAYERS, SNAKE_SKIN_NAMES, SNAKE_SKINS, snakeViewScaleFor, type SnakeRoomState } from '@/contracts';
+import { Coins } from '@/components/stage/coin';
 import { Button } from '@/components/ui/button';
 import { ConnectionBanner } from '@/features/game/connection-banner';
 import { useProfile } from '@/features/profile/profile-context';
@@ -294,6 +295,10 @@ function Menu({
               </b>
               <span className="text-muted-foreground text-xs">A partida começa com pelo menos {SNAKE_MIN_PLAYERS} pessoas. Compartilhe o código da sala!</span>
             </div>
+          ) : online < SNAKE_CPU_FILL ? (
+            <p className="text-xs text-sky-200">
+              Pouca gente na sala: cobras da CPU completam a arena. Derrubar uma CPU vale <Coins amount={CPU_WIN_COINS} className="align-middle" /> (sem ranking).
+            </p>
           ) : null}
           <Button size="lg" className="h-14 rounded-2xl text-xl [@media(max-height:500px)]:h-11" disabled={busy || waiting} onClick={onPlay}>
             {busy ? <Loader2 aria-hidden className="animate-spin" /> : null}

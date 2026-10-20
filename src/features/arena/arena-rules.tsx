@@ -5,6 +5,9 @@ import {
   COINS_PER_DIAMOND,
   COMEBACK_COINS,
   COMEBACK_LOSSES,
+  CPU_DAILY_CAP,
+  CPU_PLAY_COINS,
+  CPU_WIN_COINS,
   DIAMOND_PACKS,
   DIAMOND_STREAK_BONUS,
   DIAMOND_STREAK_DAYS,
@@ -98,7 +101,9 @@ export function ArenaRules() {
             <li>Partida curta demais não pontua nem rende bônus.</li>
             <li>Enfrentar sempre os mesmos adversários rende cada vez menos em 24 horas.</li>
             <li>Sair no meio é derrota: paga a entrada de novo (vai para quem ficou) e perde pontos.</li>
-            <li>CPU não pontua e não paga nada.</li>
+            <li>
+              Partida com CPU (para treinar ou jogar sozinho) não vale ranking nem aposta: vitória rende {CPU_WIN_COINS} moedas, derrota {CPU_PLAY_COINS}, até {CPU_DAILY_CAP} partidas pagas por dia.
+            </li>
           </ul>
         </section>
       </div>

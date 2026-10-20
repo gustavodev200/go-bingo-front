@@ -10,7 +10,7 @@ const grid = Array.from({ length: 25 }, (_, i) => (i === 12 ? 0 : i + 1));
 
 const push = vi.fn();
 const toast = vi.fn();
-const actions = { generateCard: vi.fn(), start: vi.fn(), cancel: vi.fn(), leave: vi.fn(async () => undefined), kick: vi.fn(), mark: vi.fn(), claim: vi.fn(), replay: vi.fn(), emote: vi.fn() };
+const actions = { generateCard: vi.fn(), start: vi.fn(), cancel: vi.fn(), leave: vi.fn(async () => undefined), kick: vi.fn(), mark: vi.fn(), claim: vi.fn(), replay: vi.fn(), emote: vi.fn(), setCpus: vi.fn() };
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push }), usePathname: () => '/ABC234' }));
 vi.mock('sonner', () => ({ toast: Object.assign((msg: string) => toast(msg), { error: vi.fn(), success: vi.fn() }) }));
@@ -53,7 +53,7 @@ vi.mock('./scene3d/lobby-stage-lazy', () => ({
 
 function room(overrides: Partial<RoomSnapshot> = {}): RoomSnapshot {
   return {
-    code: 'ABC234', name: 'Amigos', hostId: ME, maxPlayers: 10, isPublic: true, status: 'WAITING', winPattern: 'FULL_CARD', stake: 20,
+    code: 'ABC234', name: 'Amigos', hostId: ME, maxPlayers: 10, isPublic: true, status: 'WAITING', winPattern: 'FULL_CARD', stake: 20, cpuPlayers: 0,
     members: [
       { userId: ME, nickname: 'Eu', character: null, slot: 0, isGuest: false, connected: true, hasCard: false },
       { userId: ANA, nickname: 'Ana', character: null, slot: 1, isGuest: true, connected: true, hasCard: true },

@@ -126,6 +126,9 @@ export interface TacadaShootInput {
 export interface TacadaActions {
   leave(): Promise<boolean>;
   ready(ready: boolean): Promise<boolean>;
+  /** Anfitrião, no lobby: uma CPU senta no primeiro lugar vago. */
+  addBot(): Promise<boolean>;
+  removeBot(seat: number): Promise<boolean>;
   setRules(rules: TacadaRules): Promise<boolean>;
   setVisibility(isPublic: boolean): Promise<boolean>;
   setStake(stake: number): Promise<boolean>;
@@ -275,6 +278,8 @@ export function useTacadaRoom(code: string, listeners: TacadaListeners): TacadaA
         return ok;
       },
       ready: (ready) => call('tacada:ready', { ready }),
+      addBot: () => call('tacada:add_bot'),
+      removeBot: (seat) => call('tacada:remove_bot', { seat }),
       setRules: (rules) => call('tacada:set_rules', { rules }),
       setVisibility: (isPublic) => call('tacada:set_visibility', { isPublic }),
       setStake: (stake) => call('tacada:set_stake', { stake }),

@@ -108,6 +108,9 @@ const EXIT_BY_CODE: Partial<Record<ErrorCode, TrucoExit['reason']>> = {
 export interface TrucoActions {
   leave(): Promise<boolean>;
   ready(ready: boolean): Promise<boolean>;
+  /** Anfitrião, no lobby: uma CPU senta no primeiro lugar vago. */
+  addBot(seat?: number): Promise<boolean>;
+  removeBot(seat: number): Promise<boolean>;
   takeSeat(seat: Seat): Promise<boolean>;
   setVisibility(isPublic: boolean): Promise<boolean>;
   setStake(stake: number): Promise<boolean>;
@@ -244,6 +247,8 @@ export function useTrucoRoom(code: string, listeners: TrucoListeners): TrucoActi
         return ok;
       },
       ready: (ready) => call('truco:ready', { ready }),
+      addBot: (seat) => call('truco:add_bot', seat === undefined ? {} : { seat }),
+      removeBot: (seat) => call('truco:remove_bot', { seat }),
       takeSeat: (seat) => call('truco:take_seat', { seat }),
       setVisibility: (isPublic) => call('truco:set_visibility', { isPublic }),
       setStake: (stake) => call('truco:set_stake', { stake }),

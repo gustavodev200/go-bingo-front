@@ -114,6 +114,9 @@ const EXIT_BY_CODE: Partial<Record<ErrorCode, BjExit['reason']>> = {
 export interface BjActions {
   leave(): Promise<boolean>;
   ready(ready: boolean): Promise<boolean>;
+  /** Anfitrião, no lobby: uma CPU senta no primeiro lugar vago. */
+  addBot(): Promise<boolean>;
+  removeBot(seat: number): Promise<boolean>;
   setRules(rules: BjRules): Promise<boolean>;
   setVisibility(isPublic: boolean): Promise<boolean>;
   setStake(stake: number): Promise<boolean>;
@@ -257,6 +260,8 @@ export function useBjRoom(code: string, listeners: BjListeners): BjActions {
         return ok;
       },
       ready: (ready) => call('blackjack:ready', { ready }),
+      addBot: () => call('blackjack:add_bot'),
+      removeBot: (seat) => call('blackjack:remove_bot', { seat }),
       setRules: (rules) => call('blackjack:set_rules', { rules }),
       setVisibility: (isPublic) => call('blackjack:set_visibility', { isPublic }),
       setStake: (stake) => call('blackjack:set_stake', { stake }),

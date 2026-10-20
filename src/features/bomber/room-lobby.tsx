@@ -158,7 +158,7 @@ export function RoomLobby({ state, mySeat, actions }: { state: BomberRoomState; 
         </div>
       </header>
 
-      <StakePicker game="BOMBER" stake={state.stake} players={state.seats.filter((s) => s && !s.bot).length} editable={isHost} onChange={actions.setStake} variant="light" className="mx-3 mt-3" />
+      <StakePicker game="BOMBER" stake={state.stake} players={state.seats.filter((s) => s && !s.bot).length} editable={isHost} onChange={actions.setStake} variant="light" className="mx-3 mt-3" cpu={state.seats.filter((s) => s?.bot).length} />
 
       <ul className="grid flex-1 grid-cols-2 content-start gap-2.5 p-3 sm:grid-cols-4 sm:gap-4 sm:p-5" aria-label="Jogadores">
         {Array.from({ length: BOMBER_SEATS }, (_, seat) => (
