@@ -57,6 +57,13 @@ describe('GamesHub', () => {
     expect(card).toHaveAttribute('href', '/snake');
     expect(within(card).getByText('Até 20 jogadores')).toBeInTheDocument();
   });
+
+  it('lists the Infiltrado leading to its lobby', () => {
+    render(<GamesHub />);
+    const card = screen.getByRole('link', { name: 'Jogar Infiltrado' });
+    expect(card).toHaveAttribute('href', '/infiltrado');
+    expect(within(card).getByText('4 a 15 jogadores')).toBeInTheDocument();
+  });
 });
 
 describe('GameCard', () => {

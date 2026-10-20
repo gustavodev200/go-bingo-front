@@ -154,3 +154,22 @@
     -webkit-tap-highlight-color: transparent;
   }
 }
+/* Infiltrado: the ejected diver drifts across the screen while bubbles rise. */
+@keyframes inf-float {
+  from {
+    transform: translate(-20vw, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(120vw, -50%) rotate(540deg);
+  }
+}
+@keyframes inf-bubble {
+  from {
+    transform: translateY(0);
+    opacity: 0.8;
+  }
+  to {
+    transform: translateY(-110vh);
+    opacity: 0;
+  }
+}
