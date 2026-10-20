@@ -30,6 +30,13 @@ describe('GamesHub', () => {
     expect(within(card).getByText('4 jogadores')).toBeInTheDocument();
   });
 
+  it('lists the Truco Gaudério leading to its lobby', () => {
+    render(<GamesHub />);
+    const card = screen.getByRole('link', { name: 'Jogar Truco Gaudério/Argentino' });
+    expect(card).toHaveAttribute('href', '/gauderio');
+    expect(within(card).getByText('2 ou 4 jogadores')).toBeInTheDocument();
+  });
+
   it('lists the UNO leading to its lobby', () => {
     render(<GamesHub />);
     const card = screen.getByRole('link', { name: 'Jogar UNO' });

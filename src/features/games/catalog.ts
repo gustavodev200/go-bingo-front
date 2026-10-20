@@ -4,6 +4,7 @@ import { BomberArt } from '@/features/bomber/bomber-art';
 import { DamasArt } from '@/features/damas/damas-art';
 import { TacadaArt } from '@/features/tacada/tacada-art';
 import { DominoArt } from '@/features/domino/domino-art';
+import { GauderioArt } from '@/features/gauderio/gauderio-art';
 import { InfiltradoArt } from '@/features/infiltrado/infiltrado-art';
 import { SnakeArt } from '@/features/snake/snake-art';
 import { TrucoArt } from '@/features/truco/truco-art';
@@ -47,6 +48,16 @@ export const GAMES: readonly Game[] = [
     tags: ['4 jogadores', 'Duplas', 'Tempo real'],
     glow: '#22c55e',
     Art: TrucoArt,
+  },
+  {
+    id: 'gauderio',
+    name: 'Truco Gaudério/Argentino',
+    description: 'Baralho espanhol, envido e flor: mano a mano ou em duplas, cante truco, retruco e vale 4 ao vivo.',
+    href: '/gauderio',
+    status: 'available',
+    tags: ['2 ou 4 jogadores', 'Envido e flor', 'Salas públicas'],
+    glow: '#38bdf8',
+    Art: GauderioArt,
   },
   {
     id: 'uno',
