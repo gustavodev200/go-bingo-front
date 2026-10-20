@@ -29,6 +29,14 @@ vi.mock('./connection', () => ({
     return actions;
   },
 }));
+const voice = {
+  view: { status: 'off', muted: false, hasMic: false, speaking: false, peers: [] as { userId: string; speaking: boolean }[] },
+  supported: true,
+  join: vi.fn(),
+  leave: vi.fn(),
+  setMuted: vi.fn(),
+};
+vi.mock('@/features/voice/use-voice-chat', () => ({ useVoiceChat: () => voice }));
 vi.mock('./media/audio', () => ({ unlockAudio: vi.fn(), sfx: vi.fn(), isMuted: () => false, toggleMute: () => true }));
 
 function fakeActions(): InfActions {
@@ -130,11 +138,27 @@ describe('MeetingOverlay', () => {
     expect(actions.act).toHaveBeenCalledWith({ t: 'vote', target: 2 });
   });
 
+  it('joins the meeting voice by itself and lights up who is talking', async () => {
+    voice.view = { status: 'live', muted: false, hasMic: true, speaking: false, peers: [{ userId: 'u2', speaking: true }] };
+    render(<MeetingOverlay state={roomState({ phase: 'PLAYING' })} mySeat={0} frame={frame({ phase: 'meeting', meeting })} actions={actions} />);
+    expect(voice.join).toHaveBeenCalledWith(false);
+    expect(screen.getByRole('button', { name: 'P2, falando' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Desligar microfone' }));
+    expect(voice.setMuted).toHaveBeenCalledWith(true);
+    await userEvent.click(screen.getByRole('button', { name: 'Sair da voz' }));
+    expect(voice.leave).toHaveBeenCalled();
+    voice.view = { status: 'off', muted: false, hasMic: false, speaking: false, peers: [] };
+    localStorage.clear();
+  });
+
   it('ghosts cannot vote but can chat', async () => {
     render(<MeetingOverlay state={roomState({ phase: 'PLAYING' })} mySeat={3} frame={frame({ phase: 'meeting', meeting, me: me({ alive: false }) })} actions={actions} />);
     expect(screen.getByRole('button', { name: /PULAR VOTO/ })).toBeDisabled();
     await userEvent.type(screen.getByLabelText('Mensagem'), 'fui eu não{enter}');
     expect(actions.chat).toHaveBeenCalledWith('fui eu não');
+    // Ghosts never join the voice of the living.
+    expect(voice.join).not.toHaveBeenCalled();
+    expect(screen.getByText(/Fantasmas não falam com os vivos/)).toBeInTheDocument();
   });
 });
 

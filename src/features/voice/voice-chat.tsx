@@ -68,7 +68,7 @@ export function VoiceChatPanel({ voice }: { voice: VoiceChatState }) {
   if (view.status === 'off')
     return (
       <Draggable>
-        <button type="button" onClick={voice.join} aria-label="Entrar no chat de voz" title="Entrar no chat de voz (arraste para mover)" className={cn(roundButton, 'border-violet-300/50 bg-violet-950/70 text-violet-100')}>
+        <button type="button" onClick={() => voice.join()} aria-label="Entrar no chat de voz" title="Entrar no chat de voz (arraste para mover)" className={cn(roundButton, 'border-violet-300/50 bg-violet-950/70 text-violet-100')}>
           <Headphones aria-hidden className="size-5" />
         </button>
       </Draggable>

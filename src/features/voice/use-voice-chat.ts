@@ -10,7 +10,8 @@ import { VOICE_OFF, VoiceEngine, type VoiceDeps, type VoiceView } from './voice-
 export interface VoiceChat {
   view: VoiceView;
   supported: boolean;
-  join(): void;
+  /** Joins the channel; `muted` starts with the microphone off. */
+  join(muted?: boolean): void;
   leave(): void;
   setMuted(muted: boolean): void;
 }
@@ -33,19 +34,22 @@ export function useVoiceChat(game: VoiceGame, code: string, makeDeps: () => Voic
     [game, code],
   );
 
-  const join = useCallback(() => {
-    if (engine.current) return;
-    const created: VoiceEngine = new VoiceEngine(game, code, makeDepsRef.current(), {
-      onChange: (next) => {
-        if (engine.current !== created) return;
-        if (next.status === 'off') engine.current = null;
-        setView(next);
-      },
-      onNotice: (message) => toast(message),
-    });
-    engine.current = created;
-    void created.start();
-  }, [game, code]);
+  const join = useCallback(
+    (muted = false) => {
+      if (engine.current) return;
+      const created: VoiceEngine = new VoiceEngine(game, code, makeDepsRef.current(), {
+        onChange: (next) => {
+          if (engine.current !== created) return;
+          if (next.status === 'off') engine.current = null;
+          setView(next);
+        },
+        onNotice: (message) => toast(message),
+      });
+      engine.current = created;
+      void created.start(muted);
+    },
+    [game, code],
+  );
 
   return useMemo(
     () => ({
