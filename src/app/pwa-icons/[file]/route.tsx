@@ -7,7 +7,7 @@ export function generateStaticParams() {
   return PWA_ICONS.map(({ file }) => ({ file }));
 }
 
-// Mesma marca do DedeGamesMark: bola dourada com "D" e três bolinhas (os jogos) em órbita.
+// Mesma marca do GoPlayersMark: bola dourada com "GO" e três bolinhas (os jogos) em órbita.
 const ORBIT = [
   { color: '#2563eb', angle: -150 },
   { color: '#db2777', angle: -30 },
@@ -77,12 +77,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ fil
               justifyContent: 'center',
               background: '#ffffff',
               color: '#4c1d95',
-              fontSize: Math.round(disc * 0.85),
+              fontSize: Math.round(disc * 0.55),
               fontWeight: 800,
               lineHeight: 1,
             }}
           >
-            D
+            GO
           </div>
         </div>
       </div>

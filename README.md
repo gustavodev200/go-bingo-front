@@ -1,4 +1,4 @@
-## Rodando o DedéGames Front
+## Rodando o GoPlayers Front
 
 ```bash
 cp .env.example .env.local    # Supabase URL/publishable key do seu projeto; API em http://localhost:3333
@@ -19,7 +19,7 @@ Cobertura mínima: 80% (statements/branches/functions/lines), conforme a constit
 
 **Checklist de dispositivos reais (critério de saída do M2)** — marcar em Android (Chrome) e iPhone (Safari), com o front em HTTPS (preview da Vercel) e o back acessível:
 
-- [ ] Android: aparece o card "Instale o DedéGames"; "Instalar" abre o prompt nativo; ícone na tela inicial abre em tela cheia.
+- [ ] Android: aparece o card "Instale o GoPlayers"; "Instalar" abre o prompt nativo; ícone na tela inicial abre em tela cheia.
 - [ ] iPhone: card mostra "Compartilhar → Adicionar à Tela de Início"; ícone abre em tela cheia.
 - [ ] Login com Google a partir do app **instalado** no iPhone volta para o app logado (risco do PRD §8). Se abrir o Safari e não voltar: registrar e orientar "faça login antes de instalar".
 - [ ] Partida completa em retrato e em paisagem; cartela cabe em 320 px; nada atrás do notch/barra inferior.

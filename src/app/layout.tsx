@@ -13,10 +13,10 @@ const fredoka = Fredoka({ variable: '--font-display', subsets: ['latin'], weight
 const luckiestGuy = Luckiest_Guy({ variable: '--font-show', subsets: ['latin'], weight: '400' });
 
 export const metadata: Metadata = {
-  applicationName: 'DedéGames',
-  title: { default: 'DedéGames', template: '%s · DedéGames' },
+  applicationName: 'GoPlayers',
+  title: { default: 'GoPlayers', template: '%s · GoPlayers' },
   description: 'Jogos multiplayer para jogar com os amigos',
-  appleWebApp: { capable: true, title: 'DedéGames', statusBarStyle: 'black-translucent' },
+  appleWebApp: { capable: true, title: 'GoPlayers', statusBarStyle: 'black-translucent' },
   formatDetection: { telephone: false },
   icons: {
     icon: [

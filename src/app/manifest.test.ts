@@ -4,7 +4,7 @@ describe('manifest', () => {
   const m = manifest();
 
   it('is installable standalone in any orientation', () => {
-    expect(m).toMatchObject({ name: 'DedéGames', short_name: 'DedéGames', start_url: '/', display: 'standalone', orientation: 'any', lang: 'pt-BR', theme_color: '#4c1d95' });
+    expect(m).toMatchObject({ name: 'GoPlayers', short_name: 'GoPlayers', start_url: '/', display: 'standalone', orientation: 'any', lang: 'pt-BR', theme_color: '#4c1d95' });
   });
 
   it('declares 192, 512 and maskable icons', () => {

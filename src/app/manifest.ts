@@ -3,8 +3,8 @@ import type { MetadataRoute } from 'next';
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: '/',
-    name: 'DedéGames',
-    short_name: 'DedéGames',
+    name: 'GoPlayers',
+    short_name: 'GoPlayers',
     description: 'Jogos multiplayer para jogar com os amigos',
     start_url: '/',
     scope: '/',

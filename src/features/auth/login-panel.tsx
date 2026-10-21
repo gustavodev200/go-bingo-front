@@ -1,7 +1,7 @@
 'use client';
 
 import { toast } from 'sonner';
-import { DedeGamesMark } from '@/components/brand/dede-games-logo';
+import { GoPlayersMark } from '@/components/brand/goplayers-logo';
 import { ConfettiRain } from '@/components/stage/stage';
 import { Button } from '@/components/ui/button';
 import { isInAppBrowser } from '@/lib/in-app-browser';
@@ -23,8 +23,8 @@ export function LoginPanel({ userAgent, next }: { userAgent: string; next: strin
     <main className="relative flex min-h-dvh items-center justify-center">
       <ConfettiRain />
       <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-5 px-4 py-8">
-        <DedeGamesMark className="size-32" />
-        <h1 className="font-show text-marquee text-5xl leading-none tracking-wide">DedéGames</h1>
+        <GoPlayersMark className="size-32" />
+        <h1 className="font-show text-marquee text-5xl leading-none tracking-wide">GoPlayers</h1>
         <p className="text-center text-sm font-medium text-violet-100/90">
           Vários jogos, um só salão. <span className="text-amber-300">Chame a galera!</span>
         </p>

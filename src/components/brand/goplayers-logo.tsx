@@ -1,14 +1,14 @@
 import { cn } from '@/lib/utils';
 
-/** Bolinhas orbitando o "D": cada uma é um jogo do salão (cores das bolas do bingo). */
+/** Bolinhas orbitando o "GO": cada uma é um jogo do salão (cores das bolas do bingo). */
 const ORBIT = [
   { color: '#2563eb', angle: -150 },
   { color: '#db2777', angle: -30 },
   { color: '#16a34a', angle: 90 },
 ] as const;
 
-/** Marca da plataforma: bola dourada com "D" e três bolinhas orbitando, uma por jogo. Decorativa. */
-export function DedeGamesMark({ className }: { className?: string }) {
+/** Marca da plataforma: bola dourada com "GO" e três bolinhas orbitando, uma por jogo. Decorativa. */
+export function GoPlayersMark({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 100 100" aria-hidden className={cn('shrink-0 drop-shadow-[0_0_10px_rgb(251_191_36/0.5)]', className)}>
       <defs>
@@ -23,19 +23,22 @@ export function DedeGamesMark({ className }: { className?: string }) {
       ))}
       <circle cx="50" cy="50" r="27" fill="url(#gu-ball)" />
       <circle cx="50" cy="50" r="16" fill="#fff" />
-      <text x="50" y="58.5" textAnchor="middle" fontSize="25" fontWeight="800" fill="#4c1d95" fontFamily="var(--font-show), sans-serif">
-        D
+      <text x="50" y="56" textAnchor="middle" fontSize="17" fontWeight="800" fill="#4c1d95" fontFamily="var(--font-show), sans-serif">
+        GO
       </text>
     </svg>
   );
 }
 
-/** Marca + nome "DedéGames" no dourado do letreiro. */
-export function DedeGamesLogo({ className }: { className?: string }) {
+/** Marca + nome no dourado do letreiro: "GoPlayers" a partir de sm, só "GO" no mobile. */
+export function GoPlayersLogo({ className }: { className?: string }) {
   return (
     <span className={cn('flex items-center gap-2', className)}>
-      <DedeGamesMark className="size-10" />
-      <span className="font-show text-marquee text-2xl leading-none tracking-wide">DedéGames</span>
+      <GoPlayersMark className="size-10" />
+      <span className="font-show text-marquee text-2xl leading-none tracking-wide">
+        <span className="sm:hidden">GO</span>
+        <span className="hidden sm:inline">GoPlayers</span>
+      </span>
     </span>
   );
 }
