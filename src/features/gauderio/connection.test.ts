@@ -12,7 +12,7 @@ vi.mock('sonner', () => ({ toast: { error: (msg: string) => toastError(msg) } })
 const snapshot = { state: roomState(), mySeat: 0, hand: privateHand() };
 
 function listeners(): GaudListeners {
-  return { onAnnouncement: vi.fn(), onError: vi.fn() };
+  return { onAnnouncement: vi.fn(), onChat: vi.fn(), onError: vi.fn() };
 }
 
 async function mount(join: unknown = { ok: true, data: snapshot }, l = listeners()) {
@@ -52,14 +52,16 @@ describe('useGaudRoom', () => {
     expect(l.onAnnouncement).toHaveBeenCalledWith({ event: 'gauderio:called', payload: msg });
   });
 
-  it('routes states and hands', async () => {
-    await mount();
+  it('routes states, hands and chat', async () => {
+    const { l } = await mount();
     act(() => {
       socket.fire('gauderio:state', roomState({ version: 2, scores: [4, 2] }));
       socket.fire('gauderio:private_hand', privateHand({ handNumber: 2 }));
     });
     expect(useGaudStore.getState().state!.scores).toEqual([4, 2]);
     expect(useGaudStore.getState().hand!.handNumber).toBe(2);
+    act(() => socket.fire('gauderio:chat_message', { seat: 1, to: 'table', text: 'Bah!', bot: true }));
+    expect(l.onChat).toHaveBeenCalledWith({ seat: 1, to: 'table', text: 'Bah!', bot: true });
     act(() => socket.fire('gauderio:room_closed', { reason: 'empty' }));
     expect(useGaudStore.getState().exit!.reason).toBe('not_found');
   });

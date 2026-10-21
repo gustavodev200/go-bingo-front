@@ -78,6 +78,7 @@ export function GauderioRoomScreen({ code }: { code: string }) {
         if (reaction.side) addEffect({ kind: 'side', result: reaction.side });
         playReaction(reaction, prefs.current, deps());
       },
+      onChat: (message) => useGaudStore.getState().addChat(message),
       onError: () => playReaction({ sfx: 'error' }, prefs.current, deps()),
     };
   }, []);

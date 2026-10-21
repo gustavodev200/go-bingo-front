@@ -53,5 +53,8 @@ describe('useGaudStore', () => {
     expect(useGaudStore.getState().effects).toHaveLength(1);
     s.removeEffect(id);
     expect(useGaudStore.getState().effects).toHaveLength(0);
+    s.addChat({ seat: 1, to: 'table', text: 'Vem que tem!', bot: true });
+    expect(useGaudStore.getState().chat).toHaveLength(1);
+    expect(useGaudStore.getState().effects[0]).toMatchObject({ kind: 'say', seat: 1 });
   });
 });

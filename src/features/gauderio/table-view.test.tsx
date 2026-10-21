@@ -25,7 +25,7 @@ describe('TableView (Truco Gaudério)', () => {
     const hand = screen.getByRole('list', { name: 'Suas cartas' });
     expect(within(hand).getAllByRole('button')).toHaveLength(3);
     expect(screen.getByRole('button', { name: 'Jogar Ás de espadas (Espadão)' })).toBeEnabled();
-    expect(screen.getByText('Envido: 33')).toBeInTheDocument();
+    expect(screen.getByText(/Envido: 33/)).toHaveTextContent('Envido: 33= 20 + 7 + 6');
     expect(screen.getByText('Sua vez!')).toBeInTheDocument();
   });
 

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { GaudPrivateHand, GaudRoomState, GaudSeat, GaudSideResult, GaudSnapshot } from '@/contracts';
+import type { GaudChatMessage, GaudPrivateHand, GaudRoomState, GaudSeat, GaudSideResult, GaudSnapshot } from '@/contracts';
 
 export type GaudConnection = 'connecting' | 'online' | 'reconnecting';
 
@@ -14,7 +14,11 @@ export type GaudEffect =
   | { id: number; kind: 'shout'; text: string; tone: ShoutTone }
   | { id: number; kind: 'banner'; text: string; tone: ShoutTone }
   /** Placa explicando como saiu um envido/flor (quem, quantos pontos, por quê). */
-  | { id: number; kind: 'side'; result: GaudSideResult };
+  | { id: number; kind: 'side'; result: GaudSideResult }
+  /** Balão de fala do chat em cima de quem falou. */
+  | { id: number; kind: 'say'; seat: GaudSeat; text: string; to: GaudChatMessage['to'] };
+
+export type GaudChatEntry = GaudChatMessage & { id: number };
 
 type NewEffect = GaudEffect extends infer E ? (E extends GaudEffect ? Omit<E, 'id'> : never) : never;
 
@@ -29,7 +33,10 @@ interface GaudStore {
   /** Maior seq de anúncio já tratado; igual ou menor é repetido. */
   lastSeq: number;
   effects: GaudEffect[];
+  /** Últimas frases do chat desta mesa. */
+  chat: GaudChatEntry[];
   reset(): void;
+  addChat(message: GaudChatMessage): void;
   setConnection(connection: GaudConnection): void;
   setExit(exit: GaudExit | null): void;
   applySnapshot(snapshot: GaudSnapshot): void;
@@ -51,6 +58,7 @@ const initial = {
   exit: null,
   lastSeq: 0,
   effects: [],
+  chat: [],
 };
 
 function seatOf(state: GaudRoomState, userId: string | null): GaudSeat | null {
@@ -95,6 +103,13 @@ export const useGaudStore = create<GaudStore>((set, get) => ({
     const id = ++effectId;
     set((s) => ({ effects: [...s.effects.slice(-5), { ...effect, id } as GaudEffect] }));
     return id;
+  },
+  addChat: (message) => {
+    const id = ++effectId;
+    set((s) => ({
+      chat: [...s.chat.slice(-19), { ...message, id }],
+      effects: [...s.effects.slice(-5), { id, kind: 'say', seat: message.seat, text: message.text, to: message.to }],
+    }));
   },
   removeEffect: (id) => set((s) => ({ effects: s.effects.filter((e) => e.id !== id) })),
 }));

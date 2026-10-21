@@ -47,7 +47,7 @@ export function roomState(over: Partial<GaudRoomState> = {}): GaudRoomState {
 }
 
 export function handActions(over: Partial<GaudActions> = {}): GaudActions {
-  return { canPlay: true, canHide: false, canFold: true, calls: ['truco', 'envido', 'real_envido', 'falta_envido'], canAccept: false, canDecline: false, ...over };
+  return { canPlay: true, canHide: false, canFold: true, calls: ['truco', 'envido', 'real_envido', 'falta_envido'], canAccept: false, canDecline: false, envidoNote: null, ...over };
 }
 
 export function privateHand(over: Partial<GaudPrivateHand> = {}): GaudPrivateHand {
@@ -59,6 +59,10 @@ export function privateHand(over: Partial<GaudPrivateHand> = {}): GaudPrivateHan
       { id: 'h1s0c2', card: { rank: 6, suit: 'copas' } },
     ],
     envido: 33,
+    envidoCards: [
+      { rank: 7, suit: 'copas' },
+      { rank: 6, suit: 'copas' },
+    ],
     flor: false,
     actions: handActions(),
     votes: null,
@@ -83,5 +87,6 @@ export function gaudActions(): GaudActionsApi {
     call: ok(),
     respond: ok(),
     fold: ok(),
+    chat: ok(),
   };
 }

@@ -2,7 +2,7 @@
 
 import { EyeOff } from 'lucide-react';
 import { useState } from 'react';
-import type { GaudHandCard } from '@/contracts';
+import { envidoValue, type GaudCard, type GaudHandCard } from '@/contracts';
 import { useBusy } from '@/features/truco/action-bar';
 import trucoStyles from '@/features/truco/truco.module.css';
 import { cn } from '@/lib/utils';
@@ -14,12 +14,18 @@ export function MyHand({
   canPlay,
   canHide,
   envido,
+  envidoCards = [],
+  envidoNote = null,
   onPlay,
 }: {
   cards: GaudHandCard[];
   canPlay: boolean;
   canHide: boolean;
   envido: number;
+  /** Cartas que formam o envido (para mostrar a conta). */
+  envidoCards?: GaudCard[];
+  /** Por que o envido não está liberado agora. */
+  envidoNote?: string | null;
   onPlay(cardId: string, hidden: boolean): Promise<unknown>;
 }) {
   const { busy, run } = useBusy();
@@ -55,8 +61,9 @@ export function MyHand({
         })}
       </ul>
       <div className="flex items-center gap-2 text-xs">
-        <span className="rounded-full bg-sky-950/70 px-2 py-0.5 font-bold text-sky-100 ring-1 ring-sky-400/40" title="Pontos de envido das suas 3 cartas">
+        <span className="rounded-full bg-sky-950/70 px-2 py-0.5 font-bold text-sky-100 ring-1 ring-sky-400/40" title="Pontos de envido das suas 3 cartas (10, 11 e 12 valem zero)">
           Envido: {envido}
+          {envidoCards.length > 0 && <span className="ml-1 font-semibold text-sky-200/80">= {envidoSum(envidoCards)}</span>}
         </span>
         {canHide && (
           <label className="flex cursor-pointer items-center gap-1 rounded-full bg-black/30 px-2 py-0.5 font-semibold text-violet-100 has-checked:bg-slate-200 has-checked:text-slate-900">
@@ -65,6 +72,20 @@ export function MyHand({
           </label>
         )}
       </div>
+      {envidoNote && (
+        <p role="note" className="text-center text-[11px] font-semibold text-amber-200/90">
+          {envidoNote}
+        </p>
+      )}
     </div>
   );
+}
+
+const FIGURE: Record<number, string> = { 10: 'Sota', 11: 'Cavalo', 12: 'Rei' };
+const cardPoints = (c: GaudCard) => (FIGURE[c.rank] ? `${FIGURE[c.rank]} 0` : `${envidoValue(c)}`);
+
+/** A conta do envido: "20 + 7 + Sota 0" (mesmo naipe) ou só a carta mais alta. */
+export function envidoSum(cards: GaudCard[]): string {
+  if (cards.length === 2) return `20 + ${cards.map(cardPoints).join(' + ')}`;
+  return cards.map(cardPoints).join('');
 }

@@ -16,7 +16,8 @@ import { ActionBar } from './action-bar';
 import type { GaudActionsApi } from './connection';
 import styles from './gauderio.module.css';
 import { MyHand } from './my-hand';
-import { PendingStrip, RoundBanner, Scoreboard, SeatBadge, ShoutOverlay, SideResultCard, TableCenter } from './table-parts';
+import { ChatPanel } from './chat-panel';
+import { PendingStrip, RoundBanner, SayBubble, Scoreboard, SeatBadge, ShoutOverlay, SideResultCard, TableCenter } from './table-parts';
 import { finishText, otherSeats, positionOf, type TablePosition } from './view';
 
 const PLACE: Record<Exclude<TablePosition, 'bottom'>, string> = {
@@ -177,6 +178,7 @@ export function TableView({ state, mySeat, hand, actions, audio }: { state: Gaud
               );
             return (
               <div key={seat} className={cn('absolute z-10', PLACE[pos])}>
+                <SayBubble seat={seat} below={pos === 'top'} align={pos === 'left' ? 'start' : pos === 'right' ? 'end' : 'center'} />
                 <SeatBadge
                   player={player}
                   position={pos}
@@ -212,13 +214,24 @@ export function TableView({ state, mySeat, hand, actions, audio }: { state: Gaud
           />
         )}
         <div className="flex items-end justify-between gap-2">
-          <div className="w-14 sm:w-24" />
+          <div className="flex w-14 justify-center sm:w-24">{playing && <ChatPanel state={state} mySeat={mySeat} onSend={actions.chat} />}</div>
           <div className="min-w-0 flex-1">
-            {hand && playing && <MyHand cards={hand.cards} canPlay={hand.actions.canPlay} canHide={hand.actions.canHide} envido={hand.envido} onPlay={actions.playCard} />}
+            {hand && playing && (
+              <MyHand
+                cards={hand.cards}
+                canPlay={hand.actions.canPlay}
+                canHide={hand.actions.canHide}
+                envido={hand.envido}
+                envidoCards={hand.envidoCards}
+                envidoNote={hand.actions.envidoNote}
+                onPlay={actions.playCard}
+              />
+            )}
           </div>
           {me && (
             <div className="flex w-14 flex-col items-center gap-1 sm:w-24">
               <div className={cn('relative rounded-full p-0.5 ring-3', TEAM_TONE.us.ring, myTurn && trucoStyles.turn)}>
+                <SayBubble seat={mySeat} align="end" />
                 <div className="flex size-11 items-end justify-center overflow-hidden rounded-full bg-violet-950/70 sm:size-14">
                   <Avatar id={me.userId} character={me.character} className="w-[85%] translate-y-[6%]" />
                 </div>
