@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { GaudPrivateHand, GaudRoomState, GaudSeat, GaudSnapshot } from '@/contracts';
+import type { GaudPrivateHand, GaudRoomState, GaudSeat, GaudSideResult, GaudSnapshot } from '@/contracts';
 
 export type GaudConnection = 'connecting' | 'online' | 'reconnecting';
 
@@ -10,7 +10,11 @@ export interface GaudExit {
 
 export type ShoutTone = 'bet' | 'good' | 'bad' | 'info';
 
-export type GaudEffect = { id: number; kind: 'shout'; text: string; tone: ShoutTone } | { id: number; kind: 'banner'; text: string; tone: ShoutTone };
+export type GaudEffect =
+  | { id: number; kind: 'shout'; text: string; tone: ShoutTone }
+  | { id: number; kind: 'banner'; text: string; tone: ShoutTone }
+  /** Placa explicando como saiu um envido/flor (quem, quantos pontos, por quê). */
+  | { id: number; kind: 'side'; result: GaudSideResult };
 
 type NewEffect = GaudEffect extends infer E ? (E extends GaudEffect ? Omit<E, 'id'> : never) : never;
 

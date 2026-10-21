@@ -61,11 +61,27 @@ export function privateHand(over: Partial<GaudPrivateHand> = {}): GaudPrivateHan
     envido: 33,
     flor: false,
     actions: handActions(),
+    votes: null,
     ...over,
   };
 }
 
 export function gaudActions(): GaudActionsApi {
   const ok = () => vi.fn(async () => true);
-  return { leave: ok(), ready: ok(), addBot: ok(), removeBot: ok(), takeSeat: ok(), setVisibility: ok(), setStake: ok(), setSettings: ok(), start: ok(), rematch: ok(), playCard: ok(), call: ok(), respond: ok(), fold: ok() };
+  return {
+    leave: ok(),
+    ready: ok(),
+    addBot: ok(),
+    removeBot: ok(),
+    takeSeat: ok(),
+    setVisibility: ok(),
+    setStake: ok(),
+    setSettings: ok(),
+    start: ok(),
+    rematch: ok(),
+    playCard: ok(),
+    call: ok(),
+    respond: ok(),
+    fold: ok(),
+  };
 }

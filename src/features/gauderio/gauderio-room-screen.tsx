@@ -75,6 +75,7 @@ export function GauderioRoomScreen({ code }: { code: string }) {
         const reaction = reactionFor(msg, seat);
         if (reaction.shout) addEffect({ kind: 'shout', ...reaction.shout });
         if (reaction.banner) addEffect({ kind: 'banner', ...reaction.banner });
+        if (reaction.side) addEffect({ kind: 'side', result: reaction.side });
         playReaction(reaction, prefs.current, deps());
       },
       onError: () => playReaction({ sfx: 'error' }, prefs.current, deps()),

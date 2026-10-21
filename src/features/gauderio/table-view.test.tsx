@@ -49,7 +49,7 @@ describe('TableView (Truco Gaudério)', () => {
   });
 
   it('responde ao canto do adversário com quero, não quero ou aumento', async () => {
-    const state = roomState({ match: matchView({ turn: 1, phase: 'AWAITING_RESPONSE', pending: { kind: 'truco', call: 'truco', chain: ['truco'], seat: 1, team: 1 } }) });
+    const state = roomState({ match: matchView({ turn: 1, phase: 'AWAITING_RESPONSE', pending: { kind: 'truco', call: 'truco', chain: ['truco'], seat: 1, team: 1, votes: 0 } }) });
     const a = renderTable({ state, hand: privateHand({ actions: handActions({ canPlay: false, canFold: false, calls: ['retruco', 'envido'], canAccept: true, canDecline: true }) }) });
     const group = screen.getByRole('group', { name: 'Responder canto' });
     expect(within(group).getByText(/Cantaram Truco/)).toBeInTheDocument();
@@ -63,15 +63,50 @@ describe('TableView (Truco Gaudério)', () => {
   });
 
   it('avisa da flor e espera quando a resposta é dos outros', () => {
-    const state = roomState({ match: matchView({ phase: 'AWAITING_RESPONSE', pending: { kind: 'envido', call: 'envido', chain: ['envido'], seat: 0, team: 0 } }) });
+    const state = roomState({ match: matchView({ phase: 'AWAITING_RESPONSE', pending: { kind: 'envido', call: 'envido', chain: ['envido'], seat: 0, team: 0, votes: 0 } }) });
     renderTable({ state, hand: privateHand({ actions: handActions({ canPlay: false, canFold: false, calls: [] }) }) });
     expect(screen.getByText('Esperando a resposta ao Envido…')).toBeInTheDocument();
   });
 
-  it('pede a flor antes de jogar', () => {
-    renderTable({ hand: privateHand({ flor: true, actions: handActions({ canPlay: false, calls: ['truco', 'flor'] }) }) });
+  it('a flor é opcional: dá para jogar a carta ou cantar', () => {
+    renderTable({ hand: privateHand({ flor: true, actions: handActions({ calls: ['truco', 'envido', 'flor'] }) }) });
     expect(screen.getByRole('button', { name: 'Flor!' })).toBeInTheDocument();
-    expect(screen.getByText('Você tem flor: cante antes de jogar!')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Jogar Ás de espadas (Espadão)' })).toBeEnabled();
+    expect(screen.getByText(/Cantar é opcional/)).toBeInTheDocument();
+  });
+
+  it('em duplas a resposta é votada e mostra o voto do parceiro', async () => {
+    const seats = [0, 1, 2, 3].map((s) => seatPlayer(s as 0 | 1 | 2 | 3));
+    const match = matchView({ turn: 1, cardsLeft: [3, 3, 3, 3], phase: 'AWAITING_RESPONSE', pending: { kind: 'truco', call: 'truco', chain: ['truco'], seat: 1, team: 1, votes: 1 } });
+    const a = renderTable({
+      state: roomState({ settings: { size: 4, target: 12, flor: true }, seats, match }),
+      hand: privateHand({ votes: { mine: 'accept', partner: 'retruco' }, actions: handActions({ canPlay: false, canFold: false, calls: ['retruco'], canAccept: true, canDecline: true }) }),
+    });
+    expect(screen.getByText(/Votação da dupla/)).toBeInTheDocument();
+    expect(screen.getByText('Caio votou: Retruco!')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Quero' })).toHaveAttribute('aria-pressed', 'true');
+    await userEvent.click(screen.getByRole('button', { name: 'Não quero' }));
+    expect(a.respond).toHaveBeenCalledWith(false);
+  });
+
+  it('com parceiro CPU não tem votação', () => {
+    const seats = [seatPlayer(0), seatPlayer(1), seatPlayer(2, { bot: true }), seatPlayer(3)];
+    const match = matchView({ turn: 1, cardsLeft: [3, 3, 3, 3], phase: 'AWAITING_RESPONSE', pending: { kind: 'truco', call: 'truco', chain: ['truco'], seat: 1, team: 1, votes: 0 } });
+    renderTable({
+      state: roomState({ settings: { size: 4, target: 12, flor: true }, seats, match }),
+      hand: privateHand({ actions: handActions({ canPlay: false, canFold: false, calls: [], canAccept: true, canDecline: true }) }),
+    });
+    expect(screen.queryByText(/Votação da dupla/)).not.toBeInTheDocument();
+  });
+
+  it('explica como saiu a flor na placa', () => {
+    useGaudStore.getState().addEffect({
+      kind: 'side',
+      result: { kind: 'flor', winnerTeam: 1, points: 6, seat: 1, chain: ['flor', 'contraflor'], accepted: true, outcome: 'compared', teamPoints: [26, 33], bestSeats: [0, 1] },
+    });
+    renderTable();
+    expect(screen.getByText('🌸 Flor de Bia: 33!')).toBeInTheDocument();
+    expect(screen.getByText('33 contra 26 de você · Flor → Contra-flor · +6 para eles')).toBeInTheDocument();
   });
 
   it('em duplas mostra os três outros lugares e os cards da rodada', () => {
@@ -98,8 +133,24 @@ describe('TableView (Truco Gaudério)', () => {
   });
 
   it('mostra o resultado e oferece revanche', async () => {
-    const a = renderTable({ state: roomState({ phase: 'FINISHED', scores: [12, 7], result: { winnerTeam: 0, reason: 'points', scores: [12, 7] } }) });
+    const a = renderTable({
+      state: roomState({
+        phase: 'FINISHED',
+        scores: [12, 7],
+        result: {
+          winnerTeam: 0,
+          reason: 'points',
+          scores: [12, 7],
+          finish: {
+            by: 'flor',
+            points: 3,
+            side: { kind: 'flor', winnerTeam: 0, points: 3, seat: 1, chain: ['flor'], accepted: false, outcome: 'uncontested', teamPoints: [null, null], bestSeats: [null, null] },
+          },
+        },
+      }),
+    });
     expect(screen.getByRole('heading', { name: 'Vitória!' })).toBeInTheDocument();
+    expect(screen.getByText(/Fecharam com a flor de Bia \(\+3\)/)).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /Jogar de novo/ }));
     expect(a.rematch).toHaveBeenCalled();
   });

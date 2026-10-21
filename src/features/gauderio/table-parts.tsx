@@ -9,7 +9,7 @@ import trucoStyles from '@/features/truco/truco.module.css';
 import { cn } from '@/lib/utils';
 import { SpanishCard } from './spanish-card';
 import { useGaudStore, type GaudEffect, type ShoutTone } from './store';
-import { positionOf, TRUCO_VALUE_NAME, visibleRound, type TablePosition } from './view';
+import { describeSide, positionOf, TRUCO_VALUE_NAME, visibleRound, type TablePosition } from './view';
 
 // ---------------------------------------------------------------------------
 // Lugar de um adversário/parceiro na mesa
@@ -177,7 +177,7 @@ export function PendingStrip({ match }: { match: GaudMatchView }) {
 // Gritos e faixas
 // ---------------------------------------------------------------------------
 
-const LIFETIME: Record<GaudEffect['kind'], number> = { shout: 1_700, banner: 2_600 };
+const LIFETIME: Record<GaudEffect['kind'], number> = { shout: 1_700, banner: 2_600, side: 5_500 };
 
 /** Tira cada efeito visual depois da animação, para o store nunca crescer. */
 export function useEffectsExpiry() {
@@ -245,6 +245,33 @@ export function RoundBanner() {
       <span key={banner.id} className={cn('rounded-full px-5 py-2 text-center text-base font-black shadow-[0_6px_0_rgb(0_0_0/0.3)] sm:text-lg', BANNER_TONE[banner.tone], trucoStyles.bubble)}>
         {banner.text}
       </span>
+    </div>
+  );
+}
+
+/**
+ * Placa que explica como saiu o último envido/flor: quem marcou, os pontos de cada
+ * lado e por quê (comparação, fuga ou flor sem flor do outro lado).
+ */
+export function SideResultCard({ myTeam, nameOf }: { myTeam: GaudTeam; nameOf(seat: GaudSeat): string }) {
+  const effect = useGaudStore((s) => s.effects.findLast((e) => e.kind === 'side'));
+  if (!effect || effect.kind !== 'side') return null;
+  const { title, detail, ours } = describeSide(effect.result, myTeam, nameOf);
+  const flor = effect.result.kind === 'flor';
+  return (
+    <div className="pointer-events-none absolute inset-x-0 top-[22%] z-20 flex justify-center px-3" role="status" aria-live="polite">
+      <div
+        key={effect.id}
+        className={cn(
+          'flex max-w-sm flex-col items-center gap-0.5 rounded-2xl px-4 py-2 text-center shadow-[0_6px_0_rgb(0_0_0/0.3)] ring-2',
+          flor ? 'bg-fuchsia-950/90 ring-fuchsia-300' : 'bg-sky-950/90 ring-sky-300',
+          trucoStyles.bubble,
+        )}
+        style={{ animationDuration: '5.5s' }}
+      >
+        <span className={cn('font-display text-lg font-black sm:text-xl', ours ? 'text-emerald-200' : 'text-rose-200')}>{title}</span>
+        <span className="text-xs font-semibold text-white/90 sm:text-sm">{detail}</span>
+      </div>
     </div>
   );
 }

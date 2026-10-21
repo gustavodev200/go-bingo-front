@@ -1,4 +1,4 @@
-import { GAUD_CALL_LABEL, gaudManilhaName, gaudTeamOf, type GaudCall, type GaudSeat, type GaudServerEventPayloads } from '@/contracts';
+import { GAUD_CALL_LABEL, gaudManilhaName, gaudTeamOf, type GaudCall, type GaudSeat, type GaudServerEventPayloads, type GaudSideResult } from '@/contracts';
 import type { TrucoSfx } from '@/features/game/sound/sfx';
 import type { ShoutTone } from './store';
 
@@ -10,6 +10,8 @@ export type Announced = {
 export interface Reaction {
   shout?: { text: string; tone: ShoutTone };
   banner?: { text: string; tone: ShoutTone };
+  /** Envido/flor resolvido: a mesa mostra uma placa com quem marcou e por quê. */
+  side?: GaudSideResult;
   sfx?: TrucoSfx;
   /** Frase para a voz (SpeechSynthesis). Nunca essencial: o grito e o estado dizem o mesmo. */
   speech?: string;
@@ -51,14 +53,15 @@ export function reactionFor(msg: Announced, mySeat: GaudSeat): Reaction {
       const { call, team } = msg.payload;
       return { shout: { text: `${GAUD_CALL_LABEL[call].toUpperCase()}!`, tone: 'bet' }, sfx: 'truco', speech: team !== myTeam ? SPEECH[call] : undefined };
     }
+    case 'gauderio:voted':
+      // O voto em si chega só na mão privada; aqui só avisamos que o parceiro votou.
+      return msg.payload.seat !== mySeat && msg.payload.team === myTeam ? { banner: { text: 'Seu parceiro votou', tone: 'info' } } : {};
     case 'gauderio:responded':
       return msg.payload.accept ? { shout: { text: 'QUERO!', tone: 'good' }, sfx: 'accept', speech: 'Quero!' } : { shout: { text: 'NÃO QUERO!', tone: 'info' }, sfx: 'run', speech: 'Não quero!' };
     case 'gauderio:side_resolved': {
-      const { kind, winnerTeam, points, teamPoints, accepted } = msg.payload;
-      const ours = winnerTeam === myTeam;
-      const name = kind === 'flor' ? 'Flor' : 'Envido';
-      const detail = accepted && teamPoints[0] !== null && teamPoints[1] !== null ? ` (${teamPoints[myTeam]} × ${teamPoints[1 - myTeam]})` : '';
-      return { banner: { text: `${name}: ${ours ? 'nós' : 'eles'} +${points}${detail}`, tone: ours ? 'good' : 'bad' }, sfx: ours ? 'hand-won' : 'hand-lost' };
+      const ours = msg.payload.winnerTeam === myTeam;
+      const flor = msg.payload.kind === 'flor';
+      return { side: msg.payload, sfx: ours ? 'hand-won' : 'hand-lost', speech: flor && ours ? 'Flor! Essa é nossa!' : undefined };
     }
     case 'gauderio:folded':
       return msg.payload.team === myTeam ? { banner: { text: 'Fomos ao baralho', tone: 'bad' }, sfx: 'run' } : { banner: { text: 'Foram ao baralho!', tone: 'good' }, sfx: 'run' };
