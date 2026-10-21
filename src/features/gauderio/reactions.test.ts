@@ -10,11 +10,16 @@ describe('reactionFor', () => {
     expect(mine.speech).toBeUndefined();
   });
 
-  it('conta o resultado do envido do meu lado', () => {
-    const r = reactionFor({ event: 'gauderio:side_resolved', payload: { seq: 1, kind: 'envido', winnerTeam: 1, points: 2, accepted: true, teamPoints: [27, 31], bestSeats: [0, 1] } }, 1);
-    expect(r.banner).toEqual({ text: 'Envido: nós +2 (31 × 27)', tone: 'good' });
-    const flor = reactionFor({ event: 'gauderio:side_resolved', payload: { seq: 2, kind: 'flor', winnerTeam: 0, points: 3, accepted: false, teamPoints: [null, null], bestSeats: [null, null] } }, 1);
-    expect(flor.banner).toEqual({ text: 'Flor: eles +3', tone: 'bad' });
+  it('manda o envido/flor para a placa explicativa', () => {
+    const payload = { seq: 1, kind: 'flor', winnerTeam: 1, seat: 1, chain: ['flor'], points: 3, accepted: false, outcome: 'uncontested', teamPoints: [null, null], bestSeats: [null, null] } as const;
+    const r = reactionFor({ event: 'gauderio:side_resolved', payload: { ...payload, chain: ['flor'], teamPoints: [null, null], bestSeats: [null, null] } }, 1);
+    expect(r.side).toMatchObject({ kind: 'flor', seat: 1 });
+    expect(r.speech).toBe('Flor! Essa é nossa!');
+  });
+
+  it('avisa quando o parceiro votou', () => {
+    expect(reactionFor({ event: 'gauderio:voted', payload: { seq: 1, seat: 2, team: 0 } }, 0).banner?.text).toBe('Seu parceiro votou');
+    expect(reactionFor({ event: 'gauderio:voted', payload: { seq: 1, seat: 1, team: 1 } }, 0)).toEqual({});
   });
 
   it('reage às rodadas, mãos, respostas e fim de partida', () => {
@@ -26,8 +31,8 @@ describe('reactionFor', () => {
     expect(reactionFor({ event: 'gauderio:folded', payload: { seq: 1, seat: 1, team: 1 } }, 0).banner?.text).toBe('Foram ao baralho!');
     expect(reactionFor({ event: 'gauderio:card_played', payload: { seq: 1, seat: 0, card: { rank: 1, suit: 'espadas' }, hidden: false, round: 1 } }, 0).shout?.text).toBe('ESPADÃO!');
     expect(reactionFor({ event: 'gauderio:card_played', payload: { seq: 1, seat: 0, card: null, hidden: true, round: 2 } }, 0).sfx).toBe('card');
-    expect(reactionFor({ event: 'gauderio:match_over', payload: { seq: 1, winnerTeam: 0, reason: 'points', scores: [12, 3] } }, 0).shout?.text).toBe('VITÓRIA!');
-    expect(reactionFor({ event: 'gauderio:match_over', payload: { seq: 1, winnerTeam: 1, reason: 'points', scores: [3, 12] } }, 0).shout?.text).toBe('DERROTA');
+    expect(reactionFor({ event: 'gauderio:match_over', payload: { seq: 1, winnerTeam: 0, reason: 'points', scores: [12, 3], finish: null } }, 0).shout?.text).toBe('VITÓRIA!');
+    expect(reactionFor({ event: 'gauderio:match_over', payload: { seq: 1, winnerTeam: 1, reason: 'points', scores: [3, 12], finish: null } }, 0).shout?.text).toBe('DERROTA');
     expect(reactionFor({ event: 'gauderio:player_reconnected', payload: { seq: 1, seat: 1 } }, 0)).toEqual({});
   });
 });

@@ -16,8 +16,8 @@ import { ActionBar } from './action-bar';
 import type { GaudActionsApi } from './connection';
 import styles from './gauderio.module.css';
 import { MyHand } from './my-hand';
-import { PendingStrip, RoundBanner, Scoreboard, SeatBadge, ShoutOverlay, TableCenter } from './table-parts';
-import { otherSeats, positionOf, type TablePosition } from './view';
+import { PendingStrip, RoundBanner, Scoreboard, SeatBadge, ShoutOverlay, SideResultCard, TableCenter } from './table-parts';
+import { finishText, otherSeats, positionOf, type TablePosition } from './view';
 
 const PLACE: Record<Exclude<TablePosition, 'bottom'>, string> = {
   top: 'top-[3%] left-1/2 -translate-x-1/2',
@@ -71,6 +71,7 @@ export function ResultPanel({
   myTeam,
   target,
   solo,
+  nameOf,
   onRematch,
   onLeave,
 }: {
@@ -78,12 +79,14 @@ export function ResultPanel({
   myTeam: GaudTeam;
   target: number;
   solo: boolean;
+  nameOf(seat: GaudSeat): string;
   onRematch(): Promise<unknown>;
   onLeave(): Promise<unknown>;
 }) {
   const { busy, run } = useBusy();
   const won = result.winnerTeam === myTeam;
   const us = solo ? 'Você' : 'Sua dupla';
+  const how = result.reason === 'points' ? finishText(result.finish, nameOf) : null;
   return (
     <div className="absolute inset-0 z-40 flex items-center justify-center overflow-hidden bg-black/55 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="gauderio-result-title">
       {won &&
@@ -111,6 +114,12 @@ export function ResultPanel({
               ? `${us} fechou ${target} pontos. Bah, que partida!`
               : `Eles chegaram aos ${target} pontos.`}
         </p>
+        {how && (
+          <p className={cn('rounded-full px-3 py-1 text-sm font-bold', result.finish?.by === 'flor' ? 'bg-fuchsia-500/25 text-fuchsia-100 ring-1 ring-fuchsia-300/60' : 'bg-white/10 text-amber-100')}>
+            {result.finish?.by === 'flor' ? '🌸 ' : ''}
+            {how}
+          </p>
+        )}
         <p className="font-display text-3xl font-black tabular-nums">
           <span className="text-emerald-300">{result.scores[myTeam]}</span>
           <span className="mx-2 text-violet-300">×</span>
@@ -136,6 +145,10 @@ export function TableView({ state, mySeat, hand, actions, audio }: { state: Gaud
   const size = state.settings.size;
   const myTeam = gaudTeamOf(mySeat);
   const me = state.seats[mySeat];
+  const nameOf = (seat: GaudSeat) => (seat === mySeat ? 'você' : (state.seats[seat]?.nickname ?? `lugar ${seat + 1}`));
+  const partner = size === 4 ? state.seats[(mySeat + 2) % 4] : null;
+  // Votação só com parceiro humano conectado; senão meu voto decide sozinho.
+  const teamVote = !!partner && !partner.bot && partner.connected;
   const playing = state.phase === 'PLAYING';
   const turnPlayer = match ? state.seats[match.turn] : null;
   const myTurn = !!match && playing && match.turn === mySeat && match.phase === 'AWAITING_PLAY';
@@ -179,6 +192,7 @@ export function TableView({ state, mySeat, hand, actions, audio }: { state: Gaud
           <TableCenter state={state} mySeat={mySeat} />
           {match && playing && <PendingStrip match={match} />}
           <RoundBanner />
+          <SideResultCard myTeam={myTeam} nameOf={nameOf} />
           <ShoutOverlay />
         </div>
       </div>
@@ -190,6 +204,8 @@ export function TableView({ state, mySeat, hand, actions, audio }: { state: Gaud
             pending={match.phase === 'AWAITING_RESPONSE' ? match.pending : null}
             pendingIsOurs={match.pending?.team === myTeam}
             turnName={match.phase === 'HAND_OVER' ? null : (turnPlayer?.nickname ?? null)}
+            partnerName={partner?.nickname ?? null}
+            teamVote={teamVote}
             onCall={actions.call}
             onRespond={actions.respond}
             onFold={actions.fold}
@@ -219,7 +235,7 @@ export function TableView({ state, mySeat, hand, actions, audio }: { state: Gaud
       </footer>
 
       {state.phase === 'FINISHED' && state.result && (
-        <ResultPanel result={state.result} myTeam={myTeam} target={state.settings.target} solo={size === 2} onRematch={actions.rematch} onLeave={actions.leave} />
+        <ResultPanel result={state.result} myTeam={myTeam} target={state.settings.target} solo={size === 2} nameOf={nameOf} onRematch={actions.rematch} onLeave={actions.leave} />
       )}
     </div>
   );
