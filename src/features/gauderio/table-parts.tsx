@@ -177,7 +177,7 @@ export function PendingStrip({ match }: { match: GaudMatchView }) {
 // Gritos e faixas
 // ---------------------------------------------------------------------------
 
-const LIFETIME: Record<GaudEffect['kind'], number> = { shout: 1_700, banner: 2_600, side: 5_500 };
+const LIFETIME: Record<GaudEffect['kind'], number> = { shout: 1_700, banner: 2_600, side: 5_500, say: 4_500 };
 
 /** Tira cada efeito visual depois da animação, para o store nunca crescer. */
 export function useEffectsExpiry() {
@@ -273,5 +273,29 @@ export function SideResultCard({ myTeam, nameOf }: { myTeam: GaudTeam; nameOf(se
         <span className="text-xs font-semibold text-white/90 sm:text-sm">{detail}</span>
       </div>
     </div>
+  );
+}
+
+/** Balão com a última frase que `seat` disse no chat. `below` abre para baixo (lugar do topo). */
+export function SayBubble({ seat, below = false, align = 'center' }: { seat: GaudSeat; below?: boolean; align?: 'center' | 'start' | 'end' }) {
+  const say = useGaudStore((s) => s.effects.findLast((e) => e.kind === 'say' && e.seat === seat));
+  if (!say || say.kind !== 'say') return null;
+  return (
+    <span
+      key={say.id}
+      role="status"
+      className={cn(
+        'pointer-events-none absolute z-30 w-max max-w-[11rem] rounded-2xl px-3 py-1.5 text-center text-xs font-bold shadow-lg ring-2 sm:max-w-[14rem] sm:text-sm',
+        below ? 'top-full mt-1' : 'bottom-full mb-1',
+        // Nas bordas o balão abre para dentro da mesa, para não sair da tela.
+        align === 'center' ? 'left-1/2 -translate-x-1/2' : align === 'start' ? 'left-0' : 'right-0',
+        say.to === 'team' ? 'bg-emerald-50 text-emerald-950 ring-emerald-400' : 'bg-white text-slate-900 ring-white',
+        trucoStyles.bubble,
+      )}
+      style={{ animationDuration: '4.5s' }}
+    >
+      {say.to === 'team' && <span className="mr-1 text-[10px] font-black text-emerald-600 uppercase">dupla</span>}
+      {say.text}
+    </span>
   );
 }

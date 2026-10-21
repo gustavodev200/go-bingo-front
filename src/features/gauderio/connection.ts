@@ -9,6 +9,9 @@ import {
   type Ack,
   type ErrorCode,
   type GaudCall,
+  type GaudChatKey,
+  type GaudChatMessage,
+  type GaudChatTo,
   type GaudClientAckData,
   type GaudSeat,
   type GaudSettings,
@@ -120,11 +123,14 @@ export interface GaudActionsApi {
   call(call: GaudCall): Promise<boolean>;
   respond(accept: boolean): Promise<boolean>;
   fold(): Promise<boolean>;
+  chat(to: GaudChatTo, key: GaudChatKey): Promise<boolean>;
 }
 
 export interface GaudListeners {
   /** A validated announcement seen for the first time (duplicates are dropped by seq). */
   onAnnouncement(msg: Announced): void;
+  /** Frase do chat (minha, do parceiro, da mesa ou resposta da CPU). */
+  onChat?(message: GaudChatMessage): void;
   onError(): void;
 }
 
@@ -162,6 +168,8 @@ export function useGaudRoom(code: string, listeners: GaudListeners): GaudActions
           return s.applyState(payload as GaudServerEventPayloads['gauderio:state']);
         case GaudServerEvents.PRIVATE_HAND:
           return s.applyHand(payload as GaudServerEventPayloads['gauderio:private_hand']);
+        case GaudServerEvents.CHAT_MESSAGE:
+          return listenersRef.current.onChat?.(payload as GaudChatMessage);
         case GaudServerEvents.ROOM_CLOSED:
           return s.setExit({ reason: 'not_found', message: 'A mesa foi encerrada' });
         default: {
@@ -251,6 +259,7 @@ export function useGaudRoom(code: string, listeners: GaudListeners): GaudActions
       call: (c) => call('gauderio:call', { actionId: newActionId(), call: c }),
       respond: (accept) => call('gauderio:respond', { actionId: newActionId(), accept }),
       fold: () => call('gauderio:fold', { actionId: newActionId() }),
+      chat: (to, key) => call('gauderio:chat', { to, key }),
     };
   }, []);
 }
