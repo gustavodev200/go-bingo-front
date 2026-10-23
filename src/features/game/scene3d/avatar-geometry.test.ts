@@ -1,5 +1,6 @@
 import { Vector3, type BufferGeometry } from 'three';
-import { FACE, HEAD_R, createAvatarGeometries, disposeAvatarGeometries } from './avatar-geometry';
+import { FACES } from './avatar-look';
+import { FACE, HEAD_R, createAvatarGeometries, disposeAvatarGeometries, trianglesOf } from './avatar-geometry';
 
 const origin = (m: (typeof FACE.eye)[number]) => new Vector3().setFromMatrixPosition(m);
 
@@ -8,10 +9,10 @@ describe('avatar geometries', () => {
   afterAll(() => disposeAvatarGeometries(geo));
 
   const all: [string, BufferGeometry][] = [
-    ...Object.entries(geo).filter((e): e is [string, BufferGeometry] => 'attributes' in e[1]),
+    ...Object.entries(geo).filter((e): e is [string, BufferGeometry] => 'attributes' in (e[1] as object)),
     ...Object.entries(geo.mouths),
     ...Object.entries(geo.hair),
-    ...Object.entries(geo.hats),
+    ...Object.entries(geo.extras),
   ];
 
   it('builds every piece with finite positions and normals', () => {
@@ -37,12 +38,18 @@ describe('avatar geometries', () => {
     expect(origin(FACE.brow[1]).y).toBeGreaterThan(right.y);
     expect(origin(FACE.mouth).y).toBeLessThan(right.y);
     expect(origin(FACE.mouth).x).toBeCloseTo(0);
+    expect(origin(FACE.unibrow).x).toBeCloseTo(0);
   });
 
-  it('runs the sash from the left shoulder (+x) down to the right hip (-x) across the chest', () => {
-    const position = geo.sash.getAttribute('position');
-    const front = Array.from({ length: position.count }, (_, i) => new Vector3().fromBufferAttribute(position, i)).filter((p) => p.z > 0.1);
-    expect(front.filter((p) => p.y > 0.7).every((p) => p.x > 0)).toBe(true);
-    expect(front.filter((p) => p.y < 0.42).every((p) => p.x < 0)).toBe(true);
+  it('keeps every player within the low-poly budget (< 5k triangles, even the most decorated face)', () => {
+    const body = ['torso', 'hips', 'collar', 'head', 'crown', 'shadow'] as const;
+    const paired = ['legs', 'shorts', 'socks', 'boots', 'arms', 'hands', 'sclera', 'pupils', 'brows', 'cheeks', 'halfLids'] as const;
+    const base = body.reduce((n, k) => n + trianglesOf(geo[k]), 0) + paired.reduce((n, k) => n + 2 * trianglesOf(geo[k]), 0);
+    for (const face of Object.values(FACES)) {
+      const hair = face.hairStyle === 'bald' ? 0 : trianglesOf(geo.hair[face.hairStyle]);
+      const extras = face.extras.reduce((n, e) => n + trianglesOf(geo.extras[e]), 0);
+      const total = base + hair + extras + trianglesOf(geo.mouths[face.mouth]);
+      expect(total, face.name).toBeLessThan(5000);
+    }
   });
 });

@@ -1,4 +1,5 @@
-import { CHARACTERS } from './characters';
+import { FACES } from './avatar-look';
+import { jersey } from './jerseys';
 import { PHASE_MS } from './pose';
 import { choreograph, labelIds, statesChanged, triggerDance, type SceneMember } from './choreographer';
 
@@ -15,12 +16,12 @@ describe('choreograph', () => {
     expect(s.get(B)?.phase).toBe('ghost');
   });
 
-  it('dresses each player as the chosen character, and switches when it changes mid-room', () => {
-    const s0 = choreograph(null, { members: [m(A, 0, { character: 'c07' }), m(B, 1)], hostId: A, now: 0 });
-    expect(s0.get(A)?.look).toMatchObject(CHARACTERS.c07);
-    expect(s0.get(B)?.look.body).toBeDefined();
-    const s1 = choreograph(s0, { members: [m(A, 0, { character: 'c02' }), m(B, 1)], hostId: A, now: 100 });
-    expect(s1.get(A)?.look).toMatchObject(CHARACTERS.c02);
+  it('dresses each player with the chosen face, jersey and nickname, and switches when it changes mid-room', () => {
+    const s0 = choreograph(null, { members: [m(A, 0, { character: 'dfla10', nickname: 'Ana' }), m(B, 1)], hostId: A, now: 0 });
+    expect(s0.get(A)?.look).toMatchObject({ face: FACES.d, jersey: jersey('fla'), number: 10, backName: 'ANA' });
+    expect(s0.get(B)?.look.jersey.category).toBe('comunidade');
+    const s1 = choreograph(s0, { members: [m(A, 0, { character: 'bpal09', nickname: 'Ana' }), m(B, 1)], hostId: A, now: 100 });
+    expect(s1.get(A)?.look).toMatchObject({ face: FACES.b, jersey: jersey('pal'), number: 9 });
     expect(s1.get(B)?.look).toBe(s0.get(B)?.look);
   });
 

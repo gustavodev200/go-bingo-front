@@ -29,7 +29,7 @@ export function ProfileView() {
       </Link>
       <h1 className="sr-only">Seu perfil</h1>
       <section className="glass flex flex-col items-center gap-2 p-5 text-center" aria-label="Identidade">
-        <CharacterEditor saved={profile.character ?? null} onSaved={refresh} />
+        <CharacterEditor saved={profile.character ?? null} name={profile.nickname} onSaved={refresh} />
         <NicknameEditor nickname={profile.nickname ?? ''} onSaved={refresh} />
         <p className="flex items-center gap-2 text-sm">
           <Coins amount={profile.coins} className="rounded-full bg-amber-300/15 px-2.5 py-1 text-amber-200 ring-1 ring-amber-300/30" />

@@ -1,6 +1,24 @@
-import { ACCENT_COLORS, BODY_COLORS, FACES, HAIR_COLORS, HAIR_STYLES, HATS, PANTS_COLORS, SKIN_COLORS, avatarFromId, hashId } from './avatar-look';
+import { CHARACTER_FACES } from '@/contracts';
+import { BROW_STYLES, EYE_STYLES, FACES, FACE_EXTRAS, HAIR_STYLES, MOUTH_STYLES, avatarFromId, hashId } from './avatar-look';
+import { COMMUNITY_JERSEYS } from './jerseys';
 
 const ids = Array.from({ length: 300 }, (_, i) => `00000000-0000-4000-8000-${i.toString(16).padStart(12, '0')}`);
+
+describe('FACES', () => {
+  it('has a face for every face id of the contract, in the same order', () => {
+    expect(Object.keys(FACES)).toEqual([...CHARACTER_FACES]);
+  });
+
+  it('gives every face its own name and covers every hair, eye, brow, mouth and extra', () => {
+    const faces = Object.values(FACES);
+    expect(new Set(faces.map((f) => f.name)).size).toBe(faces.length);
+    expect(new Set(faces.map((f) => f.hairStyle))).toEqual(new Set(HAIR_STYLES));
+    expect(new Set(faces.map((f) => f.eyes))).toEqual(new Set(EYE_STYLES));
+    expect(new Set(faces.map((f) => f.brows))).toEqual(new Set(BROW_STYLES));
+    expect(new Set(faces.map((f) => f.mouth))).toEqual(new Set(MOUTH_STYLES));
+    expect(new Set(faces.flatMap((f) => f.extras))).toEqual(new Set(FACE_EXTRAS));
+  });
+});
 
 describe('avatarFromId', () => {
   it('is deterministic', () => {
@@ -8,35 +26,20 @@ describe('avatarFromId', () => {
     expect(hashId('abc')).toBe(hashId('abc'));
   });
 
-  it('only produces values from the palettes, with a seed in [0, 1)', () => {
+  it('dresses the default player in an original community jersey (never a club or a political one)', () => {
     for (const id of ids) {
       const look = avatarFromId(id);
-      expect(BODY_COLORS).toContain(look.body);
-      expect(ACCENT_COLORS).toContain(look.accent);
-      expect(HATS).toContain(look.hat);
-      expect(FACES).toContain(look.face);
+      expect(COMMUNITY_JERSEYS).toContain(look.jersey);
+      expect(look.number).toBeGreaterThanOrEqual(1);
+      expect(look.number).toBeLessThanOrEqual(99);
       expect(look.seed).toBeGreaterThanOrEqual(0);
       expect(look.seed).toBeLessThan(1);
     }
   });
 
-  it('spreads looks across a room-sized crowd', () => {
-    const looks = ids.map(avatarFromId);
-    expect(new Set(looks.map((l) => l.body)).size).toBe(BODY_COLORS.length);
-    expect(new Set(looks.map((l) => l.hat)).size).toBe(HATS.length);
-    expect(new Set(looks.map((l) => l.face)).size).toBe(FACES.length);
-  });
-});
-
-describe('avatarFromId (person)', () => {
-  it('always picks skin, hair and pants from the palettes and spreads skin tones', () => {
-    const looks = ids.map(avatarFromId);
-    for (const look of looks) {
-      expect(SKIN_COLORS).toContain(look.skin);
-      expect(HAIR_COLORS).toContain(look.hair);
-      expect(PANTS_COLORS).toContain(look.pants);
-    }
-    expect(new Set(looks.map((l) => l.skin)).size).toBe(SKIN_COLORS.length);
-    expect(new Set(looks.map((l) => l.hairStyle)).size).toBe(HAIR_STYLES.length);
+  it('spreads faces and jerseys across a room-sized crowd', () => {
+    const looks = ids.map((id) => avatarFromId(id));
+    expect(new Set(looks.map((l) => l.face)).size).toBe(CHARACTER_FACES.length);
+    expect(new Set(looks.map((l) => l.jersey)).size).toBe(COMMUNITY_JERSEYS.length);
   });
 });

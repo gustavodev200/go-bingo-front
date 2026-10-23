@@ -19,17 +19,17 @@ describe('NicknameForm', () => {
     render(<NicknameForm next="/ABC234" suggestion="Gustavo" />);
     expect(screen.getByLabelText(/apelido/i)).toHaveValue('Gustavo');
     await userEvent.click(screen.getByRole('button', { name: /continuar/i }));
-    expect(apiFetch).toHaveBeenCalledWith('/me', expect.anything(), { method: 'PATCH', body: JSON.stringify({ nickname: 'Gustavo', character: 'c01' }) });
+    expect(apiFetch).toHaveBeenCalledWith('/me', expect.anything(), { method: 'PATCH', body: JSON.stringify({ nickname: 'Gustavo', character: 'agpl10' }) });
     expect(replace).toHaveBeenCalledWith('/ABC234');
   });
 
-  it('saves the character chosen with the arrows together with the nickname', async () => {
+  it('saves the face chosen with the arrows together with the nickname', async () => {
     apiFetch.mockResolvedValue({});
     render(<NicknameForm next="/" suggestion="Ana" />);
     await userEvent.click(screen.getByRole('button', { name: /anterior/i }));
-    expect(screen.getByText('Personagem 17 de 17')).toBeInTheDocument();
+    expect(screen.getByText(/Chorão/)).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /continuar/i }));
-    expect(apiFetch).toHaveBeenCalledWith('/me', expect.anything(), { method: 'PATCH', body: JSON.stringify({ nickname: 'Ana', character: 'c17' }) });
+    expect(apiFetch).toHaveBeenCalledWith('/me', expect.anything(), { method: 'PATCH', body: JSON.stringify({ nickname: 'Ana', character: 'lgpl10' }) });
   });
 
   it('goes back to the login by signing out (otherwise the login would bounce back here)', async () => {

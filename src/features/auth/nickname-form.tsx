@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { profileSchema, type CharacterId } from '@/contracts';
+import { DEFAULT_CHARACTER } from '@/features/game/scene3d/characters';
 import { CharacterPicker } from '@/features/profile/character-picker';
 import { ApiError, apiFetch } from '@/lib/api';
 import { validateNickname } from '@/lib/nickname';
@@ -16,7 +17,7 @@ export function NicknameForm({ next, suggestion }: { next: string; suggestion: s
   const router = useRouter();
   const logout = useLogout();
   const [value, setValue] = useState(suggestion);
-  const [character, setCharacter] = useState<CharacterId>('c01');
+  const [character, setCharacter] = useState<CharacterId>(DEFAULT_CHARACTER);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -49,7 +50,7 @@ export function NicknameForm({ next, suggestion }: { next: string; suggestion: s
       <header className="flex flex-col items-center gap-2 text-center">
         <p className="text-xs font-semibold tracking-[0.3em] text-pink-300 uppercase">Bem-vindo ao salão</p>
         <h1 className="font-display text-marquee text-3xl font-bold">Escolha seu boneco</h1>
-        <p className="text-muted-foreground text-sm">Passe pelas setas e dê um nome a ele. Dá para trocar depois no perfil.</p>
+        <p className="text-muted-foreground text-sm">Escolha o rosto, a camisa e o número e dê um nome a ele. Dá para trocar depois no perfil.</p>
       </header>
 
       {/* Prévia: o boneco do palco 3D com o apelido em cima, como os outros vão ver. */}
