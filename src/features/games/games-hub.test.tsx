@@ -7,8 +7,25 @@ vi.mock('@/features/profile/profile-context', () => ({
   useProfile: () => ({ profile: { id: '00000000-0000-4000-8000-000000000001', nickname: 'Ana', character: 'c03', isGuest: false, points: 20, coins: 980 }, refresh: vi.fn() }),
 }));
 vi.mock('@/features/auth/use-logout', () => ({ useLogout: () => vi.fn() }));
+const presence = vi.hoisted(() => ({ online: null as number | null }));
+vi.mock('@/features/presence/presence-context', () => ({ useOnlineCount: () => presence.online }));
 
 describe('GamesHub', () => {
+  afterEach(() => {
+    presence.online = null;
+  });
+
+  it('shows how many players are online once the server tells', () => {
+    const { rerender } = render(<GamesHub />);
+    expect(screen.queryByText(/online/i)).not.toBeInTheDocument();
+    presence.online = 4;
+    rerender(<GamesHub />);
+    expect(screen.getByText('4 onlines')).toBeInTheDocument();
+    presence.online = 1;
+    rerender(<GamesHub />);
+    expect(screen.getByText('1 online')).toBeInTheDocument();
+  });
+
   it('greets the player and keeps their profile at hand', () => {
     render(<GamesHub />);
     expect(screen.getByRole('heading', { level: 1, name: 'Escolha seu jogo' })).toBeInTheDocument();
