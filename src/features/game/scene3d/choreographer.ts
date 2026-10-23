@@ -8,6 +8,8 @@ export interface SceneMember {
   hasCard: boolean;
   /** Personagem escolhido no perfil; ausente/null = boneco derivado do id. */
   character?: string | null;
+  /** Apelido: vai nas costas da camisa. */
+  nickname?: string | null;
 }
 
 export interface ChoreoInput {
@@ -72,8 +74,8 @@ export function choreograph(prev: ReadonlyMap<string, AvatarState> | null, { mem
     next.set(member.userId, {
       userId: member.userId,
       slot: member.slot,
-      // trocou de personagem com a sala aberta: aparece com o novo no próximo snapshot
-      look: lookFor(member.userId, member.character),
+      // trocou de jogador/camisa com a sala aberta: aparece com o novo no próximo snapshot
+      look: lookFor(member.userId, member.character, member.nickname),
       phase,
       phaseStart,
       isHost: member.userId === hostId,

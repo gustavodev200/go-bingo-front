@@ -1,10 +1,11 @@
 'use client';
 
 import { useFrame, type ThreeEvent } from '@react-three/fiber';
-import { useEffect, useLayoutEffect, useMemo, useRef, type ReactNode, type Ref, type RefObject } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type Ref, type RefObject } from 'react';
 import { Color, DoubleSide, Euler, Matrix4, Object3D, Quaternion, Vector3, type BufferGeometry, type InstancedMesh, type Side } from 'three';
-import { ALL_HAIR_STYLES, type Face, type HairStyle } from './avatar-look';
-import { FACE, HAT_TYPES, HEAD_Y, characterShader, createAvatarGeometries, disposeAvatarGeometries, type HatType, type V3 } from './avatar-geometry';
+import { FACE_EXTRAS, MOUTH_STYLES, type BrowStyle, type HairStyle, type MouthStyle } from './avatar-look';
+import { FACE, HAIR_GEOMETRIES, HEAD_Y, characterShader, createAvatarGeometries, disposeAvatarGeometries, type V3 } from './avatar-geometry';
+import { attachKitAttributes, createGlyphAtlas, jerseyShader, markKitDirty, writeKit } from './jersey-shader';
 import { PHASE_MS, WAVE_MS, pose, type AvatarState } from './pose';
 import { useStageActivity } from './stage-activity';
 
@@ -15,13 +16,11 @@ const WHITE = new Color('#ffffff');
 const ZERO = new Matrix4().makeScale(0, 0, 0);
 const NONE: V3 = [0, 0, 0];
 const SIDES = [-1, 1] as const;
-/** Sobrancelha de cor própria vem mais grossa. */
-const BUSHY: V3 = [1.15, 1.5, 1.2];
 
 /** Cintura: o tronco inclina/balança a partir daqui; quadril e pernas ficam no chão. */
 const WAIST_Y = 0.32;
 const FROM_WAIST = new Matrix4().makeTranslation(0, -WAIST_Y, 0);
-const SHOULDER: V3 = [0.235, 0.665, 0];
+const SHOULDER: V3 = [0.24, 0.665, 0];
 const ELBOW_Y = -0.09;
 const HIP: V3 = [0.105, 0.3, 0];
 /** Comemoração (vitória/dança) em FPS cheio só no começo; depois segue no ocioso, atrás do diálogo de resultado. */
@@ -30,25 +29,19 @@ const CELEBRATION_ACTIVE_MS = 8000;
 const BLINK_PERIOD_S = 4.2;
 const BLINK_S = 0.12;
 
-/** Expressão do momento: a escolhida pelo id, trocada pela fase (vitória, "por 1", fantasma). */
-type Mood = Face | 'happy' | 'sleepy';
-/** Sobrancelha: `tilt` > 0 sobe a ponta de dentro (simpatia/surpresa/tristeza). */
-const BROW: Record<Mood, { lift: number; tilt: number }> = {
-  smile: { lift: 0, tilt: 0.06 },
-  grin: { lift: 0.012, tilt: 0.1 },
-  wow: { lift: 0.03, tilt: 0.16 },
-  happy: { lift: 0.02, tilt: 0.12 },
-  sleepy: { lift: -0.006, tilt: 0.3 },
+/** Expressão do momento por cima da personalidade: comemorando, sonolento (fantasma), espantado ("por 1"). */
+type Mood = 'base' | 'happy' | 'sleepy' | 'wow';
+/** Sobrancelha: `lift` sobe, `tilt` > 0 sobe a ponta de dentro (simpatia/tristeza), < 0 desce (bravo). */
+const BROW: Record<BrowStyle, { lift: number; tilt: number; scale?: V3 }> = {
+  normal: { lift: 0, tilt: 0.06 },
+  thick: { lift: 0, tilt: 0.04, scale: [1.1, 1.8, 1.3] },
+  uni: { lift: 0, tilt: 0, scale: [2.3, 1.6, 1.2] },
+  angry: { lift: -0.01, tilt: -0.38, scale: [1, 1.3, 1] },
+  worried: { lift: 0.012, tilt: 0.38 },
+  raised: { lift: 0, tilt: 0.1 },
 };
-
-type Single = 'torso' | 'sash' | 'hips' | 'collar' | 'head' | 'bigNose' | 'mustache' | 'mouthSmile' | 'mouthOpen' | 'mouthWow' | 'crown' | 'shadow';
-type Paired = 'legs' | 'shorts' | 'socks' | 'shoes' | 'sneakers' | 'arms' | 'hands' | 'eyes' | 'lids' | 'brows' | 'cheeks';
-type Parts = Record<Single | Paired, InstancedMesh | null> & { hair: Record<HairStyle, InstancedMesh | null>; hats: Record<HatType, InstancedMesh | null> };
-
-function allMeshes(p: Parts): InstancedMesh[] {
-  const { hair, hats, ...rest } = p;
-  return [...Object.values(rest), ...Object.values(hair), ...Object.values(hats)].filter((m): m is InstancedMesh => m !== null);
-}
+/** Boca "fechada" demais para comemorar: abre num sorrisão. As engraçadas (dentuço, banguela...) ficam. */
+const CLOSED: readonly MouthStyle[] = ['smile', 'smirk', 'wavy', 'o'];
 
 const colors = new Map<string, Color>();
 const cached = (hex: string) => {
@@ -57,9 +50,15 @@ const cached = (hex: string) => {
   return color;
 };
 
+/** Nomes das peças: uma InstancedMesh por nome para a sala toda (as em par recebem 2 instâncias por boneco). */
+type Paired = 'legs' | 'shorts' | 'socks' | 'boots' | 'arms' | 'hands' | 'sclera' | 'pupils' | 'lids' | 'halfLids' | 'brows' | 'cheeks';
+type Single = 'torso' | 'hips' | 'collar' | 'head' | 'crown' | 'shadow';
+type PartName = Paired | Single | `mouth:${MouthStyle}` | `hair:${string}` | `extra:${string}`;
+
 /**
- * Bonecos chibi (pele, cabelo, roupa e rosto derivados do id): 1 InstancedMesh por peça para toda a plateia.
- * Cada peça só desenha as instâncias em uso — cabelos, chapéus e bocas que ninguém está usando nem vão para a GPU.
+ * Jogadores de futebol (rosto, camisa, número e nome escolhidos ou derivados do id): 1 InstancedMesh por peça para
+ * a plateia inteira. Cada peça só desenha as instâncias em uso — bocas, cabelos e extras que ninguém está usando nem
+ * vão para a GPU. A camisa é uma peça só com shader próprio (padrão/número/nome por instância).
  */
 export function AvatarCrowd({
   statesRef,
@@ -72,46 +71,26 @@ export function AvatarCrowd({
   castShadow: boolean;
   fakeShadow: boolean;
 }) {
-  const parts = useRef<Parts>({
-    ...(Object.fromEntries(
-      ([
-        'torso',
-        'sash',
-        'hips',
-        'collar',
-        'head',
-        'bigNose',
-        'mustache',
-        'mouthSmile',
-        'mouthOpen',
-        'mouthWow',
-        'crown',
-        'shadow',
-        'legs',
-        'shorts',
-        'socks',
-        'shoes',
-        'sneakers',
-        'arms',
-        'hands',
-        'eyes',
-        'lids',
-        'brows',
-        'cheeks',
-      ] as const).map((k) => [k, null]),
-    ) as Record<Single | Paired, null>),
-    hair: { short: null, spiky: null, bun: null, long: null, afro: null, quiff: null },
-    hats: { tophat: null, cap: null, beanie: null, party: null },
-  });
+  // Map estável (não ref): as peças se registram pelo ref callback e o quadro lê daqui.
+  const [parts] = useState(() => new Map<PartName, InstancedMesh>());
   const ids = useRef<string[]>([]);
   const activity = useStageActivity();
   const geo = useMemo(() => createAvatarGeometries(), []);
-  useEffect(() => () => disposeAvatarGeometries(geo), [geo]);
+  const kit = useMemo(() => attachKitAttributes(geo.torso, MAX_AVATARS), [geo]);
+  const atlas = useMemo(() => createGlyphAtlas(), []);
+  const kitShader = useMemo(() => jerseyShader(atlas), [atlas]);
+  useEffect(
+    () => () => {
+      disposeAvatarGeometries(geo);
+      atlas?.dispose();
+    },
+    [geo, atlas],
+  );
   const tmp = useMemo(
     () => ({
       o: new Object3D(),
-      base: new Matrix4(),
       upper: new Matrix4(),
+      base: new Matrix4(),
       head: new Matrix4(),
       face: new Matrix4(),
       limb: new Matrix4(),
@@ -123,6 +102,7 @@ export function AvatarCrowd({
       v: new Vector3(),
       s: new Vector3(),
       color: new Color(),
+      kitTint: new Color(),
       used: new Map<InstancedMesh, number>(),
     }),
     [],
@@ -130,17 +110,17 @@ export function AvatarCrowd({
 
   useLayoutEffect(() => {
     // instanceColor só existe depois do primeiro setColorAt; começa tudo escondido.
-    for (const mesh of allMeshes(parts.current)) {
+    for (const mesh of parts.values()) {
       for (let i = 0; i < mesh.count; i++) {
         mesh.setMatrixAt(i, ZERO);
         mesh.setColorAt(i, WHITE);
       }
       mesh.instanceMatrix.needsUpdate = true;
     }
-  }, [fakeShadow]);
+  }, [parts, fakeShadow]);
 
   useFrame(() => {
-    const p = parts.current;
+    const p = parts;
     const now = performance.now();
     const t = now / 1000;
     const states = [...(statesRef.current?.values() ?? [])].slice(0, MAX_AVATARS);
@@ -148,8 +128,9 @@ export function AvatarCrowd({
     const used = tmp.used;
     used.clear();
 
-    /** Próxima instância livre da peça. Torso e cabeça recebem 1 por boneco, na ordem: o índice é o do boneco (toque). */
-    const put = (mesh: InstancedMesh | null, matrix: Matrix4, color?: Color) => {
+    /** Próxima instância livre da peça. Tronco e cabeça recebem 1 por boneco, na ordem: o índice é o do boneco (toque). */
+    const put = (name: PartName, matrix: Matrix4, color?: Color) => {
+      const mesh = p.get(name);
       if (!mesh) return;
       const index = used.get(mesh) ?? 0;
       mesh.setMatrixAt(index, matrix);
@@ -165,18 +146,18 @@ export function AvatarCrowd({
     const tint = (hex: string, ghost: number, glow = 0) => tmp.color.copy(cached(hex)).lerp(GHOST, ghost).lerp(GOLD, glow);
     let moving = false;
 
-    for (const s of states) {
+    states.forEach((s, index) => {
       const ps = pose(s, now);
-      const look = s.look;
+      const { face, jersey } = s.look;
       const ghost = ps.ghost;
       const glow = ps.glow * 0.6;
-      const phase = look.seed * Math.PI * 2;
+      const phase = s.look.seed * Math.PI * 2;
       const elapsed = now - s.phaseStart;
       const walking = (s.phase === 'entering' && elapsed < PHASE_MS.entering) || (s.phase === 'leaving' && elapsed >= WAVE_MS);
       const celebrating = s.phase === 'winner' || s.phase === 'dance';
       // Andar, pular e comemorar pedem FPS ativo; respirar/piscar/fantasma ficam no ocioso.
       if (walking || (celebrating && elapsed < CELEBRATION_ACTIVE_MS) || (s.phase === 'ready-jump' && elapsed < PHASE_MS['ready-jump'])) moving = true;
-      const mood: Mood = celebrating ? 'happy' : ghost > 0.5 ? 'sleepy' : s.oneAway ? 'wow' : s.phase === 'ready-jump' ? 'grin' : look.face;
+      const mood: Mood = celebrating || s.phase === 'ready-jump' ? 'happy' : ghost > 0.5 ? 'sleepy' : s.oneAway ? 'wow' : 'base';
 
       // estica na velocidade vertical (pulos) e encolhe a largura junto: volume constante, pulo menos "duro"
       const vy = (ps.position[1] - pose(s, now - 32).position[1]) / 0.032;
@@ -190,77 +171,104 @@ export function AvatarCrowd({
       const sway = ghost > 0 ? 0.08 * Math.sin(t * 1.4 + phase) : celebrating ? 0.12 * Math.sin(t * 9) : 0.035 * Math.sin(t * 0.9 + phase);
       at(tmp.upper, tmp.base, [0, WAIST_Y, 0], [lean, 0, sway]).multiply(FROM_WAIST);
 
-      put(p.torso, tmp.upper, tint(look.body, ghost, glow));
-      if (look.sash) put(p.sash, tmp.upper, tint('#ffffff', ghost, glow));
-      put(p.collar, tmp.upper, tint(look.accent, ghost));
-      put(p.hips, tmp.base, tint(look.pants, ghost));
+      // camisa: matriz na ordem do boneco + cores/padrão/número/nome nos atributos da instância
+      const torso = p.get('torso');
+      if (torso) {
+        torso.setMatrixAt(index, tmp.upper);
+        writeKit(kit, index, s.look, tmp.kitTint.copy(GHOST).multiplyScalar(ghost * (1 - glow)).add(tmp.color.copy(GOLD).multiplyScalar(glow)), (1 - ghost) * (1 - glow));
+        used.set(torso, index + 1);
+      }
+      put('collar', tmp.upper, tint(jersey.collar ?? jersey.secondary, ghost));
+      put('hips', tmp.base, tint(jersey.shorts, ghost));
 
       for (const side of SIDES) {
-        // pernas balançam opostas aos braços; o tênis já vem pendurado na perna
+        // pernas balançam opostas aos braços; calção, meião e chuteira já vêm pendurados na perna
         at(tmp.limb, tmp.base, [side * HIP[0], HIP[1], 0], [walking ? side * ps.armSwing * 0.9 : 0, 0, 0]);
-        put(p.legs, tmp.limb, tint(look.shorts ? look.skin : look.pants, ghost));
-        if (look.shorts) {
-          put(p.shorts, tmp.limb, tint(look.pants, ghost));
-          put(p.socks, tmp.limb, tint('#ffffff', ghost));
-        }
-        if (look.shoes) put(p.sneakers, tmp.limb, tint(look.shoes, ghost));
-        else put(p.shoes, tmp.limb);
+        put('legs', tmp.limb, tint(face.skin, ghost));
+        put('shorts', tmp.limb, tint(jersey.shorts, ghost));
+        put('socks', tmp.limb, tint(jersey.socks, ghost));
+        put('boots', tmp.limb, tint(face.boots, ghost));
 
         // braço gira no ombro (o direito acena; na comemoração os dois sobem); antebraço dobra no cotovelo
         const raised = side > 0 || celebrating ? ps.armRaise : 0;
         const hang = 0.2 + 0.03 * Math.sin(t * 1.1 + phase) + ghost * 0.55;
         at(tmp.limb, tmp.upper, [side * SHOULDER[0], SHOULDER[1], 0], [-side * ps.armSwing * (walking ? 0.9 : 0.5), 0, side * (hang + raised * (2.6 + side * ps.armSwing))]);
-        put(p.arms, tmp.limb, tint(look.body, ghost, glow));
+        put('arms', tmp.limb, tint(jersey.sleeves ?? jersey.primary, ghost, glow));
         at(tmp.elbow, tmp.limb, [0, ELBOW_Y, 0], [walking ? -0.45 : raised ? -0.2 : -0.15, 0, raised ? -side * 0.3 : 0]);
-        put(p.hands, tmp.elbow, tint(look.skin, ghost));
+        put('hands', tmp.elbow, tint(face.skin, ghost));
       }
 
       // cabeça: inclina e acena junto com o humor; tudo do rosto/cabelo vai com ela
       const nod = ghost > 0 ? 0.2 : walking ? 0.05 * Math.abs(Math.sin(t * 8)) : s.oneAway ? -0.1 : 0;
       const tilt = celebrating ? 0.16 * Math.sin(t * 7) : ghost > 0 ? 0.18 : 0.06 * Math.sin(t * 0.55 + phase * 3);
       at(tmp.head, tmp.upper, [0, HEAD_Y, 0], [nod, ps.headYaw, tilt]);
-      put(p.head, tmp.head, tint(look.skin, ghost));
-      if (look.mustache) {
-        put(p.bigNose, tmp.head, tint(look.skin, ghost));
-        put(p.mustache, tmp.head, tint(look.mustache, ghost));
+      put('head', tmp.head, tint(face.skin, ghost));
+
+      if (face.hairStyle !== 'bald') put(`hair:${face.hairStyle}`, tmp.head, tint(face.hair, ghost));
+      for (const extra of face.extras) {
+        const color = extra === 'beard' || extra === 'mustache' ? face.hair : extra === 'bigNose' ? face.skin : extra === 'headband' ? jersey.secondary : '#ffffff';
+        put(`extra:${extra}`, tmp.head, tint(color, ghost));
       }
+      if (s.isHost) put('crown', at(tmp.out, tmp.head, [0, crownLift(face.hairStyle), 0], [-0.12, 0, 0], [1.3, 1.3, 1.3]));
 
-      // chapéu (black power não usa) por cima do cabelo; sob chapéu os espetos/topete atravessariam a aba → cabelo curto
-      const hat = !s.isHost && look.hat !== 'none' && look.hairStyle !== 'afro' ? look.hat : null;
-      put(p.hair[hat && (look.hairStyle === 'spiky' || look.hairStyle === 'quiff') ? 'short' : look.hairStyle], tmp.head, tint(look.hair, ghost));
-      if (hat) put(p.hats[hat], tmp.head, tint(look.accent, ghost));
-      if (s.isHost) put(p.crown, at(tmp.out, tmp.head, [0, look.hairStyle === 'afro' ? 0.64 : 0.44, 0], [-0.12, 0, 0], [1.3, 1.3, 1.3]));
-
-      // rosto: olhos piscam (ou fecham felizes/sonolentos), sobrancelhas e boca seguem o humor
-      const blink = (t + look.seed * 11) % BLINK_PERIOD_S < BLINK_S;
-      const shut = blink || mood === 'happy' || mood === 'sleepy';
-      const eye = mood === 'wow' ? 1.12 : 1;
-      const brow = BROW[mood];
+      // olhos: estilo da personalidade (zarolho, desconfiado, sonolento, piscadinha) + piscar e humor
+      const blink = (t + s.look.seed * 11) % BLINK_PERIOD_S < BLINK_S;
+      const eyes = face.eyes;
+      const eyeScale = mood === 'wow' ? 1.2 : eyes === 'big' ? 1.25 : eyes === 'tiny' ? 0.8 : 1;
+      const pupilScale = eyes === 'tiny' ? 0.65 : eyes === 'big' ? 1.1 : 1;
+      // desconfiado: olha de um lado para o outro devagar; os outros dão uma olhadinha discreta
+      const glance = eyes === 'side' ? 0.024 * Math.sign(Math.sin(t * 0.6 + phase)) : 0.006 * Math.sin(t * 0.5 + phase);
       SIDES.forEach((side, k) => {
         tmp.face.multiplyMatrices(tmp.head, FACE.eye[k]);
-        if (shut) put(p.lids, at(tmp.out, tmp.face, NONE, [0, 0, mood === 'happy' ? 0 : Math.PI]));
-        else put(p.eyes, at(tmp.out, tmp.face, NONE, NONE, [eye, eye, 1]));
-        tmp.face.multiplyMatrices(tmp.head, FACE.brow[k]);
-        put(p.brows, at(tmp.out, tmp.face, [0, brow.lift, 0], [0, 0, -side * brow.tilt], look.brows ? BUSHY : undefined), tint(look.brows ?? look.hair, ghost));
-        put(p.cheeks, tmp.face.multiplyMatrices(tmp.head, FACE.cheek[k]));
+        const winking = eyes === 'wink' && side > 0;
+        if (mood === 'happy' || mood === 'sleepy' || blink || winking) {
+          put('lids', at(tmp.out, tmp.face, NONE, [0, 0, mood === 'happy' || winking ? 0 : Math.PI]));
+        } else {
+          put('sclera', at(tmp.out, tmp.face, NONE, NONE, [eyeScale, eyeScale, 1]));
+          const cross = eyes === 'cross' ? -side * 0.022 : 0;
+          const droop = eyes === 'sleepy' ? -0.012 : 0;
+          put('pupils', at(tmp.out, tmp.face, [cross + glance, droop, 0], NONE, [pupilScale * eyeScale, pupilScale * eyeScale, 1]));
+          if (eyes === 'sleepy') put('halfLids', at(tmp.out, tmp.face, NONE, NONE, [eyeScale, eyeScale, 1]), tint(face.skin, ghost));
+        }
       });
-      tmp.face.multiplyMatrices(tmp.head, FACE.mouth);
-      if (mood === 'wow') put(p.mouthWow, at(tmp.out, tmp.face, NONE, NONE, [1, 1 + 0.1 * Math.sin(t * 7), 1]));
-      else if (mood === 'grin' || mood === 'happy') put(p.mouthOpen, mood === 'happy' ? at(tmp.out, tmp.face, NONE, NONE, [1.15, 1.15, 1]) : tmp.face);
-      else put(p.mouthSmile, mood === 'sleepy' ? at(tmp.out, tmp.face, NONE, NONE, [0.7, 0.6, 1]) : tmp.face);
 
-      if (p.shadow) {
+      // sobrancelhas: estilo + humor (espanto sobe; monocelha é uma peça só no meio)
+      const brow = BROW[face.brows];
+      const browLift = brow.lift + (mood === 'wow' ? 0.03 : mood === 'happy' ? 0.015 : 0);
+      const browColor = tint(face.hair === '#f4c542' ? '#a16207' : face.hair, ghost);
+      if (face.brows === 'uni') {
+        tmp.face.multiplyMatrices(tmp.head, FACE.unibrow);
+        put('brows', at(tmp.out, tmp.face, [0, browLift, 0], [0, 0, 0.04 * Math.sin(t * 2 + phase)], brow.scale), browColor);
+      } else {
+        SIDES.forEach((side, k) => {
+          tmp.face.multiplyMatrices(tmp.head, FACE.brow[k]);
+          const lift = browLift + (face.brows === 'raised' && side > 0 ? 0.035 : 0);
+          put('brows', at(tmp.out, tmp.face, [0, lift, 0], [0, 0, -side * (brow.tilt + (mood === 'sleepy' ? 0.3 : 0))], brow.scale), browColor);
+        });
+      }
+      SIDES.forEach((_, k) => put('cheeks', tmp.face.multiplyMatrices(tmp.head, FACE.cheek[k])));
+
+      // boca: a da personalidade; comemorando abre, espantado faz "O", sonolento encolhe
+      tmp.face.multiplyMatrices(tmp.head, FACE.mouth);
+      const mouth: MouthStyle = mood === 'wow' ? 'o' : mood === 'happy' && CLOSED.includes(face.mouth) ? 'grin' : face.mouth;
+      if (mood === 'wow') put('mouth:o', at(tmp.out, tmp.face, NONE, NONE, [1, 1 + 0.1 * Math.sin(t * 7), 1]));
+      else if (mood === 'sleepy') put(`mouth:${mouth}`, at(tmp.out, tmp.face, NONE, NONE, [0.75, 0.65, 1]));
+      else if (mood === 'happy') put(`mouth:${mouth}`, at(tmp.out, tmp.face, NONE, NONE, [1.15, 1.15, 1]));
+      else put(`mouth:${mouth}`, tmp.face);
+
+      if (fakeShadow) {
         tmp.o.position.set(ps.position[0], ps.position[1] + 0.02, ps.position[2]);
         tmp.o.rotation.set(-Math.PI / 2, 0, 0);
         tmp.o.scale.setScalar(scale);
         tmp.o.updateMatrix();
-        put(p.shadow, tmp.o.matrix);
+        put('shadow', tmp.o.matrix);
       }
-    }
+    });
 
     if (moving) activity.keepActive(150);
+    markKitDirty(kit);
 
-    for (const mesh of allMeshes(p)) {
+    for (const mesh of p.values()) {
       // Desenha só as instâncias em uso: sala com 2 pessoas = 2 bonecos; peça sem uso nem entra no draw.
       mesh.count = used.get(mesh) ?? 0;
       mesh.visible = mesh.count > 0;
@@ -278,99 +286,98 @@ export function AvatarCrowd({
     if (id) onTap(id);
   };
 
+  /** Registra a peça no mapa (ref callback); some do mapa ao desmontar. */
+  const bind = (name: PartName) => (mesh: InstancedMesh | null) => {
+    if (mesh) parts.set(name, mesh);
+    else parts.delete(name);
+  };
   const pair = MAX_AVATARS * 2;
 
   return (
     <group>
-      {/* corpo: camisa (e faixa), gola, calça/calção, meião, braços, pernas e tênis */}
-      <Part ref={(m) => void (parts.current.torso = m)} geometry={geo.torso} count={MAX_AVATARS} castShadow={castShadow} onPointerDown={tap}>
-        <Lit roughness={0.75} />
+      {/* camisa: shader próprio (padrão, escudo, número e nome por instância) */}
+      <Part ref={bind('torso')} geometry={geo.torso} count={MAX_AVATARS} castShadow={castShadow} onPointerDown={tap}>
+        <meshStandardMaterial vertexColors flatShading roughness={0.7} onBeforeCompile={kitShader} />
       </Part>
-      <Part ref={(m) => void (parts.current.sash = m)} geometry={geo.sash} count={MAX_AVATARS}>
-        <Lit roughness={0.7} />
-      </Part>
-      <Part ref={(m) => void (parts.current.collar = m)} geometry={geo.collar} count={MAX_AVATARS}>
+      {/* gola, calção, pernas, meião, chuteiras, mangas e mãos */}
+      <Part ref={bind('collar')} geometry={geo.collar} count={MAX_AVATARS}>
         <Lit roughness={0.6} />
       </Part>
-      <Part ref={(m) => void (parts.current.hips = m)} geometry={geo.hips} count={MAX_AVATARS}>
+      <Part ref={bind('hips')} geometry={geo.hips} count={MAX_AVATARS}>
         <Lit roughness={0.8} />
       </Part>
-      <Part ref={(m) => void (parts.current.legs = m)} geometry={geo.legs} count={pair} castShadow={castShadow}>
+      <Part ref={bind('legs')} geometry={geo.legs} count={pair} castShadow={castShadow}>
         <Lit roughness={0.8} />
       </Part>
-      <Part ref={(m) => void (parts.current.shorts = m)} geometry={geo.shorts} count={pair}>
+      <Part ref={bind('shorts')} geometry={geo.shorts} count={pair}>
         <Lit roughness={0.8} />
       </Part>
-      <Part ref={(m) => void (parts.current.socks = m)} geometry={geo.socks} count={pair}>
+      <Part ref={bind('socks')} geometry={geo.socks} count={pair}>
         <Lit roughness={0.8} />
       </Part>
-      <Part ref={(m) => void (parts.current.shoes = m)} geometry={geo.shoes} count={pair}>
+      <Part ref={bind('boots')} geometry={geo.boots} count={pair}>
         <Lit roughness={0.4} />
       </Part>
-      <Part ref={(m) => void (parts.current.sneakers = m)} geometry={geo.sneakers} count={pair}>
-        <Lit roughness={0.4} />
+      <Part ref={bind('arms')} geometry={geo.arms} count={pair} castShadow={castShadow}>
+        <Lit roughness={0.7} />
       </Part>
-      <Part ref={(m) => void (parts.current.arms = m)} geometry={geo.arms} count={pair} castShadow={castShadow}>
-        <Lit roughness={0.75} />
-      </Part>
-      <Part ref={(m) => void (parts.current.hands = m)} geometry={geo.hands} count={pair}>
+      <Part ref={bind('hands')} geometry={geo.hands} count={pair}>
         <Lit roughness={0.55} />
       </Part>
 
       {/* cabeça (orelhas e nariz inclusos) e rosto */}
-      <Part ref={(m) => void (parts.current.head = m)} geometry={geo.head} count={MAX_AVATARS} castShadow={castShadow} onPointerDown={tap}>
+      <Part ref={bind('head')} geometry={geo.head} count={MAX_AVATARS} castShadow={castShadow} onPointerDown={tap}>
         <Lit roughness={0.55} />
       </Part>
-      <Part ref={(m) => void (parts.current.bigNose = m)} geometry={geo.bigNose} count={MAX_AVATARS}>
-        <Lit roughness={0.55} />
-      </Part>
-      <Part ref={(m) => void (parts.current.mustache = m)} geometry={geo.mustache} count={MAX_AVATARS}>
-        <Lit roughness={0.7} />
-      </Part>
-      <Part ref={(m) => void (parts.current.eyes = m)} geometry={geo.eyes} count={pair}>
+      <Part ref={bind('sclera')} geometry={geo.sclera} count={pair}>
         <Lit roughness={0.2} />
       </Part>
-      <Part ref={(m) => void (parts.current.lids = m)} geometry={geo.lids} count={pair}>
+      <Part ref={bind('pupils')} geometry={geo.pupils} count={pair}>
         <meshBasicMaterial vertexColors />
       </Part>
-      <Part ref={(m) => void (parts.current.brows = m)} geometry={geo.brows} count={pair}>
+      <Part ref={bind('lids')} geometry={geo.lids} count={pair}>
+        <meshBasicMaterial vertexColors />
+      </Part>
+      <Part ref={bind('halfLids')} geometry={geo.halfLids} count={pair}>
+        <Lit roughness={0.55} />
+      </Part>
+      <Part ref={bind('brows')} geometry={geo.brows} count={pair}>
         <Lit roughness={0.7} />
       </Part>
-      <Part ref={(m) => void (parts.current.cheeks = m)} geometry={geo.cheeks} count={pair}>
-        <meshBasicMaterial color="#fb7185" transparent opacity={0.45} depthWrite={false} />
+      <Part ref={bind('cheeks')} geometry={geo.cheeks} count={pair}>
+        <meshBasicMaterial color="#fb7185" transparent opacity={0.4} depthWrite={false} />
       </Part>
-      <Part ref={(m) => void (parts.current.mouthSmile = m)} geometry={geo.mouths.smile} count={MAX_AVATARS}>
-        <meshBasicMaterial vertexColors />
-      </Part>
-      <Part ref={(m) => void (parts.current.mouthOpen = m)} geometry={geo.mouths.open} count={MAX_AVATARS}>
-        <meshBasicMaterial vertexColors />
-      </Part>
-      <Part ref={(m) => void (parts.current.mouthWow = m)} geometry={geo.mouths.wow} count={MAX_AVATARS}>
-        <meshBasicMaterial vertexColors />
-      </Part>
+      {MOUTH_STYLES.map((style) => (
+        <Part key={style} ref={bind(`mouth:${style}`)} geometry={geo.mouths[style]} count={MAX_AVATARS}>
+          <meshBasicMaterial vertexColors side={DoubleSide} />
+        </Part>
+      ))}
 
-      {/* cabelos e chapéus: uma peça por estilo; cada boneco usa só a sua */}
-      {ALL_HAIR_STYLES.map((style) => (
-        <Part key={style} ref={(m) => void (parts.current.hair[style] = m)} geometry={geo.hair[style]} count={MAX_AVATARS}>
-          <Lit roughness={0.5} side={DoubleSide} />
+      {/* cabelos e extras: uma peça por estilo; cada boneco usa só os seus */}
+      {HAIR_GEOMETRIES.map((style) => (
+        <Part key={style} ref={bind(`hair:${style}`)} geometry={geo.hair[style]} count={MAX_AVATARS}>
+          <Lit roughness={0.6} side={DoubleSide} />
         </Part>
       ))}
-      {HAT_TYPES.map((type) => (
-        <Part key={type} ref={(m) => void (parts.current.hats[type] = m)} geometry={geo.hats[type]} count={MAX_AVATARS}>
-          <Lit roughness={0.55} side={DoubleSide} />
+      {FACE_EXTRAS.map((extra) => (
+        <Part key={extra} ref={bind(`extra:${extra}`)} geometry={geo.extras[extra]} count={MAX_AVATARS}>
+          <Lit roughness={extra === 'glasses' ? 0.25 : 0.6} side={DoubleSide} />
         </Part>
       ))}
-      <Part ref={(m) => void (parts.current.crown = m)} geometry={geo.crown} count={MAX_AVATARS}>
+      <Part ref={bind('crown')} geometry={geo.crown} count={MAX_AVATARS}>
         <Lit roughness={0.25} metalness={0.8} side={DoubleSide} />
       </Part>
       {fakeShadow && (
-        <Part ref={(m) => void (parts.current.shadow = m)} geometry={geo.shadow} count={MAX_AVATARS}>
+        <Part ref={bind('shadow')} geometry={geo.shadow} count={MAX_AVATARS}>
           <meshBasicMaterial color="#000000" transparent opacity={0.28} depthWrite={false} />
         </Part>
       )}
     </group>
   );
 }
+
+/** Altura da coroa do host acima do centro da cabeça (cabelo alto empurra para cima). */
+const crownLift = (hair: HairStyle) => (hair === 'afro' ? 0.6 : hair === 'mohawk' || hair === 'spiky' || hair === 'quiff' ? 0.52 : 0.4);
 
 function Part({
   ref,
@@ -393,7 +400,7 @@ function Part({
   );
 }
 
-/** Material dos bonecos: cor por vértice × cor da instância + o mesmo realce (um programa de shader para todos). */
+/** Material dos bonecos: cor por vértice × cor da instância, facetado, + o mesmo realce (um programa de shader por variante). */
 function Lit({ roughness, metalness, side }: { roughness: number; metalness?: number; side?: Side }) {
-  return <meshStandardMaterial vertexColors roughness={roughness} metalness={metalness} side={side} onBeforeCompile={characterShader} />;
+  return <meshStandardMaterial vertexColors flatShading roughness={roughness} metalness={metalness} side={side} onBeforeCompile={characterShader} />;
 }
