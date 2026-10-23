@@ -5,6 +5,7 @@ import { GoPlayersLogo } from '@/components/brand/goplayers-logo';
 import { Button } from '@/components/ui/button';
 import { useLogout } from '@/features/auth/use-logout';
 import { DiamondVault } from '@/features/diamonds/diamond-vault';
+import { useOnlineCount } from '@/features/presence/presence-context';
 import { useProfile } from '@/features/profile/profile-context';
 import { ProfilePill } from '@/features/profile/profile-pill';
 import { GAMES } from './catalog';
@@ -14,6 +15,7 @@ import { GameCard } from './game-card';
 export function GamesHub() {
   const { profile } = useProfile();
   const logout = useLogout();
+  const online = useOnlineCount();
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 pt-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] md:max-w-3xl lg:max-w-5xl">
@@ -27,10 +29,21 @@ export function GamesHub() {
           <p className="truncate text-xs font-semibold tracking-[0.25em] text-pink-300 uppercase">Bem-vindo, {profile.nickname}</p>
           <h1 className="font-display text-marquee text-2xl font-bold sm:text-3xl">Escolha seu jogo</h1>
         </div>
-        <p className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-violet-100">
-          <span aria-hidden className="size-2 rounded-full bg-emerald-400" />
-          {GAMES.length} jogos no salão
-        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-violet-100">
+            <span aria-hidden className="size-2 rounded-full bg-violet-300" />
+            {GAMES.length} jogos no salão
+          </p>
+          {online !== null && (
+            <p aria-live="polite" className="flex items-center gap-1.5 rounded-full bg-emerald-400/15 px-3 py-1 text-xs font-semibold text-emerald-200">
+              <span aria-hidden className="relative flex size-2">
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75 motion-reduce:animate-none" />
+                <span className="relative inline-flex size-2 rounded-full bg-emerald-400" />
+              </span>
+              {online} {online === 1 ? 'online' : 'onlines'}
+            </p>
+          )}
+        </div>
       </section>
 
       <DiamondVault />
