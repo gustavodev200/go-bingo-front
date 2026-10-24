@@ -24,6 +24,7 @@ export const ARENA_GAMES = [
   'BLACKJACK',
   'TACADA',
   'GAUDERIO',
+  'BOTAO',
 ] as const;
 export type ArenaGame = (typeof ARENA_GAMES)[number];
 
@@ -39,6 +40,7 @@ export const ARENA_GAME_LABELS: Record<ArenaGame, string> = {
   BLACKJACK: 'Blackjack',
   TACADA: 'Tacada',
   GAUDERIO: 'Truco Gaudério',
+  BOTAO: 'Futebol de Botão',
 };
 
 export interface ArenaRules {
@@ -146,6 +148,15 @@ export const ARENA_RULES: Record<ArenaGame, ArenaRules> = {
   GAUDERIO: {
     ante: 40,
     winBonus: 60,
+    ratingWeight: 1,
+    minRatedMs: 90_000,
+    finishBonus: 5,
+    countsStreak: true,
+  },
+  // Futebol de botão: times ao vivo; reflexo, passe e posicionamento decidem.
+  BOTAO: {
+    ante: 30,
+    winBonus: 50,
     ratingWeight: 1,
     minRatedMs: 90_000,
     finishBonus: 5,

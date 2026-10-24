@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react';
 import { BlackjackArt } from '@/features/blackjack/blackjack-art';
 import { BomberArt } from '@/features/bomber/bomber-art';
+import { BotaoArt } from '@/features/botao/botao-art';
 import { DamasArt } from '@/features/damas/damas-art';
 import { TacadaArt } from '@/features/tacada/tacada-art';
 import { DominoArt } from '@/features/domino/domino-art';
@@ -118,6 +119,16 @@ export const GAMES: readonly Game[] = [
     tags: ['2 a 8 jogadores', 'Salas públicas', 'CPU', 'Tempo real'],
     glow: '#f97316',
     Art: BomberArt,
+  },
+  {
+    id: 'botao',
+    name: 'Futebol de Botão',
+    description: 'Racha de até 4 contra 4 ao vivo: corra, dispute a bola, toque de lado e solte a bomba no ângulo.',
+    href: '/botao',
+    status: 'available',
+    tags: ['2 a 8 jogadores', 'Times', 'CPU', 'Tempo real'],
+    glow: '#22c55e',
+    Art: BotaoArt,
   },
   {
     id: 'snake',
